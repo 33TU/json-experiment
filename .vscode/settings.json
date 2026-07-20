@@ -1,0 +1,6 @@
+{
+  "go.toolsEnvVars": {
+    "GOEXPERIMENT": "jsonv2,simd",
+    "GOAMD64": "v3"
+  }
+}

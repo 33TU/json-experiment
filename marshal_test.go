@@ -10,6 +10,7 @@ import (
 
 	jsonexperiment "github.com/33TU/json-experiment"
 	"github.com/bytedance/sonic"
+	sonicEncoder "github.com/bytedance/sonic/encoder"
 )
 
 type numberInterface interface {
@@ -242,6 +243,16 @@ func BenchmarkMarshalMapInt(b *testing.B) {
 		marshalResult = result
 	})
 
+	b.Run("sonic_encode_into", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result = result[:0]
+			_ = sonicEncoder.EncodeInto(&result, values, 0)
+		}
+		marshalResult = result
+	})
+
 	runtime.KeepAlive(marshalResult)
 }
 
@@ -289,6 +300,16 @@ func BenchmarkMarshalMapIntSlice(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			result, _ = sonicJson.Marshal(values)
+		}
+		marshalResult = result
+	})
+
+	b.Run("sonic_encode_into", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result = result[:0]
+			_ = sonicEncoder.EncodeInto(&result, values, 0)
 		}
 		marshalResult = result
 	})
@@ -346,6 +367,16 @@ func BenchmarkMarshalMapAny(b *testing.B) {
 		marshalResult = result
 	})
 
+	b.Run("sonic_encode_into", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result = result[:0]
+			_ = sonicEncoder.EncodeInto(&result, values, 0)
+		}
+		marshalResult = result
+	})
+
 	runtime.KeepAlive(marshalResult)
 }
 
@@ -398,6 +429,16 @@ func BenchmarkMarshalIntSlice(b *testing.B) {
 		marshalResult = result
 	})
 
+	b.Run("sonic_encode_into", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result = result[:0]
+			_ = sonicEncoder.EncodeInto(&result, values, 0)
+		}
+		marshalResult = result
+	})
+
 	runtime.KeepAlive(marshalResult)
 }
 
@@ -441,6 +482,16 @@ func BenchmarkMarshalFloat32(b *testing.B) {
 		marshalResult = result
 	})
 
+	b.Run("sonic_encode_into", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result = result[:0]
+			_ = sonicEncoder.EncodeInto(&result, value, 0)
+		}
+		marshalResult = result
+	})
+
 	runtime.KeepAlive(marshalResult)
 }
 
@@ -480,6 +531,16 @@ func BenchmarkMarshalFloat64(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			result, _ = sonicJson.Marshal(value)
+		}
+		marshalResult = result
+	})
+
+	b.Run("sonic_encode_into", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result = result[:0]
+			_ = sonicEncoder.EncodeInto(&result, value, 0)
 		}
 		marshalResult = result
 	})
@@ -543,6 +604,16 @@ func BenchmarkMarshalStruct(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
 			result, _ = sonicJson.Marshal(value)
+		}
+		marshalResult = result
+	})
+
+	b.Run("sonic_encode_into", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result = result[:0]
+			_ = sonicEncoder.EncodeInto(&result, value, 0)
 		}
 		marshalResult = result
 	})

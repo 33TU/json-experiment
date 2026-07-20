@@ -13,7 +13,7 @@
   </style>
   <rect width="1200" height="1420" rx="14" fill="#10151d"/>
   <text class="title" x="40" y="48">Marshal latency by workload</text>
-  <text class="subtitle" x="40" y="76">Five-run median, relative to MarshalAppend (1×). Shorter is faster.</text>
+  <text class="subtitle" x="40" y="76">Go 1.26 with SIMD; five-run median relative to MarshalAppend (1×). Shorter is faster.</text>
 
   <rect x="40" y="96" width="14" height="14" rx="3" fill="#50c878"/><text class="series" x="62" y="108">MarshalAppend</text>
   <rect x="190" y="96" width="14" height="14" rx="3" fill="#5aa9e6"/><text class="series" x="212" y="108">Marshal</text>
@@ -36,58 +36,58 @@
   <!-- Each bar begins at x=260. -->
   <g transform="translate(0,145)">
     <text class="group" x="40" y="13">map[string]int</text>
-    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">203.4 ns</text>
-    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="146" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="416" y="67">395.2 ns</text>
-    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="573" height="19" rx="4" fill="#ef8354"/><text class="value" x="843" y="95">1554 ns</text>
-    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="206" height="19" rx="4" fill="#b388eb"/><text class="value" x="476" y="123">558.2 ns</text>
-    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="135" height="19" rx="4" fill="#f2c14e"/><text class="value" x="405" y="151">365.7 ns</text>
+    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">201.6 ns</text>
+    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="136" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="406" y="67">366.5 ns</text>
+    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="566" height="19" rx="4" fill="#ef8354"/><text class="value" x="836" y="95">1521 ns</text>
+    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="192" height="19" rx="4" fill="#b388eb"/><text class="value" x="462" y="123">516.2 ns</text>
+    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="142" height="19" rx="4" fill="#f2c14e"/><text class="value" x="412" y="151">383.0 ns</text>
   </g>
   <g transform="translate(0,325)">
     <text class="group" x="40" y="13">map[string][]int</text>
-    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">503.7 ns</text>
-    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="100" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="370" y="67">671.2 ns</text>
-    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="230" height="19" rx="4" fill="#ef8354"/><text class="value" x="500" y="95">1543 ns</text>
-    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="85" height="19" rx="4" fill="#b388eb"/><text class="value" x="355" y="123">570.3 ns</text>
-    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="60" height="19" rx="4" fill="#f2c14e"/><text class="value" x="330" y="151">401.1 ns</text>
+    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">498.6 ns</text>
+    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="104" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="374" y="67">693.9 ns</text>
+    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="224" height="19" rx="4" fill="#ef8354"/><text class="value" x="494" y="95">1491 ns</text>
+    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="72" height="19" rx="4" fill="#b388eb"/><text class="value" x="342" y="123">480.5 ns</text>
+    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="56" height="19" rx="4" fill="#f2c14e"/><text class="value" x="326" y="151">373.1 ns</text>
   </g>
   <g transform="translate(0,505)">
     <text class="group" x="40" y="13">map[string]any</text>
-    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">332.0 ns</text>
-    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="120" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="390" y="67">533.0 ns</text>
-    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="461" height="19" rx="4" fill="#ef8354"/><text class="value" x="731" y="95">2042 ns</text>
-    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="167" height="19" rx="4" fill="#b388eb"/><text class="value" x="437" y="123">738.4 ns</text>
-    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="117" height="19" rx="4" fill="#f2c14e"/><text class="value" x="387" y="151">519.6 ns</text>
+    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">329.6 ns</text>
+    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="121" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="391" y="67">531.5 ns</text>
+    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="490" height="19" rx="4" fill="#ef8354"/><text class="value" x="760" y="95">2155 ns</text>
+    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="157" height="19" rx="4" fill="#b388eb"/><text class="value" x="427" y="123">692.0 ns</text>
+    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="126" height="19" rx="4" fill="#f2c14e"/><text class="value" x="396" y="151">553.1 ns</text>
   </g>
   <g transform="translate(0,685)">
     <text class="group" x="40" y="13">[]int</text>
-    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">90.87 ns</text>
-    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="164" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="434" y="67">198.5 ns</text>
-    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="256" height="19" rx="4" fill="#ef8354"/><text class="value" x="526" y="95">310.1 ns</text>
-    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="230" height="19" rx="4" fill="#b388eb"/><text class="value" x="500" y="123">279.1 ns</text>
-    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="137" height="19" rx="4" fill="#f2c14e"/><text class="value" x="407" y="151">165.8 ns</text>
+    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">91.80 ns</text>
+    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="158" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="428" y="67">193.1 ns</text>
+    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="250" height="19" rx="4" fill="#ef8354"/><text class="value" x="520" y="95">305.5 ns</text>
+    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="211" height="19" rx="4" fill="#b388eb"/><text class="value" x="481" y="123">258.5 ns</text>
+    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="128" height="19" rx="4" fill="#f2c14e"/><text class="value" x="398" y="151">156.9 ns</text>
   </g>
   <g transform="translate(0,865)">
     <text class="group" x="40" y="13">float32</text>
-    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">38.14 ns</text>
-    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="144" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="414" y="67">73.40 ns</text>
-    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="185" height="19" rx="4" fill="#ef8354"/><text class="value" x="455" y="95">93.86 ns</text>
-    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="190" height="19" rx="4" fill="#b388eb"/><text class="value" x="460" y="123">96.45 ns</text>
-    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="120" height="19" rx="4" fill="#f2c14e"/><text class="value" x="390" y="151">60.87 ns</text>
+    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">37.40 ns</text>
+    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="148" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="418" y="67">73.85 ns</text>
+    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="187" height="19" rx="4" fill="#ef8354"/><text class="value" x="457" y="95">93.25 ns</text>
+    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="186" height="19" rx="4" fill="#b388eb"/><text class="value" x="456" y="123">92.70 ns</text>
+    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="123" height="19" rx="4" fill="#f2c14e"/><text class="value" x="393" y="151">61.48 ns</text>
   </g>
   <g transform="translate(0,1045)">
     <text class="group" x="40" y="13">float64</text>
-    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">69.42 ns</text>
-    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="133" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="403" y="67">123.5 ns</text>
-    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="160" height="19" rx="4" fill="#ef8354"/><text class="value" x="430" y="95">148.4 ns</text>
-    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="139" height="19" rx="4" fill="#b388eb"/><text class="value" x="409" y="123">128.7 ns</text>
-    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="84" height="19" rx="4" fill="#f2c14e"/><text class="value" x="354" y="151">77.42 ns</text>
+    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">69.18 ns</text>
+    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="128" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="398" y="67">118.1 ns</text>
+    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="156" height="19" rx="4" fill="#ef8354"/><text class="value" x="426" y="95">144.3 ns</text>
+    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="137" height="19" rx="4" fill="#b388eb"/><text class="value" x="407" y="123">126.8 ns</text>
+    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="87" height="19" rx="4" fill="#f2c14e"/><text class="value" x="357" y="151">79.98 ns</text>
   </g>
   <g transform="translate(0,1225)">
     <text class="group" x="40" y="13">mixed struct</text>
-    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">286.2 ns</text>
-    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="139" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="409" y="67">532.4 ns</text>
-    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="311" height="19" rx="4" fill="#ef8354"/><text class="value" x="581" y="95">1188 ns</text>
-    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="193" height="19" rx="4" fill="#b388eb"/><text class="value" x="463" y="123">736.0 ns</text>
-    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="136" height="19" rx="4" fill="#f2c14e"/><text class="value" x="406" y="151">518.3 ns</text>
+    <text class="series" x="245" y="39" text-anchor="end">append</text><rect x="260" y="25" width="75" height="19" rx="4" fill="#50c878"/><text class="value" x="345" y="39">283.0 ns</text>
+    <text class="series" x="245" y="67" text-anchor="end">marshal</text><rect x="260" y="53" width="133" height="19" rx="4" fill="#5aa9e6"/><text class="value" x="403" y="67">501.0 ns</text>
+    <text class="series" x="245" y="95" text-anchor="end">stdlib</text><rect x="260" y="81" width="283" height="19" rx="4" fill="#ef8354"/><text class="value" x="553" y="95">1067 ns</text>
+    <text class="series" x="245" y="123" text-anchor="end">sonic</text><rect x="260" y="109" width="187" height="19" rx="4" fill="#b388eb"/><text class="value" x="457" y="123">705.8 ns</text>
+    <text class="series" x="245" y="151" text-anchor="end">sonic into</text><rect x="260" y="137" width="118" height="19" rx="4" fill="#f2c14e"/><text class="value" x="388" y="151">444.7 ns</text>
   </g>
 </svg>

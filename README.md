@@ -9,6 +9,11 @@ The benchmarks compare `MarshalAppend`, `Marshal`, `encoding/json`,
 `MarshalAppend` and `EncodeInto` reuse caller-provided destination capacity;
 the other marshal APIs return an owned byte slice.
 
+For like-for-like comparisons, `MarshalAppend` corresponds to Sonic's
+`EncodeInto`, while `Marshal` corresponds to `sonic.ConfigFastest.Marshal`.
+The append-style APIs can avoid the output allocation when the destination has
+enough capacity; the marshal-style APIs must return independently owned output.
+
 ### Benchmark 2: improved SIMD string encoding
 
 Benchmark 2 was recorded after improving the SIMD string-escaping path. It
@@ -16,25 +21,26 @@ keeps SIMD setup outside the scanning loop, processes escape masks directly,
 and retains the scalar fast path for short strings. Consequently, it should
 not be treated as a direct rerun of Benchmark 1: string-heavy workloads also
 measure those encoder improvements. This run additionally includes Sonic's
-reusable-buffer `EncodeInto` API and reports the median of five rounds.
+reusable-buffer `EncodeInto` API, uses Go 1.26's default JSON implementation,
+and reports the median of five rounds.
 
 ![Marshal benchmark comparison](assets/benchmark2.svg)
 
 ```sh
-GOAMD64=v3 GOEXPERIMENT=simd,nojsonv2 go test -benchmem -run='^$' -count=5 -bench='^(BenchmarkMarshalMapInt|BenchmarkMarshalMapIntSlice|BenchmarkMarshalMapAny|BenchmarkMarshalIntSlice|BenchmarkMarshalFloat32|BenchmarkMarshalFloat64|BenchmarkMarshalStruct)$'
+GOAMD64=v3 GOEXPERIMENT=simd go test -benchmem -run='^$' -count=5 -bench='^(BenchmarkMarshalMapInt|BenchmarkMarshalMapIntSlice|BenchmarkMarshalMapAny|BenchmarkMarshalIntSlice|BenchmarkMarshalFloat32|BenchmarkMarshalFloat64|BenchmarkMarshalStruct)$'
 ```
 
 Five-run median latency (lower is better):
 
 | Workload | MarshalAppend | Marshal | encoding/json | Sonic Marshal | Sonic EncodeInto |
 |---|---:|---:|---:|---:|---:|
-| `map[string]int` | 203.4 ns | 395.2 ns | 1554 ns | 558.2 ns | 365.7 ns |
-| `map[string][]int` | 503.7 ns | 671.2 ns | 1543 ns | 570.3 ns | 401.1 ns |
-| `map[string]any` | 332.0 ns | 533.0 ns | 2042 ns | 738.4 ns | 519.6 ns |
-| `[]int` | 90.87 ns | 198.5 ns | 310.1 ns | 279.1 ns | 165.8 ns |
-| `float32` | 38.14 ns | 73.40 ns | 93.86 ns | 96.45 ns | 60.87 ns |
-| `float64` | 69.42 ns | 123.5 ns | 148.4 ns | 128.7 ns | 77.42 ns |
-| mixed struct | 286.2 ns | 532.4 ns | 1188 ns | 736.0 ns | 518.3 ns |
+| `map[string]int` | 201.6 ns | 366.5 ns | 1521 ns | 516.2 ns | 383.0 ns |
+| `map[string][]int` | 498.6 ns | 693.9 ns | 1491 ns | 480.5 ns | 373.1 ns |
+| `map[string]any` | 329.6 ns | 531.5 ns | 2155 ns | 692.0 ns | 553.1 ns |
+| `[]int` | 91.80 ns | 193.1 ns | 305.5 ns | 258.5 ns | 156.9 ns |
+| `float32` | 37.40 ns | 73.85 ns | 93.25 ns | 92.70 ns | 61.48 ns |
+| `float64` | 69.18 ns | 118.1 ns | 144.3 ns | 126.8 ns | 79.98 ns |
+| mixed struct | 283.0 ns | 501.0 ns | 1067 ns | 705.8 ns | 444.7 ns |
 
 The complete five-run output, including bytes and allocations per operation,
 is available in [`bench.txt`](bench.txt).

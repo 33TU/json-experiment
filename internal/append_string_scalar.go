@@ -1,3 +1,5 @@
+//go:build !goexperiment.simd
+
 package internal
 
 import "slices"
@@ -7,34 +9,10 @@ const lowerHex = "0123456789abcdef"
 // AppendString appends the JSON representation of s to dst.
 func AppendString(dst []byte, s string) []byte {
 	dst = slices.Grow(dst, len(s)+2)
-
-	if firstEscape := findStringEscape(s); firstEscape >= 0 {
-		return appendEscapedString(dst, s, firstEscape)
-	}
-
 	dst = append(dst, '"')
-	dst = append(dst, s...)
-	return append(dst, '"')
-}
 
-// AppendStringHTML appends the HTML-safe JSON representation of s to dst.
-func AppendStringHTML(dst []byte, s string) []byte {
-	dst = slices.Grow(dst, len(s)+2)
-
-	if firstEscape := findStringEscapeHTML(s); firstEscape >= 0 {
-		return appendEscapedStringHTML(dst, s, firstEscape)
-	}
-
-	dst = append(dst, '"')
-	dst = append(dst, s...)
-	return append(dst, '"')
-}
-
-func appendEscapedString(dst []byte, s string, firstEscape int) []byte {
-	dst = append(dst, '"')
 	start := 0
-
-	for i := firstEscape; i < len(s); i++ {
+	for i := 0; i < len(s); i++ {
 		c := s[i]
 		if c >= 0x20 && c != '"' && c != '\\' {
 			continue
@@ -49,23 +27,20 @@ func appendEscapedString(dst []byte, s string, firstEscape int) []byte {
 	return append(dst, '"')
 }
 
-func appendEscapedStringHTML(dst []byte, s string, firstEscape int) []byte {
+// AppendStringHTML appends the HTML-safe JSON representation of s to dst.
+func AppendStringHTML(dst []byte, s string) []byte {
+	dst = slices.Grow(dst, len(s)+2)
 	dst = append(dst, '"')
-	start := 0
 
-	for i := firstEscape; i < len(s); i++ {
+	start := 0
+	for i := 0; i < len(s); i++ {
 		c := s[i]
 		if c >= 0x20 && c != '"' && c != '\\' && c != '<' && c != '>' && c != '&' {
 			continue
 		}
 
 		dst = append(dst, s[start:i]...)
-		switch c {
-		case '<', '>', '&':
-			dst = append(dst, '\\', 'u', '0', '0', lowerHex[c>>4], lowerHex[c&0x0f])
-		default:
-			dst = appendEscapedByte(dst, c)
-		}
+		dst = appendEscapedByte(dst, c)
 		start = i + 1
 	}
 

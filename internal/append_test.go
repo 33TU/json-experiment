@@ -6,6 +6,7 @@ import (
 	"math"
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/33TU/json-experiment/internal"
@@ -245,8 +246,14 @@ func BenchmarkAppendString(b *testing.B) {
 		html  bool
 	}{
 		{"plain", "hello world", false},
+		{"plain_clean_huge", strings.Repeat("The quick brown fox jumps. ", 64), false},
 		{"escaped", "hello \"world\"\npath\\to\\file", false},
+		{"escape_at_end", strings.Repeat("a", 1024) + `"`, false},
+		{"escape_at_middle", strings.Repeat("a", 512) + `"` + strings.Repeat("a", 512), false},
 		{"HTML", `<script type="text/javascript">a && b</script>`, true},
+		{"HTML_clean_huge", strings.Repeat("plain text without HTML characters ", 32), true},
+		{"HTML_escape_at_end", strings.Repeat("a", 1024) + "<", true},
+		{"HTML_escape_at_middle", strings.Repeat("a", 512) + "<" + strings.Repeat("a", 512), true},
 	}
 
 	for _, bm := range benchmarks {

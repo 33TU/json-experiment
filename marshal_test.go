@@ -207,11 +207,10 @@ func BenchmarkMarshalMapInt(b *testing.B) {
 	}
 
 	b.Run("marshal_append", func(b *testing.B) {
-		dst := make([]byte, 0, 192)
 		var result []byte
 		b.ReportAllocs()
 		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(dst[:0], values)
+			result, _ = jsonexperiment.MarshalAppend(result[:0], values)
 		}
 		marshalResult = result
 	})
@@ -259,11 +258,10 @@ func BenchmarkMarshalMapIntSlice(b *testing.B) {
 	}
 
 	b.Run("marshal_append", func(b *testing.B) {
-		dst := make([]byte, 0, 512)
 		var result []byte
 		b.ReportAllocs()
 		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(dst[:0], values)
+			result, _ = jsonexperiment.MarshalAppend(result[:0], values)
 		}
 		marshalResult = result
 	})
@@ -313,11 +311,10 @@ func BenchmarkMarshalMapAny(b *testing.B) {
 	}
 
 	b.Run("marshal_append", func(b *testing.B) {
-		dst := make([]byte, 0, 256)
 		var result []byte
 		b.ReportAllocs()
 		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(dst[:0], values)
+			result, _ = jsonexperiment.MarshalAppend(result[:0], values)
 		}
 		marshalResult = result
 	})
@@ -366,11 +363,10 @@ func BenchmarkMarshalIntSlice(b *testing.B) {
 	}
 
 	b.Run("marshal_append", func(b *testing.B) {
-		dst := make([]byte, 0, 128)
 		var result []byte
 		b.ReportAllocs()
 		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(dst[:0], values)
+			result, _ = jsonexperiment.MarshalAppend(result[:0], values)
 		}
 		marshalResult = result
 	})
@@ -410,11 +406,10 @@ func BenchmarkMarshalFloat32(b *testing.B) {
 	value := float32(1.234567)
 
 	b.Run("marshal_append", func(b *testing.B) {
-		dst := make([]byte, 0, 32)
 		var result []byte
 		b.ReportAllocs()
 		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(dst[:0], value)
+			result, _ = jsonexperiment.MarshalAppend(result[:0], value)
 		}
 		marshalResult = result
 	})
@@ -454,11 +449,10 @@ func BenchmarkMarshalFloat64(b *testing.B) {
 	value := 1.2345678901234567
 
 	b.Run("marshal_append", func(b *testing.B) {
-		dst := make([]byte, 0, 32)
 		var result []byte
 		b.ReportAllocs()
 		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(dst[:0], value)
+			result, _ = jsonexperiment.MarshalAppend(result[:0], value)
 		}
 		marshalResult = result
 	})
@@ -518,11 +512,10 @@ func BenchmarkMarshalStruct(b *testing.B) {
 	}
 
 	b.Run("marshal_append", func(b *testing.B) {
-		dst := make([]byte, 0, 256)
 		var result []byte
 		b.ReportAllocs()
 		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(dst[:0], value)
+			result, _ = jsonexperiment.MarshalAppend(result[:0], value)
 		}
 		marshalResult = result
 	})

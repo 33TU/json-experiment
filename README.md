@@ -22,7 +22,7 @@ builds without the SIMD experiment use an eight-byte SWAR scanner. This run
 uses the SIMD path; it is a fresh end-to-end baseline rather than an isolated
 measurement of the SWAR fallback. Results are five-run medians on Go 1.26.
 
-![Marshal benchmark 4 comparison](assets/benchmark4.svg)
+![Marshal benchmark 4 comparison](assets/benchmarks/benchmark4.svg)
 
 ```sh
 GOAMD64=v3 GOEXPERIMENT=simd go test -benchmem -run='^$' -count=5 -bench='^(BenchmarkMarshalMapInt|BenchmarkMarshalMapIntSlice|BenchmarkMarshalMapAny|BenchmarkMarshalIntSlice|BenchmarkMarshalFloat32|BenchmarkMarshalFloat64|BenchmarkMarshalStruct|BenchmarkMarshalStructSlice)$'
@@ -53,7 +53,7 @@ Median allocations per operation:
 | struct with `[]struct` and metadata maps | 0 | 1 | 22 | 7 | 6 |
 
 The complete Benchmark 4 output, including bytes and allocations per
-operation, is available in [`bench4.txt`](bench4.txt).
+operation, is available in [`bench4.txt`](assets/benchmarks/raw/bench4.txt).
 
 ### Benchmark 3: specialized primitive-slice maps
 
@@ -62,7 +62,7 @@ compacts cached struct-field metadata, and adds a nested struct-slice workload
 where every item contains a metadata map. The results are five-run medians on
 Go 1.26 with the SIMD experiment enabled.
 
-![Marshal benchmark 3 comparison](assets/benchmark3.svg)
+![Marshal benchmark 3 comparison](assets/benchmarks/benchmark3.svg)
 
 ```sh
 GOAMD64=v3 GOEXPERIMENT=simd go test -benchmem -run='^$' -count=5 -bench='^(BenchmarkMarshalMapInt|BenchmarkMarshalMapIntSlice|BenchmarkMarshalMapAny|BenchmarkMarshalIntSlice|BenchmarkMarshalFloat32|BenchmarkMarshalFloat64|BenchmarkMarshalStruct|BenchmarkMarshalStructSlice)$'
@@ -93,7 +93,7 @@ Median allocations per operation:
 | struct with `[]struct` and metadata maps | 0 | 1 | 22 | 7 | 6 |
 
 The complete Benchmark 3 output, including bytes and allocations per
-operation, is available in [`bench3.txt`](bench3.txt).
+operation, is available in [`bench3.txt`](assets/benchmarks/raw/bench3.txt).
 
 ### Benchmark 2: improved SIMD string encoding
 
@@ -105,7 +105,7 @@ measure those encoder improvements. This run additionally includes Sonic's
 reusable-buffer `EncodeInto` API, uses Go 1.26's default JSON implementation,
 and reports the median of five rounds.
 
-![Marshal benchmark comparison](assets/benchmark2.svg)
+![Marshal benchmark comparison](assets/benchmarks/benchmark2.svg)
 
 ```sh
 GOAMD64=v3 GOEXPERIMENT=simd go test -benchmem -run='^$' -count=5 -bench='^(BenchmarkMarshalMapInt|BenchmarkMarshalMapIntSlice|BenchmarkMarshalMapAny|BenchmarkMarshalIntSlice|BenchmarkMarshalFloat32|BenchmarkMarshalFloat64|BenchmarkMarshalStruct)$'
@@ -136,51 +136,16 @@ Median allocations per operation:
 | mixed struct | 0 | 1 | 7 | 4 | 3 |
 
 The complete five-run output, including bytes and allocations per operation,
-is available in [`bench2.txt`](bench2.txt).
+is available in [`bench2.txt`](assets/benchmarks/raw/bench2.txt).
 
 ### Earlier single-run results
 
 Benchmark 1 predates the improved SIMD string path and does not include
-Sonic's `EncodeInto` API.
+Sonic's `EncodeInto` API, is available in [`bench1.txt`](assets/benchmarks/raw/bench1.txt).
 
-![Earlier marshal benchmark comparison](assets/benchmark1.svg)
+![Earlier marshal benchmark comparison](assets/benchmarks/benchmark1.svg)
 
-```text
-goos: linux
-goarch: amd64
-pkg: github.com/33TU/json-experiment
-cpu: 13th Gen Intel(R) Core(TM) i9-13900H
-BenchmarkMarshalMapInt/marshal_append-20             5745892       204.7 ns/op       0 B/op       0 allocs/op
-BenchmarkMarshalMapInt/marshal-20                    2665389       446.2 ns/op     144 B/op       1 allocs/op
-BenchmarkMarshalMapInt/encoding_json-20               986754        1223 ns/op     232 B/op      11 allocs/op
-BenchmarkMarshalMapInt/sonic_json-20                 1665478       694.8 ns/op     263 B/op       3 allocs/op
-BenchmarkMarshalMapIntSlice/marshal_append-20        2483307       483.4 ns/op      40 B/op       2 allocs/op
-BenchmarkMarshalMapIntSlice/marshal-20               1501316       774.2 ns/op     200 B/op       3 allocs/op
-BenchmarkMarshalMapIntSlice/encoding_json-20          701028        1713 ns/op     352 B/op      10 allocs/op
-BenchmarkMarshalMapIntSlice/sonic_json-20            1660813       729.9 ns/op     278 B/op       3 allocs/op
-BenchmarkMarshalMapAny/marshal_append-20             3606662       327.6 ns/op       0 B/op       0 allocs/op
-BenchmarkMarshalMapAny/marshal-20                    2177620       601.0 ns/op     160 B/op       1 allocs/op
-BenchmarkMarshalMapAny/encoding_json-20               349639        2888 ns/op     448 B/op      23 allocs/op
-BenchmarkMarshalMapAny/sonic_json-20                 1236027       986.8 ns/op     279 B/op       3 allocs/op
-BenchmarkMarshalIntSlice/marshal_append-20          12649024       86.01 ns/op       0 B/op       0 allocs/op
-BenchmarkMarshalIntSlice/marshal-20                  5161215       245.1 ns/op      80 B/op       1 allocs/op
-BenchmarkMarshalIntSlice/encoding_json-20            3107413       475.0 ns/op     128 B/op       3 allocs/op
-BenchmarkMarshalIntSlice/sonic_json-20               3672754       318.8 ns/op     127 B/op       3 allocs/op
-BenchmarkMarshalFloat32/marshal_append-20           28988560       36.28 ns/op       0 B/op       0 allocs/op
-BenchmarkMarshalFloat32/marshal-20                  16656058       65.59 ns/op       8 B/op       1 allocs/op
-BenchmarkMarshalFloat32/encoding_json-20             8713119       142.7 ns/op      16 B/op       2 allocs/op
-BenchmarkMarshalFloat32/sonic_json-20               13785015       106.1 ns/op      24 B/op       2 allocs/op
-BenchmarkMarshalFloat64/marshal_append-20           19730574       56.91 ns/op       0 B/op       0 allocs/op
-BenchmarkMarshalFloat64/marshal-20                  11676784       121.6 ns/op      24 B/op       1 allocs/op
-BenchmarkMarshalFloat64/encoding_json-20             5733645       200.0 ns/op      32 B/op       2 allocs/op
-BenchmarkMarshalFloat64/sonic_json-20                7605076       154.3 ns/op      41 B/op       2 allocs/op
-BenchmarkMarshalStruct/marshal_append-20             4307013       273.2 ns/op       0 B/op       0 allocs/op
-BenchmarkMarshalStruct/marshal-20                    2137054       604.5 ns/op     240 B/op       1 allocs/op
-BenchmarkMarshalStruct/encoding_json-20               709479        1742 ns/op     464 B/op       7 allocs/op
-BenchmarkMarshalStruct/sonic_json-20                 1421000       876.8 ns/op     448 B/op       4 allocs/op
-PASS
-ok      github.com/33TU/json-experiment  33.928s
-```
+---
 
 Results vary by hardware, Go version, and workload. Run the benchmarks on the
 target system before drawing conclusions for a particular application.

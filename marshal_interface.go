@@ -21,33 +21,11 @@ func marshalInterface(dst []byte, v any, flags marshalFlags) ([]byte, error) {
 	}
 
 	typ := reflect.TypeOf(v)
-	kind := typ.Kind()
-	wasPointer := kind == reflect.Pointer
 	ptr := internal.InterfaceData(v)
-
-	// Collapse the pointer chain. The interface data word already represents the
-	// first pointer, so only dereference when another pointer level remains.
-	for kind == reflect.Pointer {
-		if ptr == nil {
-			return internal.AppendNull(dst), nil
-		}
-
-		typ = typ.Elem()
-		kind = typ.Kind()
-
-		if kind == reflect.Pointer {
-			ptr = *(*unsafe.Pointer)(ptr)
-		}
-	}
-
-	// Map marshal functions receive the map data pointer directly.
-	if kind == reflect.Map && wasPointer {
-		ptr = *(*unsafe.Pointer)(ptr)
-	}
 
 	var err error
 
-	switch kind {
+	switch kind := typ.Kind(); kind {
 	case reflect.Bool:
 		dst = internal.AppendBool(dst, *(*bool)(ptr))
 	case reflect.Int:
@@ -82,6 +60,9 @@ func marshalInterface(dst []byte, v any, flags marshalFlags) ([]byte, error) {
 		} else {
 			dst = internal.AppendString(dst, *(*string)(ptr))
 		}
+	case reflect.Pointer:
+		fn := getOrCreateMarshalFn(typ)
+		dst, err = fn(dst, noescape(unsafe.Pointer(&ptr)), flags)
 	default:
 		fn := getOrCreateMarshalFn(typ)
 		dst, err = fn(dst, noescape(ptr), flags)

@@ -123,3 +123,22 @@ func AppendStringSlice(dst []byte, values []string) []byte {
 
 	return dst
 }
+
+// AppendStringSliceHTML appends the HTML-safe JSON representation of values to dst.
+func AppendStringSliceHTML(dst []byte, values []string) []byte {
+	if values == nil {
+		return AppendNull(dst)
+	}
+	if len(values) == 0 {
+		return append(dst, "[]"...)
+	}
+
+	dst = append(dst, '[')
+	for _, value := range values {
+		dst = AppendStringHTML(dst, value)
+		dst = append(dst, ',')
+	}
+	dst[len(dst)-1] = ']'
+
+	return dst
+}

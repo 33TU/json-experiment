@@ -156,6 +156,83 @@ func TestMarshalAppend(t *testing.T) {
 	}
 }
 
+func TestMarshalEscapeHTML(t *testing.T) {
+	t.Parallel()
+
+	options := jsonexperiment.MarshalOptions{EscapeHTML: true}
+	value := struct {
+		Text   string              `json:"<text>"`
+		Array  [1]string           `json:"array"`
+		Slice  []string            `json:"slice"`
+		Map    map[string]string   `json:"map"`
+		Nested map[string][]string `json:"nested"`
+		Any    any                 `json:"any"`
+	}{
+		Text:  "<>&",
+		Array: [1]string{"<array>"},
+		Slice: []string{"<slice>"},
+		Map:   map[string]string{"<key>": "<value>"},
+		Nested: map[string][]string{
+			"<nested>": {"<item>"},
+		},
+		Any: map[string]any{"<any>": "<interface>"},
+	}
+
+	got, err := jsonexperiment.MarshalWithOptions(value, options)
+	if err != nil {
+		t.Fatalf("MarshalWithOptions: %v", err)
+	}
+	if bytes.ContainsAny(got, "<>&") {
+		t.Fatalf("MarshalWithOptions left HTML characters unescaped: %s", got)
+	}
+	for _, escaped := range [][]byte{[]byte(`\u003c`), []byte(`\u003e`), []byte(`\u0026`)} {
+		if !bytes.Contains(got, escaped) {
+			t.Fatalf("MarshalWithOptions output %q does not contain %q", got, escaped)
+		}
+	}
+
+	want, err := json.Marshal(value)
+	if err != nil {
+		t.Fatalf("json.Marshal: %v", err)
+	}
+	assertJSONEqual(t, got, want)
+
+	html := "<pointer>"
+	additional := []any{
+		&html,
+		map[string]int{"<key>": 1},
+		map[int]string{1: "<value>"},
+		map[uint]string{1: "<value>"},
+		map[int][]string{1: {"<value>"}},
+		map[uint][]string{1: {"<value>"}},
+	}
+	for _, value := range additional {
+		encoded, err := jsonexperiment.MarshalWithOptions(value, options)
+		if err != nil {
+			t.Fatalf("MarshalWithOptions(%T): %v", value, err)
+		}
+		if bytes.ContainsAny(encoded, "<>&") {
+			t.Fatalf("MarshalWithOptions(%T) left HTML characters unescaped: %s", value, encoded)
+		}
+	}
+
+	got, err = jsonexperiment.MarshalAppendWithOptions([]byte("prefix:"), "<>&", options)
+	if err != nil {
+		t.Fatalf("MarshalAppendWithOptions: %v", err)
+	}
+	if want := []byte(`prefix:"\u003c\u003e\u0026"`); !bytes.Equal(got, want) {
+		t.Fatalf("MarshalAppendWithOptions = %q, want %q", got, want)
+	}
+
+	got, err = jsonexperiment.Marshal("<>&")
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+	if want := []byte(`"<>&"`); !bytes.Equal(got, want) {
+		t.Fatalf("Marshal default = %q, want %q", got, want)
+	}
+}
+
 func TestMarshalError(t *testing.T) {
 	t.Parallel()
 

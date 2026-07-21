@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1530" viewBox="0 0 1200 1530" role="img" aria-labelledby="title desc">
+  <title id="title">JSON marshal benchmark 3 latency</title>
+  <desc id="desc">Five-run median latency normalized to MarshalAppend for eight workloads. Lower is better.</desc>
+  <style>
+    text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #d8dee9; }
+    .title { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 28px; font-weight: 700; }
+    .subtitle { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 15px; fill: #aab4c3; }
+    .group { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 18px; font-weight: 650; }
+    .series { font-size: 13px; fill: #c4ccd8; }
+    .value { font-size: 13px; font-weight: 650; }
+    .tick { font-size: 12px; fill: #788596; }
+    .grid { stroke: #293344; stroke-width: 1; }
+  </style>
+  <rect width="1200" height="1530" rx="14" fill="#10151d"/>
+  <text class="title" x="40" y="48">Marshal latency by workload — Benchmark 3</text>
+  <text class="subtitle" x="40" y="76">Go 1.26 with SIMD; five-run median relative to MarshalAppend (1×). Shorter is faster.</text>
+  <rect x="40" y="96" width="14" height="14" rx="3" fill="#50c878"/><text class="series" x="62" y="108">MarshalAppend</text>
+  <rect x="190" y="96" width="14" height="14" rx="3" fill="#5aa9e6"/><text class="series" x="212" y="108">Marshal</text>
+  <rect x="300" y="96" width="14" height="14" rx="3" fill="#ef8354"/><text class="series" x="322" y="108">encoding/json</text>
+  <rect x="450" y="96" width="14" height="14" rx="3" fill="#b388eb"/><text class="series" x="472" y="108">Sonic Marshal</text>
+  <rect x="600" y="96" width="14" height="14" rx="3" fill="#f2c14e"/><text class="series" x="622" y="108">Sonic EncodeInto</text>
+  <g>
+    <line class="grid" x1="330" y1="130" x2="330" y2="1490"/><text class="tick" x="323" y="1512">1×</text>
+    <line class="grid" x1="400" y1="130" x2="400" y2="1490"/><text class="tick" x="393" y="1512">2×</text>
+    <line class="grid" x1="470" y1="130" x2="470" y2="1490"/><text class="tick" x="463" y="1512">3×</text>
+    <line class="grid" x1="540" y1="130" x2="540" y2="1490"/><text class="tick" x="533" y="1512">4×</text>
+    <line class="grid" x1="610" y1="130" x2="610" y2="1490"/><text class="tick" x="603" y="1512">5×</text>
+    <line class="grid" x1="680" y1="130" x2="680" y2="1490"/><text class="tick" x="673" y="1512">6×</text>
+    <line class="grid" x1="750" y1="130" x2="750" y2="1490"/><text class="tick" x="743" y="1512">7×</text>
+    <line class="grid" x1="820" y1="130" x2="820" y2="1490"/><text class="tick" x="813" y="1512">8×</text>
+  </g>
+
+  <!-- Bars start at x=260; 70 pixels equals 1x. -->
+  <g transform="translate(0,145)">
+    <text class="group" x="40" y="12">map[string]int</text>
+    <text class="series" x="245" y="35" text-anchor="end">append</text><rect x="260" y="22" width="70" height="18" rx="4" fill="#50c878"/><text class="value" x="340" y="35">196.7 ns</text>
+    <text class="series" x="245" y="61" text-anchor="end">marshal</text><rect x="260" y="48" width="130" height="18" rx="4" fill="#5aa9e6"/><text class="value" x="400" y="61">365.6 ns</text>
+    <text class="series" x="245" y="87" text-anchor="end">stdlib</text><rect x="260" y="74" width="534" height="18" rx="4" fill="#ef8354"/><text class="value" x="804" y="87">1501 ns</text>
+    <text class="series" x="245" y="113" text-anchor="end">sonic</text><rect x="260" y="100" width="202" height="18" rx="4" fill="#b388eb"/><text class="value" x="472" y="113">568.7 ns</text>
+    <text class="series" x="245" y="139" text-anchor="end">sonic into</text><rect x="260" y="126" width="131" height="18" rx="4" fill="#f2c14e"/><text class="value" x="401" y="139">368.6 ns</text>
+  </g>
+  <g transform="translate(0,310)">
+    <text class="group" x="40" y="12">map[string][]int</text>
+    <text class="series" x="245" y="35" text-anchor="end">append</text><rect x="260" y="22" width="70" height="18" rx="4" fill="#50c878"/><text class="value" x="340" y="35">241.1 ns</text>
+    <text class="series" x="245" y="61" text-anchor="end">marshal</text><rect x="260" y="48" width="123" height="18" rx="4" fill="#5aa9e6"/><text class="value" x="393" y="61">423.4 ns</text>
+    <text class="series" x="245" y="87" text-anchor="end">stdlib</text><rect x="260" y="74" width="425" height="18" rx="4" fill="#ef8354"/><text class="value" x="695" y="87">1464 ns</text>
+    <text class="series" x="245" y="113" text-anchor="end">sonic</text><rect x="260" y="100" width="181" height="18" rx="4" fill="#b388eb"/><text class="value" x="451" y="113">623.3 ns</text>
+    <text class="series" x="245" y="139" text-anchor="end">sonic into</text><rect x="260" y="126" width="119" height="18" rx="4" fill="#f2c14e"/><text class="value" x="389" y="139">408.1 ns</text>
+  </g>
+  <g transform="translate(0,475)">
+    <text class="group" x="40" y="12">map[string]any</text>
+    <text class="series" x="245" y="35" text-anchor="end">append</text><rect x="260" y="22" width="70" height="18" rx="4" fill="#50c878"/><text class="value" x="340" y="35">334.6 ns</text>
+    <text class="series" x="245" y="61" text-anchor="end">marshal</text><rect x="260" y="48" width="111" height="18" rx="4" fill="#5aa9e6"/><text class="value" x="381" y="61">528.7 ns</text>
+    <text class="series" x="245" y="87" text-anchor="end">stdlib</text><rect x="260" y="74" width="424" height="18" rx="4" fill="#ef8354"/><text class="value" x="694" y="87">2029 ns</text>
+    <text class="series" x="245" y="113" text-anchor="end">sonic</text><rect x="260" y="100" width="144" height="18" rx="4" fill="#b388eb"/><text class="value" x="414" y="113">686.8 ns</text>
+    <text class="series" x="245" y="139" text-anchor="end">sonic into</text><rect x="260" y="126" width="113" height="18" rx="4" fill="#f2c14e"/><text class="value" x="383" y="139">541.2 ns</text>
+  </g>
+  <g transform="translate(0,640)">
+    <text class="group" x="40" y="12">[]int</text>
+    <text class="series" x="245" y="35" text-anchor="end">append</text><rect x="260" y="22" width="70" height="18" rx="4" fill="#50c878"/><text class="value" x="340" y="35">88.20 ns</text>
+    <text class="series" x="245" y="61" text-anchor="end">marshal</text><rect x="260" y="48" width="162" height="18" rx="4" fill="#5aa9e6"/><text class="value" x="432" y="61">204.3 ns</text>
+    <text class="series" x="245" y="87" text-anchor="end">stdlib</text><rect x="260" y="74" width="264" height="18" rx="4" fill="#ef8354"/><text class="value" x="534" y="87">332.3 ns</text>
+    <text class="series" x="245" y="113" text-anchor="end">sonic</text><rect x="260" y="100" width="250" height="18" rx="4" fill="#b388eb"/><text class="value" x="520" y="113">314.9 ns</text>
+    <text class="series" x="245" y="139" text-anchor="end">sonic into</text><rect x="260" y="126" width="153" height="18" rx="4" fill="#f2c14e"/><text class="value" x="423" y="139">192.5 ns</text>
+  </g>
+  <g transform="translate(0,805)">
+    <text class="group" x="40" y="12">float32</text>
+    <text class="series" x="245" y="35" text-anchor="end">append</text><rect x="260" y="22" width="70" height="18" rx="4" fill="#50c878"/><text class="value" x="340" y="35">37.76 ns</text>
+    <text class="series" x="245" y="61" text-anchor="end">marshal</text><rect x="260" y="48" width="133" height="18" rx="4" fill="#5aa9e6"/><text class="value" x="403" y="61">71.85 ns</text>
+    <text class="series" x="245" y="87" text-anchor="end">stdlib</text><rect x="260" y="74" width="175" height="18" rx="4" fill="#ef8354"/><text class="value" x="445" y="87">94.46 ns</text>
+    <text class="series" x="245" y="113" text-anchor="end">sonic</text><rect x="260" y="100" width="189" height="18" rx="4" fill="#b388eb"/><text class="value" x="459" y="113">102.0 ns</text>
+    <text class="series" x="245" y="139" text-anchor="end">sonic into</text><rect x="260" y="126" width="118" height="18" rx="4" fill="#f2c14e"/><text class="value" x="388" y="139">63.80 ns</text>
+  </g>
+  <g transform="translate(0,970)">
+    <text class="group" x="40" y="12">float64</text>
+    <text class="series" x="245" y="35" text-anchor="end">append</text><rect x="260" y="22" width="70" height="18" rx="4" fill="#50c878"/><text class="value" x="340" y="35">68.81 ns</text>
+    <text class="series" x="245" y="61" text-anchor="end">marshal</text><rect x="260" y="48" width="122" height="18" rx="4" fill="#5aa9e6"/><text class="value" x="392" y="61">120.3 ns</text>
+    <text class="series" x="245" y="87" text-anchor="end">stdlib</text><rect x="260" y="74" width="146" height="18" rx="4" fill="#ef8354"/><text class="value" x="416" y="87">143.7 ns</text>
+    <text class="series" x="245" y="113" text-anchor="end">sonic</text><rect x="260" y="100" width="116" height="18" rx="4" fill="#b388eb"/><text class="value" x="386" y="113">113.9 ns</text>
+    <text class="series" x="245" y="139" text-anchor="end">sonic into</text><rect x="260" y="126" width="74" height="18" rx="4" fill="#f2c14e"/><text class="value" x="344" y="139">73.02 ns</text>
+  </g>
+  <g transform="translate(0,1135)">
+    <text class="group" x="40" y="12">mixed struct</text>
+    <text class="series" x="245" y="35" text-anchor="end">append</text><rect x="260" y="22" width="70" height="18" rx="4" fill="#50c878"/><text class="value" x="340" y="35">284.3 ns</text>
+    <text class="series" x="245" y="61" text-anchor="end">marshal</text><rect x="260" y="48" width="143" height="18" rx="4" fill="#5aa9e6"/><text class="value" x="413" y="61">580.6 ns</text>
+    <text class="series" x="245" y="87" text-anchor="end">stdlib</text><rect x="260" y="74" width="281" height="18" rx="4" fill="#ef8354"/><text class="value" x="551" y="87">1140 ns</text>
+    <text class="series" x="245" y="113" text-anchor="end">sonic</text><rect x="260" y="100" width="166" height="18" rx="4" fill="#b388eb"/><text class="value" x="436" y="113">672.3 ns</text>
+    <text class="series" x="245" y="139" text-anchor="end">sonic into</text><rect x="260" y="126" width="139" height="18" rx="4" fill="#f2c14e"/><text class="value" x="409" y="139">565.8 ns</text>
+  </g>
+  <g transform="translate(0,1300)">
+    <text class="group" x="40" y="12">struct with []struct + metadata maps</text>
+    <text class="series" x="245" y="35" text-anchor="end">append</text><rect x="260" y="22" width="70" height="18" rx="4" fill="#50c878"/><text class="value" x="340" y="35">730.1 ns</text>
+    <text class="series" x="245" y="61" text-anchor="end">marshal</text><rect x="260" y="48" width="133" height="18" rx="4" fill="#5aa9e6"/><text class="value" x="403" y="61">1385 ns</text>
+    <text class="series" x="245" y="87" text-anchor="end">stdlib</text><rect x="260" y="74" width="282" height="18" rx="4" fill="#ef8354"/><text class="value" x="552" y="87">2939 ns</text>
+    <text class="series" x="245" y="113" text-anchor="end">sonic</text><rect x="260" y="100" width="140" height="18" rx="4" fill="#b388eb"/><text class="value" x="410" y="113">1465 ns</text>
+    <text class="series" x="245" y="139" text-anchor="end">sonic into</text><rect x="260" y="126" width="126" height="18" rx="4" fill="#f2c14e"/><text class="value" x="396" y="139">1312 ns</text>
+  </g>
+</svg>

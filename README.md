@@ -14,6 +14,33 @@ For like-for-like comparisons, `MarshalAppend` corresponds to Sonic's
 The append-style APIs can avoid the output allocation when the destination has
 enough capacity; the marshal-style APIs must return independently owned output.
 
+### Benchmark 3: specialized primitive-slice maps
+
+Benchmark 3 adds direct appenders for maps whose values are primitive slices,
+compacts cached struct-field metadata, and adds a nested struct-slice workload
+where every item contains a metadata map. The results are five-run medians on
+Go 1.26 with the SIMD experiment enabled.
+
+![Marshal benchmark 3 comparison](assets/benchmark3.svg)
+
+```sh
+GOAMD64=v3 GOEXPERIMENT=simd go test -benchmem -run='^$' -count=5 -bench='^(BenchmarkMarshalMapInt|BenchmarkMarshalMapIntSlice|BenchmarkMarshalMapAny|BenchmarkMarshalIntSlice|BenchmarkMarshalFloat32|BenchmarkMarshalFloat64|BenchmarkMarshalStruct|BenchmarkMarshalStructSlice)$'
+```
+
+| Workload | MarshalAppend | Marshal | encoding/json | Sonic Marshal | Sonic EncodeInto |
+|---|---:|---:|---:|---:|---:|
+| `map[string]int` | 196.7 ns | 365.6 ns | 1501 ns | 568.7 ns | 368.6 ns |
+| `map[string][]int` | 241.1 ns | 423.4 ns | 1464 ns | 623.3 ns | 408.1 ns |
+| `map[string]any` | 334.6 ns | 528.7 ns | 2029 ns | 686.8 ns | 541.2 ns |
+| `[]int` | 88.20 ns | 204.3 ns | 332.3 ns | 314.9 ns | 192.5 ns |
+| `float32` | 37.76 ns | 71.85 ns | 94.46 ns | 102.0 ns | 63.80 ns |
+| `float64` | 68.81 ns | 120.3 ns | 143.7 ns | 113.9 ns | 73.02 ns |
+| mixed struct | 284.3 ns | 580.6 ns | 1140 ns | 672.3 ns | 565.8 ns |
+| struct with `[]struct` and metadata maps | 730.1 ns | 1385 ns | 2939 ns | 1465 ns | 1312 ns |
+
+The complete Benchmark 3 output, including bytes and allocations per
+operation, is available in [`bench3.txt`](bench3.txt).
+
 ### Benchmark 2: improved SIMD string encoding
 
 Benchmark 2 was recorded after improving the SIMD string-escaping path. It

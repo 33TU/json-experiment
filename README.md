@@ -14,6 +14,34 @@ For like-for-like comparisons, `MarshalAppend` corresponds to Sonic's
 The append-style APIs can avoid the output allocation when the destination has
 enough capacity; the marshal-style APIs must return independently owned output.
 
+### Benchmark 4: current SIMD and SWAR string paths
+
+Benchmark 4 records the current implementation after separating string
+encoding into SIMD and SWAR files. SIMD builds process 16-byte chunks, while
+builds without the SIMD experiment use an eight-byte SWAR scanner. This run
+uses the SIMD path; it is a fresh end-to-end baseline rather than an isolated
+measurement of the SWAR fallback. Results are five-run medians on Go 1.26.
+
+![Marshal benchmark 4 comparison](assets/benchmark4.svg)
+
+```sh
+GOAMD64=v3 GOEXPERIMENT=simd go test -benchmem -run='^$' -count=5 -bench='^(BenchmarkMarshalMapInt|BenchmarkMarshalMapIntSlice|BenchmarkMarshalMapAny|BenchmarkMarshalIntSlice|BenchmarkMarshalFloat32|BenchmarkMarshalFloat64|BenchmarkMarshalStruct|BenchmarkMarshalStructSlice)$'
+```
+
+| Workload | MarshalAppend | Marshal | encoding/json | Sonic Marshal | Sonic EncodeInto |
+|---|---:|---:|---:|---:|---:|
+| `map[string]int` | 202.3 ns | 364.5 ns | 1393 ns | 546.0 ns | 373.3 ns |
+| `map[string][]int` | 229.6 ns | 406.2 ns | 1522 ns | 516.4 ns | 382.7 ns |
+| `map[string]any` | 332.0 ns | 517.8 ns | 1959 ns | 697.7 ns | 499.7 ns |
+| `[]int` | 86.95 ns | 177.2 ns | 322.8 ns | 277.3 ns | 172.1 ns |
+| `float32` | 37.36 ns | 72.04 ns | 93.78 ns | 97.97 ns | 61.67 ns |
+| `float64` | 68.88 ns | 124.0 ns | 146.6 ns | 127.2 ns | 69.13 ns |
+| mixed struct | 264.3 ns | 507.5 ns | 1074 ns | 680.5 ns | 565.3 ns |
+| struct with `[]struct` and metadata maps | 723.6 ns | 1421 ns | 3122 ns | 1826 ns | 1267 ns |
+
+The complete Benchmark 4 output, including bytes and allocations per
+operation, is available in [`bench4.txt`](bench4.txt).
+
 ### Benchmark 3: specialized primitive-slice maps
 
 Benchmark 3 adds direct appenders for maps whose values are primitive slices,

@@ -69,6 +69,54 @@ func AppendString(dst []byte, s string) []byte {
 	return append(dst, '"')
 }
 
+// AppendQuotedString appends the JSON representation of s encoded as a JSON string.
+func AppendQuotedString(dst []byte, s string) []byte {
+	dst = slices.Grow(dst, len(s)+6)
+	dst = append(dst, '"', '\\', '"')
+
+	data := unsafe.Pointer(unsafe.StringData(s))
+	start := 0
+	i := 0
+
+	// SWAR: Process 8 bytes at a time using bitwise operations to detect special characters.
+	for ; i+8 <= len(s); i += 8 {
+		word := *(*uint64)(unsafe.Add(data, i))
+		mask := hasByteLessThanWord(word, controlWord) |
+			hasByteWord(word, quoteWord) |
+			hasByteWord(word, backslashWord)
+
+		if mask == 0 {
+			continue
+		}
+
+		for j := i; j < i+8; j++ {
+			c := s[j]
+			if c >= 0x20 && c != '"' && c != '\\' {
+				continue
+			}
+
+			dst = append(dst, s[start:j]...)
+			dst = appendQuotedEscapedByte(dst, c)
+			start = j + 1
+		}
+	}
+
+	// Process the remaining bytes scalarly.
+	for ; i < len(s); i++ {
+		c := s[i]
+		if c >= 0x20 && c != '"' && c != '\\' {
+			continue
+		}
+
+		dst = append(dst, s[start:i]...)
+		dst = appendQuotedEscapedByte(dst, c)
+		start = i + 1
+	}
+
+	dst = append(dst, s[start:]...)
+	return append(dst, '\\', '"', '"')
+}
+
 // AppendStringHTML appends the HTML-safe JSON representation of s to dst.
 func AppendStringHTML(dst []byte, s string) []byte {
 	dst = slices.Grow(dst, len(s)+2)
@@ -120,10 +168,63 @@ func AppendStringHTML(dst []byte, s string) []byte {
 	return append(dst, '"')
 }
 
+// AppendQuotedStringHTML appends the HTML-safe JSON representation of s encoded as a JSON string.
+func AppendQuotedStringHTML(dst []byte, s string) []byte {
+	dst = slices.Grow(dst, len(s)+6)
+	dst = append(dst, '"', '\\', '"')
+
+	data := unsafe.Pointer(unsafe.StringData(s))
+	start := 0
+	i := 0
+
+	// SWAR: Process 8 bytes at a time using bitwise operations to detect special characters.
+	for ; i+8 <= len(s); i += 8 {
+		word := *(*uint64)(unsafe.Add(data, i))
+		mask := hasByteLessThanWord(word, controlWord) |
+			hasByteWord(word, quoteWord) |
+			hasByteWord(word, backslashWord) |
+			hasByteWord(word, lessWord) |
+			hasByteWord(word, greaterWord) |
+			hasByteWord(word, ampersandWord)
+
+		if mask == 0 {
+			continue
+		}
+
+		for j := i; j < i+8; j++ {
+			c := s[j]
+			if c >= 0x20 && c != '"' && c != '\\' && c != '<' && c != '>' && c != '&' {
+				continue
+			}
+
+			dst = append(dst, s[start:j]...)
+			dst = appendQuotedEscapedByte(dst, c)
+			start = j + 1
+		}
+	}
+
+	// Process the remaining bytes scalarly.
+	for ; i < len(s); i++ {
+		c := s[i]
+		if c >= 0x20 && c != '"' && c != '\\' && c != '<' && c != '>' && c != '&' {
+			continue
+		}
+
+		dst = append(dst, s[start:i]...)
+		dst = appendQuotedEscapedByte(dst, c)
+		start = i + 1
+	}
+
+	dst = append(dst, s[start:]...)
+	return append(dst, '\\', '"', '"')
+}
+
 func appendEscapedByte(dst []byte, c byte) []byte {
 	switch c {
-	case '\\', '"':
-		return append(dst, '\\', c)
+	case '\\':
+		return append(dst, '\\', '\\')
+	case '"':
+		return append(dst, '\\', '"')
 	case '\b':
 		return append(dst, '\\', 'b')
 	case '\f':
@@ -136,6 +237,27 @@ func appendEscapedByte(dst []byte, c byte) []byte {
 		return append(dst, '\\', 't')
 	default:
 		return append(dst, '\\', 'u', '0', '0', lowerHex[c>>4], lowerHex[c&0x0f])
+	}
+}
+
+func appendQuotedEscapedByte(dst []byte, c byte) []byte {
+	switch c {
+	case '"':
+		return append(dst, '\\', '\\', '\\', '"')
+	case '\\':
+		return append(dst, '\\', '\\', '\\', '\\')
+	case '\b':
+		return append(dst, '\\', '\\', 'b')
+	case '\f':
+		return append(dst, '\\', '\\', 'f')
+	case '\n':
+		return append(dst, '\\', '\\', 'n')
+	case '\r':
+		return append(dst, '\\', '\\', 'r')
+	case '\t':
+		return append(dst, '\\', '\\', 't')
+	default:
+		return append(dst, '\\', '\\', 'u', '0', '0', lowerHex[c>>4], lowerHex[c&0x0f])
 	}
 }
 

@@ -156,6 +156,79 @@ func TestMarshalAppend(t *testing.T) {
 	}
 }
 
+func TestMarshalStringTag(t *testing.T) {
+	t.Parallel()
+
+	value := struct {
+		Bool    bool    `json:"bool,string"`
+		Int     int64   `json:"int,string"`
+		Uint    uint64  `json:"uint,string"`
+		Float32 float32 `json:"float32,string"`
+		Float64 float64 `json:"float64,string"`
+		String  string  `json:"string,string"`
+	}{
+		Bool:    true,
+		Int:     math.MinInt64,
+		Uint:    math.MaxUint64,
+		Float32: 1.25,
+		Float64: 1e-7,
+		String:  "quote: \" slash: \\ newline:\n",
+	}
+
+	got, err := jsonexperiment.Marshal(value)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+	want, err := json.Marshal(value)
+	if err != nil {
+		t.Fatalf("json.Marshal: %v", err)
+	}
+
+	assertJSONEqual(t, got, want)
+}
+
+func TestMarshalOmitTags(t *testing.T) {
+	t.Parallel()
+
+	var innerPointer *int
+	outerPointer := &innerPointer
+
+	type nested struct {
+		Value int `json:"value"`
+	}
+	type value struct {
+		Bool              bool           `json:"bool,omitempty"`
+		Int               int            `json:"int,omitempty"`
+		String            string         `json:"string,omitempty"`
+		Slice             []int          `json:"slice,omitempty"`
+		Map               map[string]int `json:"map,omitempty"`
+		Pointer           *int           `json:"pointer,omitempty"`
+		NilDoublePointer  **int          `json:"nil_double_pointer,omitempty"`
+		KeepDoublePointer **int          `json:"keep_double_pointer,omitempty"`
+		ZeroStruct        nested         `json:"zero_struct,omitzero"`
+		KeepStruct        nested         `json:"keep_struct,omitempty"`
+		KeepSlice         []int          `json:"keep_slice,omitzero"`
+	}
+	testValue := value{
+		Slice:             []int{},
+		Map:               map[string]int{},
+		KeepDoublePointer: outerPointer,
+		KeepStruct:        nested{},
+		KeepSlice:         []int{},
+	}
+
+	got, err := jsonexperiment.Marshal(testValue)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+	want, err := json.Marshal(testValue)
+	if err != nil {
+		t.Fatalf("json.Marshal: %v", err)
+	}
+
+	assertJSONEqual(t, got, want)
+}
+
 func TestMarshalEscapeHTML(t *testing.T) {
 	t.Parallel()
 
@@ -291,8 +364,6 @@ func assertJSONEqual(t *testing.T, got, want []byte) {
 var sonicJson = sonic.ConfigFastest
 
 func BenchmarkMarshalMapInt(b *testing.B) {
-	var marshalResult []byte
-
 	values := map[string]int{
 		"minimum":   math.MinInt,
 		"negative":  -1_000_000,
@@ -303,58 +374,10 @@ func BenchmarkMarshalMapInt(b *testing.B) {
 		"maximum":   math.MaxInt,
 	}
 
-	b.Run("marshal_append", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(result[:0], values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("marshal", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.Marshal(values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("encoding_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = json.Marshal(values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = sonicJson.Marshal(values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_encode_into", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result = result[:0]
-			_ = sonicEncoder.EncodeInto(&result, values, 0)
-		}
-		marshalResult = result
-	})
-
-	runtime.KeepAlive(marshalResult)
+	benchmarkMarshalValue(b, values)
 }
 
 func BenchmarkMarshalMapIntSlice(b *testing.B) {
-	var marshalResult []byte
-
 	values := map[string][]int{
 		"negative": {math.MinInt, -1_000_000, -1},
 		"zero":     {0},
@@ -364,58 +387,10 @@ func BenchmarkMarshalMapIntSlice(b *testing.B) {
 		"nil":      nil,
 	}
 
-	b.Run("marshal_append", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(result[:0], values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("marshal", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.Marshal(values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("encoding_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = json.Marshal(values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = sonicJson.Marshal(values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_encode_into", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result = result[:0]
-			_ = sonicEncoder.EncodeInto(&result, values, 0)
-		}
-		marshalResult = result
-	})
-
-	runtime.KeepAlive(marshalResult)
+	benchmarkMarshalValue(b, values)
 }
 
 func BenchmarkMarshalMapAny(b *testing.B) {
-	var marshalResult []byte
-
 	values := map[string]any{
 		"bool":    true,
 		"int":     int(math.MinInt),
@@ -427,58 +402,10 @@ func BenchmarkMarshalMapAny(b *testing.B) {
 		"nil":     nil,
 	}
 
-	b.Run("marshal_append", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(result[:0], values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("marshal", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.Marshal(values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("encoding_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = json.Marshal(values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = sonicJson.Marshal(values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_encode_into", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result = result[:0]
-			_ = sonicEncoder.EncodeInto(&result, values, 0)
-		}
-		marshalResult = result
-	})
-
-	runtime.KeepAlive(marshalResult)
+	benchmarkMarshalValue(b, values)
 }
 
 func BenchmarkMarshalIntSlice(b *testing.B) {
-	var marshalResult []byte
-
 	values := []int{
 		math.MinInt,
 		-1_000_000,
@@ -489,164 +416,22 @@ func BenchmarkMarshalIntSlice(b *testing.B) {
 		math.MaxInt,
 	}
 
-	b.Run("marshal_append", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(result[:0], values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("marshal", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.Marshal(values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("encoding_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = json.Marshal(values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = sonicJson.Marshal(values)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_encode_into", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result = result[:0]
-			_ = sonicEncoder.EncodeInto(&result, values, 0)
-		}
-		marshalResult = result
-	})
-
-	runtime.KeepAlive(marshalResult)
+	benchmarkMarshalValue(b, values)
 }
 
 func BenchmarkMarshalFloat32(b *testing.B) {
-	var marshalResult []byte
 	value := float32(1.234567)
 
-	b.Run("marshal_append", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(result[:0], value)
-		}
-		marshalResult = result
-	})
-
-	b.Run("marshal", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.Marshal(value)
-		}
-		marshalResult = result
-	})
-
-	b.Run("encoding_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = json.Marshal(value)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = sonicJson.Marshal(value)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_encode_into", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result = result[:0]
-			_ = sonicEncoder.EncodeInto(&result, value, 0)
-		}
-		marshalResult = result
-	})
-
-	runtime.KeepAlive(marshalResult)
+	benchmarkMarshalValue(b, value)
 }
 
 func BenchmarkMarshalFloat64(b *testing.B) {
-	var marshalResult []byte
 	value := 1.2345678901234567
 
-	b.Run("marshal_append", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(result[:0], value)
-		}
-		marshalResult = result
-	})
-
-	b.Run("marshal", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.Marshal(value)
-		}
-		marshalResult = result
-	})
-
-	b.Run("encoding_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = json.Marshal(value)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = sonicJson.Marshal(value)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_encode_into", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result = result[:0]
-			_ = sonicEncoder.EncodeInto(&result, value, 0)
-		}
-		marshalResult = result
-	})
-
-	runtime.KeepAlive(marshalResult)
+	benchmarkMarshalValue(b, value)
 }
 
 func BenchmarkMarshalStruct(b *testing.B) {
-	var marshalResult []byte
-
 	value := struct {
 		ID       uint64            `json:"id"`
 		Name     string            `json:"name"`
@@ -668,58 +453,10 @@ func BenchmarkMarshalStruct(b *testing.B) {
 		},
 	}
 
-	b.Run("marshal_append", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.MarshalAppend(result[:0], value)
-		}
-		marshalResult = result
-	})
-
-	b.Run("marshal", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = jsonexperiment.Marshal(value)
-		}
-		marshalResult = result
-	})
-
-	b.Run("encoding_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = json.Marshal(value)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_json", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result, _ = sonicJson.Marshal(value)
-		}
-		marshalResult = result
-	})
-
-	b.Run("sonic_encode_into", func(b *testing.B) {
-		var result []byte
-		b.ReportAllocs()
-		for b.Loop() {
-			result = result[:0]
-			_ = sonicEncoder.EncodeInto(&result, value, 0)
-		}
-		marshalResult = result
-	})
-
-	runtime.KeepAlive(marshalResult)
+	benchmarkMarshalValue(b, value)
 }
 
 func BenchmarkMarshalStructSlice(b *testing.B) {
-	var marshalResult []byte
-
 	type itemMetadata map[string]string
 
 	type item struct {
@@ -745,6 +482,53 @@ func BenchmarkMarshalStructSlice(b *testing.B) {
 			{ID: math.MaxUint64, Name: "final item", Quantity: -1, Price: 4444.4444, Active: true, Metadata: itemMetadata{"color": "black", "size": "XL"}},
 		},
 	}
+
+	benchmarkMarshalValue(b, value)
+}
+
+func BenchmarkMarshalStructQuoted(b *testing.B) {
+	value := struct {
+		Bool    bool    `json:"bool,string"`
+		Int     int64   `json:"int,string"`
+		Uint    uint64  `json:"uint,string"`
+		Float32 float32 `json:"float32,string"`
+		Float64 float64 `json:"float64,string"`
+		String  string  `json:"string,string"`
+	}{
+		Bool:    true,
+		Int:     math.MinInt64,
+		Uint:    math.MaxUint64,
+		Float32: 1.25,
+		Float64: 1e-7,
+		String:  `quoted "benchmark" value`,
+	}
+
+	benchmarkMarshalValue(b, value)
+}
+
+func BenchmarkMarshalOmits(b *testing.B) {
+	value := struct {
+		EmptyBool   bool           `json:"empty_bool,omitempty"`
+		EmptyInt    int            `json:"empty_int,omitempty"`
+		EmptyString string         `json:"empty_string,omitempty"`
+		EmptySlice  []int          `json:"empty_slice,omitempty"`
+		EmptyMap    map[string]int `json:"empty_map,omitempty"`
+		KeepInt     int            `json:"keep_int,omitempty"`
+		KeepString  string         `json:"keep_string,omitempty"`
+		KeepSlice   []int          `json:"keep_slice,omitempty"`
+	}{
+		EmptySlice: []int{},
+		EmptyMap:   map[string]int{},
+		KeepInt:    math.MaxInt,
+		KeepString: "benchmark value",
+		KeepSlice:  []int{1, 2, 3},
+	}
+
+	benchmarkMarshalValue(b, value)
+}
+
+func benchmarkMarshalValue[T any](b *testing.B, value T) {
+	var marshalResult []byte
 
 	b.Run("marshal_append", func(b *testing.B) {
 		var result []byte

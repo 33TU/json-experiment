@@ -125,6 +125,45 @@ func TestAppendStringHTML(t *testing.T) {
 	}
 }
 
+func TestAppendQuotedString(t *testing.T) {
+	t.Parallel()
+
+	values := []string{"", "hello world", `quote: " slash: \\`, "\b\f\n\r\t\x00", "Hello, 世界", "<>&"}
+	for _, value := range values {
+		inner := internal.AppendString(nil, value)
+
+		var want bytes.Buffer
+		encoder := json.NewEncoder(&want)
+		encoder.SetEscapeHTML(false)
+		if err := encoder.Encode(string(inner)); err != nil {
+			t.Fatalf("encoding quoted string %q: %v", value, err)
+		}
+
+		got := internal.AppendQuotedString(nil, value)
+		if !bytes.Equal(got, bytes.TrimSuffix(want.Bytes(), []byte{'\n'})) {
+			t.Fatalf("AppendQuotedString(%q) = %q, want %q", value, got, want.Bytes())
+		}
+	}
+}
+
+func TestAppendQuotedStringHTML(t *testing.T) {
+	t.Parallel()
+
+	values := []string{"hello world", `<script>&"`, "\b\f\n\r\t\x00"}
+	for _, value := range values {
+		inner := internal.AppendStringHTML(nil, value)
+		want, err := json.Marshal(string(inner))
+		if err != nil {
+			t.Fatalf("encoding HTML-safe quoted string %q: %v", value, err)
+		}
+
+		got := internal.AppendQuotedStringHTML(nil, value)
+		if !bytes.Equal(got, want) {
+			t.Fatalf("AppendQuotedStringHTML(%q) = %q, want %q", value, got, want)
+		}
+	}
+}
+
 func TestAppendSlice(t *testing.T) {
 	t.Parallel()
 

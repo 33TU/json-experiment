@@ -39,6 +39,19 @@ GOAMD64=v3 GOEXPERIMENT=simd go test -benchmem -run='^$' -count=5 -bench='^(Benc
 | mixed struct | 264.3 ns | 507.5 ns | 1074 ns | 680.5 ns | 565.3 ns |
 | struct with `[]struct` and metadata maps | 723.6 ns | 1421 ns | 3122 ns | 1826 ns | 1267 ns |
 
+Median allocations per operation:
+
+| Workload | MarshalAppend | Marshal | encoding/json | Sonic Marshal | Sonic EncodeInto |
+|---|---:|---:|---:|---:|---:|
+| `map[string]int` | 0 | 1 | 16 | 3 | 2 |
+| `map[string][]int` | 0 | 1 | 14 | 3 | 2 |
+| `map[string]any` | 0 | 1 | 18 | 3 | 2 |
+| `[]int` | 0 | 1 | 2 | 3 | 2 |
+| `float32` | 0 | 1 | 1 | 2 | 1 |
+| `float64` | 0 | 1 | 1 | 2 | 1 |
+| mixed struct | 0 | 1 | 7 | 4 | 3 |
+| struct with `[]struct` and metadata maps | 0 | 1 | 22 | 7 | 6 |
+
 The complete Benchmark 4 output, including bytes and allocations per
 operation, is available in [`bench4.txt`](bench4.txt).
 
@@ -65,6 +78,19 @@ GOAMD64=v3 GOEXPERIMENT=simd go test -benchmem -run='^$' -count=5 -bench='^(Benc
 | `float64` | 68.81 ns | 120.3 ns | 143.7 ns | 113.9 ns | 73.02 ns |
 | mixed struct | 284.3 ns | 580.6 ns | 1140 ns | 672.3 ns | 565.8 ns |
 | struct with `[]struct` and metadata maps | 730.1 ns | 1385 ns | 2939 ns | 1465 ns | 1312 ns |
+
+Median allocations per operation:
+
+| Workload | MarshalAppend | Marshal | encoding/json | Sonic Marshal | Sonic EncodeInto |
+|---|---:|---:|---:|---:|---:|
+| `map[string]int` | 0 | 1 | 16 | 3 | 2 |
+| `map[string][]int` | 0 | 1 | 14 | 3 | 2 |
+| `map[string]any` | 0 | 1 | 18 | 3 | 2 |
+| `[]int` | 0 | 1 | 2 | 3 | 2 |
+| `float32` | 0 | 1 | 1 | 2 | 1 |
+| `float64` | 0 | 1 | 1 | 2 | 1 |
+| mixed struct | 0 | 1 | 7 | 4 | 3 |
+| struct with `[]struct` and metadata maps | 0 | 1 | 22 | 7 | 6 |
 
 The complete Benchmark 3 output, including bytes and allocations per
 operation, is available in [`bench3.txt`](bench3.txt).
@@ -97,8 +123,20 @@ Five-run median latency (lower is better):
 | `float64` | 69.18 ns | 118.1 ns | 144.3 ns | 126.8 ns | 79.98 ns |
 | mixed struct | 283.0 ns | 501.0 ns | 1067 ns | 705.8 ns | 444.7 ns |
 
+Median allocations per operation:
+
+| Workload | MarshalAppend | Marshal | encoding/json | Sonic Marshal | Sonic EncodeInto |
+|---|---:|---:|---:|---:|---:|
+| `map[string]int` | 0 | 1 | 16 | 3 | 2 |
+| `map[string][]int` | 2 | 3 | 14 | 3 | 2 |
+| `map[string]any` | 0 | 1 | 18 | 3 | 2 |
+| `[]int` | 0 | 1 | 2 | 3 | 2 |
+| `float32` | 0 | 1 | 1 | 2 | 1 |
+| `float64` | 0 | 1 | 1 | 2 | 1 |
+| mixed struct | 0 | 1 | 7 | 4 | 3 |
+
 The complete five-run output, including bytes and allocations per operation,
-is available in [`bench.txt`](bench.txt).
+is available in [`bench2.txt`](bench2.txt).
 
 ### Earlier single-run results
 

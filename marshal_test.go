@@ -67,6 +67,23 @@ func TestMarshal(t *testing.T) {
 		{"int any map", map[int]any{1: "one", 2: []int{2, 3}}},
 		{"uint any map", map[uint]any{1: true, 2: "two"}},
 		{"composite map value", map[string][]int{"numbers": {1, 2, 3}}},
+		{"named int slice map", map[string][]testNumber{"numbers": {1, 2, 3}}},
+		{"bool slice map", map[string][]bool{"values": {true, false}}},
+		{"float32 slice map", map[string][]float32{"values": {-1.25, 1e-7}}},
+		{"float64 slice map", map[string][]float64{"values": {-1.25, 1e-7}}},
+		{"string slice map", map[string][]string{"values": {"one", "two"}}},
+		{"int bool slice map", map[int][]bool{-1: {true, false}}},
+		{"int int slice map", map[int][]int16{-1: {-2, 3}}},
+		{"int uint slice map", map[int][]uint32{-1: {2, 3}}},
+		{"int float32 slice map", map[int][]float32{-1: {-1.25, 1e-7}}},
+		{"int float64 slice map", map[int][]float64{-1: {-1.25, 1e-7}}},
+		{"int string slice map", map[int][]string{-1: {"one", "two"}}},
+		{"uint bool slice map", map[uint][]bool{1: {true, false}}},
+		{"uint int slice map", map[uint][]int16{1: {-2, 3}}},
+		{"uint uint slice map", map[uint][]uint32{1: {2, 3}}},
+		{"uint float32 slice map", map[uint][]float32{1: {-1.25, 1e-7}}},
+		{"uint float64 slice map", map[uint][]float64{1: {-1.25, 1e-7}}},
+		{"uint string slice map", map[uint][]string{1: {"one", "two"}}},
 		{"pointer to map", mapPointer},
 		{"pointer chain to map", &mapPointer},
 		{"slice of maps", []map[string]int{{"one": 1}, nil, {"two": 2}}},
@@ -149,6 +166,8 @@ func TestMarshalError(t *testing.T) {
 		{"float32 NaN", float32(math.NaN())},
 		{"float64 positive infinity", math.Inf(1)},
 		{"float64 negative infinity", math.Inf(-1)},
+		{"int float slice infinity", map[int][]float64{1: {math.Inf(1)}}},
+		{"uint float slice NaN", map[uint][]float32{1: {float32(math.NaN())}}},
 		{"unsupported channel", make(chan int)},
 	}
 
@@ -569,6 +588,84 @@ func BenchmarkMarshalStruct(b *testing.B) {
 		Metadata: map[string]string{
 			"environment": "production",
 			"region":      "eu-north-1",
+		},
+	}
+
+	b.Run("marshal_append", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result, _ = jsonexperiment.MarshalAppend(result[:0], value)
+		}
+		marshalResult = result
+	})
+
+	b.Run("marshal", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result, _ = jsonexperiment.Marshal(value)
+		}
+		marshalResult = result
+	})
+
+	b.Run("encoding_json", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result, _ = json.Marshal(value)
+		}
+		marshalResult = result
+	})
+
+	b.Run("sonic_json", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result, _ = sonicJson.Marshal(value)
+		}
+		marshalResult = result
+	})
+
+	b.Run("sonic_encode_into", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result = result[:0]
+			_ = sonicEncoder.EncodeInto(&result, value, 0)
+		}
+		marshalResult = result
+	})
+
+	runtime.KeepAlive(marshalResult)
+}
+
+func BenchmarkMarshalStructSlice(b *testing.B) {
+	var marshalResult []byte
+
+	type itemMetadata map[string]string
+
+	type item struct {
+		ID       uint64       `json:"id"`
+		Name     string       `json:"name"`
+		Quantity int          `json:"quantity"`
+		Price    float64      `json:"price"`
+		Active   bool         `json:"active"`
+		Metadata itemMetadata `json:"metadata"`
+	}
+
+	value := struct {
+		OrderID uint64 `json:"order_id"`
+		Owner   string `json:"owner"`
+		Items   []item `json:"items"`
+	}{
+		OrderID: math.MaxUint64,
+		Owner:   "benchmark owner",
+		Items: []item{
+			{ID: 1, Name: "first item", Quantity: 1, Price: 1.1, Active: true, Metadata: itemMetadata{"color": "red", "size": "M"}},
+			{ID: 2, Name: "second item", Quantity: 10, Price: 22.22, Active: true, Metadata: itemMetadata{"color": "blue", "size": "L"}},
+			{ID: 3, Name: "third item", Quantity: math.MaxInt, Price: 333.333, Active: false, Metadata: itemMetadata{"color": "green", "size": "S"}},
+			{ID: math.MaxUint64, Name: "final item", Quantity: -1, Price: 4444.4444, Active: true, Metadata: itemMetadata{"color": "black", "size": "XL"}},
 		},
 	}
 

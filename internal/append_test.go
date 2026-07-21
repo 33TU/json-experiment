@@ -176,6 +176,12 @@ func TestAppendMap(t *testing.T) {
 	uintFloat64Values := map[uint16]float64{1: -1.25, 2: 1e-7}
 	uintFloat64Result, uintFloat64Err := internal.AppendUintFloat64Map(nil, uintFloat64Values)
 
+	float32SliceValues := map[string][]float32{"values": {-1.25, 1e-7}}
+	float32SliceResult, float32SliceErr := internal.AppendStringFloat32SliceMap(nil, float32SliceValues)
+
+	float64SliceValues := map[string][]float64{"values": {-1.25, 1e-7}}
+	float64SliceResult, float64SliceErr := internal.AppendStringFloat64SliceMap(nil, float64SliceValues)
+
 	tests := []struct {
 		name  string
 		got   []byte
@@ -188,6 +194,14 @@ func TestAppendMap(t *testing.T) {
 		{"float32", float32Result, float32Err, float32Values},
 		{"float64", float64Result, float64Err, float64Values},
 		{"string", internal.AppendStringStringMap(nil, map[string]string{`key"`: "line\nvalue"}), nil, map[string]string{`key"`: "line\nvalue"}},
+		{"bool slice", internal.AppendStringBoolSliceMap(nil, map[string][]bool{"values": {true, false}}), nil, map[string][]bool{"values": {true, false}}},
+		{"int slice", internal.AppendStringIntSliceMap(nil, map[string][]int16{"values": {-1, 0, 1}}), nil, map[string][]int16{"values": {-1, 0, 1}}},
+		{"uint slice", internal.AppendStringUintSliceMap(nil, map[string][]uint32{"values": {0, 1, 2}}), nil, map[string][]uint32{"values": {0, 1, 2}}},
+		{"float32 slice", float32SliceResult, float32SliceErr, float32SliceValues},
+		{"float64 slice", float64SliceResult, float64SliceErr, float64SliceValues},
+		{"string slice", internal.AppendStringStringSliceMap(nil, map[string][]string{"values": {"one", "two"}}), nil, map[string][]string{"values": {"one", "two"}}},
+		{"nil int slice map", internal.AppendStringIntSliceMap[int](nil, nil), nil, map[string][]int(nil)},
+		{"empty uint slice map", internal.AppendStringUintSliceMap(nil, map[string][]uint{}), nil, map[string][]uint{}},
 		{"nil", internal.AppendStringIntMap[int](nil, nil), nil, map[string]int(nil)},
 		{"empty", internal.AppendStringIntMap(nil, map[string]int{}), nil, map[string]int{}},
 		{"int key bool", internal.AppendIntBoolMap(nil, map[int8]bool{-1: true, 2: false}), nil, map[int8]bool{-1: true, 2: false}},
@@ -234,6 +248,12 @@ func TestAppendMap(t *testing.T) {
 	}
 	if _, err := internal.AppendStringFloat64Map(nil, map[string]float64{"invalid": math.Inf(1)}); err == nil {
 		t.Fatal("AppendStringFloat64Map with infinity returned nil error")
+	}
+	if _, err := internal.AppendStringFloat32SliceMap(nil, map[string][]float32{"invalid": {float32(math.NaN())}}); err == nil {
+		t.Fatal("AppendStringFloat32SliceMap with NaN returned nil error")
+	}
+	if _, err := internal.AppendStringFloat64SliceMap(nil, map[string][]float64{"invalid": {math.Inf(1)}}); err == nil {
+		t.Fatal("AppendStringFloat64SliceMap with infinity returned nil error")
 	}
 }
 

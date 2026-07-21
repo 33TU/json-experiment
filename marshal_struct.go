@@ -8,6 +8,13 @@ import (
 	"github.com/33TU/json-experiment/internal"
 )
 
+type structField struct {
+	key     []byte
+	offset  uintptr
+	marshal marshalFn
+	isMap   bool
+}
+
 func jsonFieldName(field reflect.StructField) (string, bool) {
 	if !field.IsExported() {
 		return "", false
@@ -26,8 +33,75 @@ func jsonFieldName(field reflect.StructField) (string, bool) {
 	return name, true
 }
 
+func fieldMarshalFn(typ reflect.Type, kind reflect.Kind) marshalFn {
+	switch kind {
+	case reflect.Bool:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendBool(dst, *(*bool)(ptr)), nil
+		}
+	case reflect.Int:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendInt(dst, *(*int)(ptr)), nil
+		}
+	case reflect.Int8:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendInt(dst, *(*int8)(ptr)), nil
+		}
+	case reflect.Int16:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendInt(dst, *(*int16)(ptr)), nil
+		}
+	case reflect.Int32:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendInt(dst, *(*int32)(ptr)), nil
+		}
+	case reflect.Int64:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendInt(dst, *(*int64)(ptr)), nil
+		}
+	case reflect.Uint:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendUint(dst, *(*uint)(ptr)), nil
+		}
+	case reflect.Uint8:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendUint(dst, *(*uint8)(ptr)), nil
+		}
+	case reflect.Uint16:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendUint(dst, *(*uint16)(ptr)), nil
+		}
+	case reflect.Uint32:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendUint(dst, *(*uint32)(ptr)), nil
+		}
+	case reflect.Uint64:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendUint(dst, *(*uint64)(ptr)), nil
+		}
+	case reflect.Uintptr:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendUint(dst, *(*uintptr)(ptr)), nil
+		}
+	case reflect.Float32:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendFloat32(dst, *(*float32)(ptr))
+		}
+	case reflect.Float64:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendFloat64(dst, *(*float64)(ptr))
+		}
+	case reflect.String:
+		return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
+			return internal.AppendString(dst, *(*string)(ptr)), nil
+		}
+	default:
+		return getOrCreateMarshalFn(typ)
+	}
+}
+
 func createStructMarshalFn(typ reflect.Type) marshalFn {
-	fieldFns := make([]marshalFn, 0, typ.NumField())
+	fields := make([]structField, 0, typ.NumField())
 
 	for i := range typ.NumField() {
 		field := typ.Field(i)
@@ -37,111 +111,25 @@ func createStructMarshalFn(typ reflect.Type) marshalFn {
 			continue
 		}
 
-		fieldKey := internal.AppendString(nil, fieldName)
+		fieldKey := make([]byte, 0, len(fieldName)+4)
+		if len(fields) != 0 {
+			fieldKey = append(fieldKey, ',')
+		}
+		fieldKey = internal.AppendString(fieldKey, fieldName)
 		fieldKey = append(fieldKey, ':')
 
-		fieldType := field.Type
-		fieldKind := fieldType.Kind()
-		fieldOffset := field.Offset
+		fieldKind := field.Type.Kind()
+		fieldFn := fieldMarshalFn(field.Type, fieldKind)
 
-		var fieldFn marshalFn
-
-		switch fieldKind {
-		case reflect.Bool:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendBool(dst, *(*bool)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		case reflect.Int:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendInt(dst, *(*int)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		case reflect.Int8:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendInt(dst, *(*int8)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		case reflect.Int16:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendInt(dst, *(*int16)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		case reflect.Int32:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendInt(dst, *(*int32)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		case reflect.Int64:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendInt(dst, *(*int64)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		case reflect.Uint:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendUint(dst, *(*uint)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		case reflect.Uint8:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendUint(dst, *(*uint8)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		case reflect.Uint16:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendUint(dst, *(*uint16)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		case reflect.Uint32:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendUint(dst, *(*uint32)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		case reflect.Uint64:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendUint(dst, *(*uint64)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		case reflect.Uintptr:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendUint(dst, *(*uintptr)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		case reflect.Float32:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendFloat32(dst, *(*float32)(unsafe.Add(ptr, fieldOffset)))
-			}
-		case reflect.Float64:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendFloat64(dst, *(*float64)(unsafe.Add(ptr, fieldOffset)))
-			}
-		case reflect.String:
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-				return internal.AppendString(dst, *(*string)(unsafe.Add(ptr, fieldOffset))), nil
-			}
-		default:
-			valueFn := getOrCreateMarshalFn(fieldType)
-			fieldIsMap := fieldKind == reflect.Map
-
-			fieldFn = func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
-				dst = append(dst, fieldKey...)
-
-				fieldPtr := unsafe.Add(ptr, fieldOffset)
-				if fieldIsMap {
-					fieldPtr = *(*unsafe.Pointer)(fieldPtr)
-				}
-
-				return valueFn(dst, fieldPtr)
-			}
-		}
-
-		fieldFns = append(fieldFns, fieldFn)
+		fields = append(fields, structField{
+			key:     fieldKey,
+			offset:  field.Offset,
+			marshal: fieldFn,
+			isMap:   fieldKind == reflect.Map,
+		})
 	}
 
-	if len(fieldFns) == 0 {
+	if len(fields) == 0 {
 		return func(dst []byte, _ unsafe.Pointer) ([]byte, error) {
 			return append(dst, "{}"...), nil
 		}
@@ -149,16 +137,21 @@ func createStructMarshalFn(typ reflect.Type) marshalFn {
 
 	return func(dst []byte, ptr unsafe.Pointer) ([]byte, error) {
 		dst = append(dst, '{')
-		for _, fieldFn := range fieldFns {
-			var err error
-			if dst, err = fieldFn(dst, ptr); err != nil {
-				return dst, err
+
+		for _, field := range fields {
+			dst = append(dst, field.key...)
+
+			fieldPtr := unsafe.Add(ptr, field.offset)
+			if field.isMap {
+				fieldPtr = *(*unsafe.Pointer)(fieldPtr)
 			}
 
-			dst = append(dst, ',')
+			var err error
+			if dst, err = field.marshal(dst, fieldPtr); err != nil {
+				return dst, err
+			}
 		}
-		dst[len(dst)-1] = '}'
 
-		return dst, nil
+		return append(dst, '}'), nil
 	}
 }

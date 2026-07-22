@@ -6,6 +6,7 @@ import (
 	"math"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -34,6 +35,44 @@ func TestAppendPrimitive(t *testing.T) {
 				t.Fatalf("got %q, want %q", tt.got, tt.want)
 			}
 		})
+	}
+}
+
+func TestAppendJeaiii(t *testing.T) {
+	t.Parallel()
+
+	values := []uint64{
+		0, 1, 9, 10, 11, 99, 100, 101, 999, 1_000, 1_001,
+		9_999, 10_000, 99_999, 100_000, 999_999, 1_000_000,
+		9_999_999, 10_000_000, 99_999_999, 100_000_000,
+		999_999_999, 1_000_000_000, math.MaxUint32,
+		9_999_999_999, 10_000_000_000, 99_999_999_999,
+		999_999_999_999_999_999, 1_000_000_000_000_000_000,
+		math.MaxUint64,
+	}
+
+	state := uint64(0x9e3779b97f4a7c15)
+	for range 1_000_000 {
+		state ^= state << 7
+		state ^= state >> 9
+		state ^= state << 8
+		values = append(values, state)
+	}
+
+	for _, value := range values {
+		got := internal.AppendUintJeaiii([]byte("prefix:"), value)
+		want := strconv.AppendUint([]byte("prefix:"), value, 10)
+		if !bytes.Equal(got, want) {
+			t.Fatalf("AppendUintJeaiii(%d) = %q, want %q", value, got, want)
+		}
+	}
+
+	for _, value := range []int64{math.MinInt64, -1, 0, 1, math.MaxInt64} {
+		got := internal.AppendIntJeaiii([]byte("prefix:"), value)
+		want := strconv.AppendInt([]byte("prefix:"), value, 10)
+		if !bytes.Equal(got, want) {
+			t.Fatalf("AppendIntJeaiii(%d) = %q, want %q", value, got, want)
+		}
 	}
 }
 
@@ -358,6 +397,16 @@ func BenchmarkAppendInt(b *testing.B) {
 		appendResult = result
 	})
 
+	b.Run("strconv", func(b *testing.B) {
+		dst := make([]byte, 0, 32)
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result = strconv.AppendInt(dst[:0], value, 10)
+		}
+		appendResult = result
+	})
+
 	b.Run("encoding_json", func(b *testing.B) {
 		var result []byte
 		b.ReportAllocs()
@@ -383,6 +432,16 @@ func BenchmarkAppendUint(b *testing.B) {
 		appendResult = result
 	})
 
+	b.Run("strconv", func(b *testing.B) {
+		dst := make([]byte, 0, 32)
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result = strconv.AppendUint(dst[:0], value, 10)
+		}
+		appendResult = result
+	})
+
 	b.Run("encoding_json", func(b *testing.B) {
 		var result []byte
 		b.ReportAllocs()
@@ -391,6 +450,47 @@ func BenchmarkAppendUint(b *testing.B) {
 		}
 		appendResult = result
 	})
+
+	runtime.KeepAlive(appendResult)
+}
+
+func BenchmarkAppendUintWidths(b *testing.B) {
+	benchmarks := []struct {
+		name  string
+		value uint64
+	}{
+		{"1_digit", 7},
+		{"2_digits", 42},
+		{"4_digits", 1_234},
+		{"8_digits", 12_345_678},
+		{"10_digits", 4_000_000_000},
+		{"16_digits", 1_234_567_890_123_456},
+		{"20_digits", math.MaxUint64},
+	}
+
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func(b *testing.B) {
+			b.Run("internal", func(b *testing.B) {
+				dst := make([]byte, 0, 32)
+				var result []byte
+				b.ReportAllocs()
+				for b.Loop() {
+					result = internal.AppendUint(dst[:0], bm.value)
+				}
+				appendResult = result
+			})
+
+			b.Run("strconv", func(b *testing.B) {
+				dst := make([]byte, 0, 32)
+				var result []byte
+				b.ReportAllocs()
+				for b.Loop() {
+					result = strconv.AppendUint(dst[:0], bm.value, 10)
+				}
+				appendResult = result
+			})
+		})
+	}
 
 	runtime.KeepAlive(appendResult)
 }

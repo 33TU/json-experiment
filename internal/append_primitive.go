@@ -29,12 +29,12 @@ func AppendBool(dst []byte, v bool) []byte {
 
 // AppendInt appends the base-10 JSON representation of v to dst.
 func AppendInt[T signedInteger](dst []byte, v T) []byte {
-	return strconv.AppendInt(dst, int64(v), 10)
+	return AppendIntJeaiii(dst, int64(v))
 }
 
 // AppendUint appends the base-10 JSON representation of v to dst.
 func AppendUint[T unsignedInteger](dst []byte, v T) []byte {
-	return strconv.AppendUint(dst, uint64(v), 10)
+	return AppendUintJeaiii(dst, uint64(v))
 }
 
 // AppendFloat32 appends the JSON representation of v to dst.

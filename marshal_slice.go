@@ -49,7 +49,7 @@ func createSliceMarshalFn(typ reflect.Type) marshalFn {
 		}
 	case reflect.Uint8:
 		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendUintSlice(dst, *(*[]uint8)(ptr)), nil
+			return internal.AppendByteSliceBase64(dst, *(*[]byte)(ptr)), nil
 		}
 	case reflect.Uint16:
 		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {

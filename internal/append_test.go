@@ -148,6 +148,138 @@ func TestAppendString(t *testing.T) {
 	}
 }
 
+func TestAppendByteSliceBase64(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		src  []byte
+		want string
+	}{
+		{"nil", nil, "null"},
+		{"empty", []byte{}, `""`},
+		{"text", []byte("hello"), `"aGVsbG8="`},
+		{"standard alphabet", []byte{0xfb, 0xff}, `"+/8="`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := internal.AppendByteSliceBase64([]byte("prefix:"), tt.src)
+			if want := "prefix:" + tt.want; string(got) != want {
+				t.Fatalf("AppendByteSliceBase64() = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+func TestAppendByteSliceBase64URL(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		src  []byte
+		want string
+	}{
+		{"nil", nil, "null"},
+		{"empty", []byte{}, `""`},
+		{"text", []byte("hello"), `"aGVsbG8="`},
+		{"URL-safe alphabet", []byte{0xfb, 0xff}, `"-_8="`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := internal.AppendByteSliceBase64URL([]byte("prefix:"), tt.src)
+			if want := "prefix:" + tt.want; string(got) != want {
+				t.Fatalf("AppendByteSliceBase64URL() = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+func TestAppendByteSliceBase32(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		src  []byte
+		want string
+	}{
+		{"nil", nil, "null"},
+		{"empty", []byte{}, `""`},
+		{"text", []byte("hello"), `"NBSWY3DP"`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := internal.AppendByteSliceBase32([]byte("prefix:"), tt.src)
+			if want := "prefix:" + tt.want; string(got) != want {
+				t.Fatalf("AppendByteSliceBase32() = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+func TestAppendByteSliceBase32Hex(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		src  []byte
+		want string
+	}{
+		{"nil", nil, "null"},
+		{"empty", []byte{}, `""`},
+		{"text", []byte("hello"), `"D1IMOR3F"`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := internal.AppendByteSliceBase32Hex([]byte("prefix:"), tt.src)
+			if want := "prefix:" + tt.want; string(got) != want {
+				t.Fatalf("AppendByteSliceBase32Hex() = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+func TestAppendByteSliceBase16(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		src  []byte
+		want string
+	}{
+		{"nil", nil, "null"},
+		{"empty", []byte{}, `""`},
+		{"bytes", []byte{0x00, 0xab, 0xff}, `"00abff"`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := internal.AppendByteSliceBase16([]byte("prefix:"), tt.src)
+			if want := "prefix:" + tt.want; string(got) != want {
+				t.Fatalf("AppendByteSliceBase16() = %q, want %q", got, want)
+			}
+
+			got = internal.AppendByteSliceHex([]byte("prefix:"), tt.src)
+			if want := "prefix:" + tt.want; string(got) != want {
+				t.Fatalf("AppendByteSliceHex() = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
 func TestAppendValidUTF8(t *testing.T) {
 	tests := []struct {
 		name string
@@ -158,8 +290,8 @@ func TestAppendValidUTF8(t *testing.T) {
 		{name: "ASCII", src: []byte("hello"), want: "hello"},
 		{name: "Unicode", src: []byte("Hello, 世界"), want: "Hello, 世界"},
 		{name: "replacement rune", src: []byte("a\uFFFDb"), want: "a\uFFFDb"},
-		{name: "invalid byte", src: []byte{'a', 0xff, 'b'}, want: `a\ufffdb`},
-		{name: "malformed sequence", src: []byte{0xe2, 0x28, 0xa1}, want: `\ufffd(\ufffd`},
+		{name: "invalid byte", src: []byte{'a', 0xff, 'b'}, want: "a\uFFFDb"},
+		{name: "malformed sequence", src: []byte{0xe2, 0x28, 0xa1}, want: "\uFFFD(\uFFFD"},
 	}
 
 	for _, tt := range tests {

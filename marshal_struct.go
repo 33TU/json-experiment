@@ -1,6 +1,7 @@
 package jsonexperiment
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"unsafe"
@@ -28,7 +29,7 @@ type structField struct {
 	isMap   bool
 }
 
-func parseJSONTag(tag string) (name string, flags structFieldFlags) {
+func parseJSONTag(tag string) (name string, flags structFieldFlags, format string, hasFormat bool) {
 	name, options, _ := strings.Cut(tag, ",")
 
 	for options != "" {
@@ -42,10 +43,15 @@ func parseJSONTag(tag string) (name string, flags structFieldFlags) {
 			flags |= structFieldOmitZero
 		case "string":
 			flags |= structFieldString
+		default:
+			if value, ok := strings.CutPrefix(option, "format:"); ok {
+				format = value
+				hasFormat = true
+			}
 		}
 	}
 
-	return name, flags
+	return name, flags, format, hasFormat
 }
 
 func fieldOmitFn(typ reflect.Type, kind reflect.Kind, omitEmpty, omitZero bool) omitFn {
@@ -234,6 +240,49 @@ func fieldMarshalFn(typ reflect.Type, kind reflect.Kind) marshalFn {
 	}
 }
 
+func fieldFormatMarshalFn(typ reflect.Type, format string) marshalFn {
+	if typ.Kind() != reflect.Slice ||
+		typ.Elem().Kind() != reflect.Uint8 ||
+		typ.Elem().PkgPath() != "" {
+		return invalidFormatMarshalFn(typ, format)
+	}
+
+	switch format {
+	case "base64":
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
+			return internal.AppendByteSliceBase64(dst, *(*[]byte)(ptr)), nil
+		}
+	case "base64url":
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
+			return internal.AppendByteSliceBase64URL(dst, *(*[]byte)(ptr)), nil
+		}
+	case "base32":
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
+			return internal.AppendByteSliceBase32(dst, *(*[]byte)(ptr)), nil
+		}
+	case "base32hex":
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
+			return internal.AppendByteSliceBase32Hex(dst, *(*[]byte)(ptr)), nil
+		}
+	case "base16", "hex":
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
+			return internal.AppendByteSliceBase16(dst, *(*[]byte)(ptr)), nil
+		}
+	case "array":
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
+			return internal.AppendUintSlice(dst, *(*[]byte)(ptr)), nil
+		}
+	default:
+		return invalidFormatMarshalFn(typ, format)
+	}
+}
+
+func invalidFormatMarshalFn(typ reflect.Type, format string) marshalFn {
+	return func(dst []byte, _ unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
+		return dst, fmt.Errorf("jsonexperiment: invalid format %q for type %s", format, typ)
+	}
+}
+
 // fieldStringMarshalFn returns a marshal function for a struct field with the "string" flag.
 func fieldStringMarshalFn(typ reflect.Type, kind reflect.Kind) marshalFn {
 	switch kind {
@@ -353,7 +402,7 @@ func createStructMarshalFn(typ reflect.Type) marshalFn {
 		fieldKind := field.Type.Kind()
 
 		// Get the JSON field fieldName and check if the field should be ignored
-		fieldName, flags := parseJSONTag(field.Tag.Get("json"))
+		fieldName, flags, format, hasFormat := parseJSONTag(field.Tag.Get("json"))
 		if fieldName == "-" {
 			continue
 		}
@@ -373,7 +422,9 @@ func createStructMarshalFn(typ reflect.Type) marshalFn {
 
 		// Determine the marshal function for the field's type
 		var fieldFn marshalFn
-		if flags&structFieldString != 0 {
+		if hasFormat {
+			fieldFn = fieldFormatMarshalFn(field.Type, format)
+		} else if flags&structFieldString != 0 {
 			fieldFn = fieldStringMarshalFn(field.Type, fieldKind)
 		} else {
 			fieldFn = fieldMarshalFn(field.Type, fieldKind)

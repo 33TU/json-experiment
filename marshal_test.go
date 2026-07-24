@@ -27,6 +27,8 @@ func (n testNumber) number() int {
 	return int(n)
 }
 
+type testByte byte
+
 type allMarshalers struct{}
 
 var (
@@ -87,6 +89,8 @@ func TestMarshal(t *testing.T) {
 		{"nil pointer", (*int)(nil)},
 		{"array", [3]int{-1, 0, 1}},
 		{"slice", []string{"one", "two"}},
+		{"byte slice", []byte{0, 1, 255}},
+		{"named byte slice", []testByte{0, 1, 255}},
 		{"non-empty interface slice", []numberInterface{testNumber(1), testNumber(2)}},
 		{"nil slice", []int(nil)},
 		{"empty slice", []int{}},
@@ -247,6 +251,80 @@ func TestMarshalStringTag(t *testing.T) {
 	}
 
 	assertJSONEqual(t, got, want)
+}
+
+func TestMarshalByteSliceFormat(t *testing.T) {
+	t.Parallel()
+
+	type formattedBytes struct {
+		Base64    []byte `json:"base64,format:base64"`
+		Base64URL []byte `json:"base64url,format:base64url"`
+		Base32    []byte `json:"base32,format:base32"`
+		Base32Hex []byte `json:"base32hex,format:base32hex"`
+		Base16    []byte `json:"base16,format:base16"`
+		Hex       []byte `json:"hex,format:hex"`
+		Array     []byte `json:"array,format:array"`
+		Nil       []byte `json:"nil,format:hex"`
+	}
+
+	value := []byte{0xfb, 0xff}
+	got, err := jsonexperiment.Marshal(formattedBytes{
+		Base64:    value,
+		Base64URL: value,
+		Base32:    value,
+		Base32Hex: value,
+		Base16:    value,
+		Hex:       value,
+		Array:     value,
+	})
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+
+	want := []byte(
+		`{"base64":"+/8=","base64url":"-_8=","base32":"7P7Q====",` +
+			`"base32hex":"VFVG====","base16":"fbff","hex":"fbff",` +
+			`"array":[251,255],"nil":null}`,
+	)
+	if !bytes.Equal(got, want) {
+		t.Fatalf("Marshal = %s, want %s", got, want)
+	}
+}
+
+func TestMarshalByteSliceFormatError(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		value any
+	}{
+		{
+			"unknown format",
+			struct {
+				Data []byte `json:",format:unknown"`
+			}{},
+		},
+		{
+			"empty format",
+			struct {
+				Data []byte `json:",format:"`
+			}{},
+		},
+		{
+			"unsupported type",
+			struct {
+				Data string `json:",format:hex"`
+			}{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := jsonexperiment.Marshal(tt.value); err == nil {
+				t.Fatal("Marshal error = nil")
+			}
+		})
+	}
 }
 
 func TestMarshalOmitTags(t *testing.T) {
@@ -738,6 +816,38 @@ func BenchmarkTextMarshaler(b *testing.B) {
 	value := textMarshaler{}
 
 	benchmarkMarshalValue(b, value)
+}
+
+func BenchmarkJsonMarshaler(b *testing.B) {
+	value := jsonMarshaller{}
+
+	benchmarkMarshalValue(b, value)
+}
+
+func BenchmarkAllMarshalers(b *testing.B) {
+	var marshalResult []byte
+
+	value := allMarshalers{}
+
+	b.Run("marshal_append", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result, _ = jsonexperiment.MarshalAppend(result[:0], value)
+		}
+		marshalResult = result
+	})
+
+	b.Run("marshal", func(b *testing.B) {
+		var result []byte
+		b.ReportAllocs()
+		for b.Loop() {
+			result, _ = jsonexperiment.Marshal(value)
+		}
+		marshalResult = result
+	})
+
+	runtime.KeepAlive(marshalResult)
 }
 
 func benchmarkMarshalValue[T any](b *testing.B, value T) {

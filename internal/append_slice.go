@@ -1,5 +1,11 @@
 package internal
 
+import (
+	"encoding/base32"
+	"encoding/base64"
+	"encoding/hex"
+)
+
 // AppendBoolSlice appends the JSON representation of values to dst.
 func AppendBoolSlice(dst []byte, values []bool) []byte {
 	if values == nil {
@@ -141,4 +147,70 @@ func AppendStringSliceHTML(dst []byte, values []string) []byte {
 	dst[len(dst)-1] = ']'
 
 	return dst
+}
+
+// AppendByteSliceBase64 appends src as a standard Base64-encoded JSON string.
+// A nil src is encoded as null.
+func AppendByteSliceBase64(dst, src []byte) []byte {
+	if src == nil {
+		return AppendNull(dst)
+	}
+
+	dst = append(dst, '"')
+	dst = base64.StdEncoding.AppendEncode(dst, src)
+	return append(dst, '"')
+}
+
+// AppendByteSliceBase64URL appends src as a URL-safe Base64-encoded JSON string.
+// A nil src is encoded as null.
+func AppendByteSliceBase64URL(dst, src []byte) []byte {
+	if src == nil {
+		return AppendNull(dst)
+	}
+
+	dst = append(dst, '"')
+	dst = base64.URLEncoding.AppendEncode(dst, src)
+	return append(dst, '"')
+}
+
+// AppendByteSliceBase32 appends src as a standard Base32-encoded JSON string.
+// A nil src is encoded as null.
+func AppendByteSliceBase32(dst, src []byte) []byte {
+	if src == nil {
+		return AppendNull(dst)
+	}
+
+	dst = append(dst, '"')
+	dst = base32.StdEncoding.AppendEncode(dst, src)
+	return append(dst, '"')
+}
+
+// AppendByteSliceBase32Hex appends src as an extended-hex Base32-encoded JSON string.
+// A nil src is encoded as null.
+func AppendByteSliceBase32Hex(dst, src []byte) []byte {
+	if src == nil {
+		return AppendNull(dst)
+	}
+
+	dst = append(dst, '"')
+	dst = base32.HexEncoding.AppendEncode(dst, src)
+	return append(dst, '"')
+}
+
+// AppendByteSliceBase16 appends src as a lowercase Base16-encoded JSON string.
+// A nil src is encoded as null.
+func AppendByteSliceBase16(dst, src []byte) []byte {
+	if src == nil {
+		return AppendNull(dst)
+	}
+
+	dst = append(dst, '"')
+	dst = hex.AppendEncode(dst, src)
+	return append(dst, '"')
+}
+
+// AppendByteSliceHex appends src as a lowercase hexadecimal JSON string.
+// It is an alias for AppendByteSliceBase16.
+func AppendByteSliceHex(dst, src []byte) []byte {
+	return AppendByteSliceBase16(dst, src)
 }

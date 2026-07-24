@@ -4,146 +4,81 @@ An experimental, performance-focused JSON marshaler for Go.
 
 ## Benchmarks
 
-The benchmarks compare `MarshalAppend`, `Marshal`, `encoding/json`,
-`sonic.ConfigFastest`, and Sonic's reusable-buffer `EncodeInto` API.
-`MarshalAppend` and `EncodeInto` reuse caller-provided destination capacity;
-the other marshal APIs return an owned byte slice.
+Benchmark 5 compares:
 
-For like-for-like comparisons, `MarshalAppend` corresponds to Sonic's
-`EncodeInto`, while `Marshal` corresponds to `sonic.ConfigFastest.Marshal`.
-The append-style APIs can avoid the output allocation when the destination has
-enough capacity; the marshal-style APIs must return independently owned output.
+- `MarshalAppend`, which reuses caller-provided destination capacity.
+- `Marshal`, which returns an independently owned byte slice.
+- Go's `encoding/json`.
+- Go's experimental `encoding/json/v2` using `MarshalWrite`.
+- `sonic.ConfigFastest.Marshal`.
+- Sonic's reusable-buffer `EncodeInto` API.
 
-### Benchmark 4: current SIMD and SWAR string paths
+For like-for-like comparisons, `MarshalAppend` corresponds to `MarshalWrite`
+and `EncodeInto`, while `Marshal` corresponds to the marshal APIs that return
+owned output. The append path can avoid output allocation when the destination
+has sufficient capacity.
 
-Benchmark 4 records the current implementation after separating string
-encoding into SIMD and SWAR files. SIMD builds process 16-byte chunks, while
-builds without the SIMD experiment use an eight-byte SWAR scanner. This run
-uses the SIMD path; it is a fresh end-to-end baseline rather than an isolated
-measurement of the SWAR fallback. Results are five-run medians on Go 1.26.
+### Benchmark 5
 
-![Marshal benchmark 4 comparison](assets/benchmarks/benchmark4.svg)
+This is a five-run median on Go 1.26 using `GOAMD64=v3` with the JSON v2 and
+SIMD experiments enabled. The suite includes maps, primitive slices, numbers,
+struct variants, UTF-8 validation, and standard marshaling interfaces.
 
-```sh
-GOAMD64=v3 GOEXPERIMENT=simd go test -benchmem -run='^$' -count=5 -bench='^(BenchmarkMarshalMapInt|BenchmarkMarshalMapIntSlice|BenchmarkMarshalMapAny|BenchmarkMarshalIntSlice|BenchmarkMarshalFloat32|BenchmarkMarshalFloat64|BenchmarkMarshalStruct|BenchmarkMarshalStructSlice)$'
-```
-
-| Workload | MarshalAppend | Marshal | encoding/json | Sonic Marshal | Sonic EncodeInto |
-|---|---:|---:|---:|---:|---:|
-| `map[string]int` | 202.3 ns | 364.5 ns | 1393 ns | 546.0 ns | 373.3 ns |
-| `map[string][]int` | 229.6 ns | 406.2 ns | 1522 ns | 516.4 ns | 382.7 ns |
-| `map[string]any` | 332.0 ns | 517.8 ns | 1959 ns | 697.7 ns | 499.7 ns |
-| `[]int` | 86.95 ns | 177.2 ns | 322.8 ns | 277.3 ns | 172.1 ns |
-| `float32` | 37.36 ns | 72.04 ns | 93.78 ns | 97.97 ns | 61.67 ns |
-| `float64` | 68.88 ns | 124.0 ns | 146.6 ns | 127.2 ns | 69.13 ns |
-| mixed struct | 264.3 ns | 507.5 ns | 1074 ns | 680.5 ns | 565.3 ns |
-| struct with `[]struct` and metadata maps | 723.6 ns | 1421 ns | 3122 ns | 1826 ns | 1267 ns |
-
-Median allocations per operation:
-
-| Workload | MarshalAppend | Marshal | encoding/json | Sonic Marshal | Sonic EncodeInto |
-|---|---:|---:|---:|---:|---:|
-| `map[string]int` | 0 | 1 | 16 | 3 | 2 |
-| `map[string][]int` | 0 | 1 | 14 | 3 | 2 |
-| `map[string]any` | 0 | 1 | 18 | 3 | 2 |
-| `[]int` | 0 | 1 | 2 | 3 | 2 |
-| `float32` | 0 | 1 | 1 | 2 | 1 |
-| `float64` | 0 | 1 | 1 | 2 | 1 |
-| mixed struct | 0 | 1 | 7 | 4 | 3 |
-| struct with `[]struct` and metadata maps | 0 | 1 | 22 | 7 | 6 |
-
-The complete Benchmark 4 output, including bytes and allocations per
-operation, is available in [`bench4.txt`](assets/benchmarks/raw/bench4.txt).
-
-### Benchmark 3: specialized primitive-slice maps
-
-Benchmark 3 adds direct appenders for maps whose values are primitive slices,
-compacts cached struct-field metadata, and adds a nested struct-slice workload
-where every item contains a metadata map. The results are five-run medians on
-Go 1.26 with the SIMD experiment enabled.
-
-![Marshal benchmark 3 comparison](assets/benchmarks/benchmark3.svg)
+![Marshal benchmark 5 comparison](assets/benchmarks/benchmark5.svg)
 
 ```sh
-GOAMD64=v3 GOEXPERIMENT=simd go test -benchmem -run='^$' -count=5 -bench='^(BenchmarkMarshalMapInt|BenchmarkMarshalMapIntSlice|BenchmarkMarshalMapAny|BenchmarkMarshalIntSlice|BenchmarkMarshalFloat32|BenchmarkMarshalFloat64|BenchmarkMarshalStruct|BenchmarkMarshalStructSlice)$'
-```
-
-| Workload | MarshalAppend | Marshal | encoding/json | Sonic Marshal | Sonic EncodeInto |
-|---|---:|---:|---:|---:|---:|
-| `map[string]int` | 196.7 ns | 365.6 ns | 1501 ns | 568.7 ns | 368.6 ns |
-| `map[string][]int` | 241.1 ns | 423.4 ns | 1464 ns | 623.3 ns | 408.1 ns |
-| `map[string]any` | 334.6 ns | 528.7 ns | 2029 ns | 686.8 ns | 541.2 ns |
-| `[]int` | 88.20 ns | 204.3 ns | 332.3 ns | 314.9 ns | 192.5 ns |
-| `float32` | 37.76 ns | 71.85 ns | 94.46 ns | 102.0 ns | 63.80 ns |
-| `float64` | 68.81 ns | 120.3 ns | 143.7 ns | 113.9 ns | 73.02 ns |
-| mixed struct | 284.3 ns | 580.6 ns | 1140 ns | 672.3 ns | 565.8 ns |
-| struct with `[]struct` and metadata maps | 730.1 ns | 1385 ns | 2939 ns | 1465 ns | 1312 ns |
-
-Median allocations per operation:
-
-| Workload | MarshalAppend | Marshal | encoding/json | Sonic Marshal | Sonic EncodeInto |
-|---|---:|---:|---:|---:|---:|
-| `map[string]int` | 0 | 1 | 16 | 3 | 2 |
-| `map[string][]int` | 0 | 1 | 14 | 3 | 2 |
-| `map[string]any` | 0 | 1 | 18 | 3 | 2 |
-| `[]int` | 0 | 1 | 2 | 3 | 2 |
-| `float32` | 0 | 1 | 1 | 2 | 1 |
-| `float64` | 0 | 1 | 1 | 2 | 1 |
-| mixed struct | 0 | 1 | 7 | 4 | 3 |
-| struct with `[]struct` and metadata maps | 0 | 1 | 22 | 7 | 6 |
-
-The complete Benchmark 3 output, including bytes and allocations per
-operation, is available in [`bench3.txt`](assets/benchmarks/raw/bench3.txt).
-
-### Benchmark 2: improved SIMD string encoding
-
-Benchmark 2 was recorded after improving the SIMD string-escaping path. It
-keeps SIMD setup outside the scanning loop, processes escape masks directly,
-and retains the scalar fast path for short strings. Consequently, it should
-not be treated as a direct rerun of Benchmark 1: string-heavy workloads also
-measure those encoder improvements. This run additionally includes Sonic's
-reusable-buffer `EncodeInto` API, uses Go 1.26's default JSON implementation,
-and reports the median of five rounds.
-
-![Marshal benchmark comparison](assets/benchmarks/benchmark2.svg)
-
-```sh
-GOAMD64=v3 GOEXPERIMENT=simd go test -benchmem -run='^$' -count=5 -bench='^(BenchmarkMarshalMapInt|BenchmarkMarshalMapIntSlice|BenchmarkMarshalMapAny|BenchmarkMarshalIntSlice|BenchmarkMarshalFloat32|BenchmarkMarshalFloat64|BenchmarkMarshalStruct)$'
+GOAMD64=v3 GOEXPERIMENT=jsonv2,simd go test \
+  -benchmem -run='^$' -count=5 -bench='^Benchmark' .
 ```
 
 Five-run median latency (lower is better):
 
-| Workload | MarshalAppend | Marshal | encoding/json | Sonic Marshal | Sonic EncodeInto |
-|---|---:|---:|---:|---:|---:|
-| `map[string]int` | 201.6 ns | 366.5 ns | 1521 ns | 516.2 ns | 383.0 ns |
-| `map[string][]int` | 498.6 ns | 693.9 ns | 1491 ns | 480.5 ns | 373.1 ns |
-| `map[string]any` | 329.6 ns | 531.5 ns | 2155 ns | 692.0 ns | 553.1 ns |
-| `[]int` | 91.80 ns | 193.1 ns | 305.5 ns | 258.5 ns | 156.9 ns |
-| `float32` | 37.40 ns | 73.85 ns | 93.25 ns | 92.70 ns | 61.48 ns |
-| `float64` | 69.18 ns | 118.1 ns | 144.3 ns | 126.8 ns | 79.98 ns |
-| mixed struct | 283.0 ns | 501.0 ns | 1067 ns | 705.8 ns | 444.7 ns |
+| Workload | MarshalAppend | Marshal | encoding/json | json/v2 Write | Sonic Marshal | Sonic EncodeInto |
+|---|---:|---:|---:|---:|---:|---:|
+| `map[string]int` | 192.8 ns | 440.3 ns | 1232 ns | 734.8 ns | 661.4 ns | 424.1 ns |
+| `map[string][]int` | 210.9 ns | 502.4 ns | 1571 ns | 888.4 ns | 718.4 ns | 433.2 ns |
+| `map[string]any` | 320.8 ns | 567.9 ns | 2566 ns | 1848 ns | 940.6 ns | 544.2 ns |
+| `[]int` | 72.52 ns | 204.6 ns | 404.6 ns | 293.7 ns | 358.9 ns | 186.0 ns |
+| `float32` | 36.80 ns | 65.93 ns | 156.7 ns | 142.6 ns | 130.7 ns | 93.96 ns |
+| `float64` | 56.63 ns | 108.9 ns | 204.5 ns | 171.9 ns | 179.4 ns | 104.7 ns |
+| mixed struct | 274.5 ns | 627.4 ns | 1622 ns | 1075 ns | 888.5 ns | 613.1 ns |
+| struct slice with metadata maps | 810.1 ns | 1536 ns | 4167 ns | 2898 ns | 2374 ns | 1484 ns |
+| quoted struct fields | 190.4 ns | 344.4 ns | 1411 ns | 671.3 ns | 511.1 ns | 273.3 ns |
+| `omitempty` / `omitzero` | 97.64 ns | 259.1 ns | 859.0 ns | 776.4 ns | 422.3 ns | 261.3 ns |
+| UTF-8 validation: ASCII | 120.4 ns | 809.7 ns | 2006 ns | 620.5 ns | 1099 ns | 166.8 ns |
+| UTF-8 validation: Unicode | 236.5 ns | 921.1 ns | 1325 ns | 579.8 ns | 951.3 ns | 170.1 ns |
+| UTF-8 validation: invalid byte | 272.5 ns | 1564 ns | 2227 ns | 740.5 ns | 2867 ns | 3501 ns |
+| `encoding.TextMarshaler` | 44.08 ns | 81.16 ns | 190.5 ns | 142.4 ns | 139.2 ns | 105.5 ns |
+| `json.Marshaler` | 33.30 ns | 66.64 ns | 137.7 ns | 122.3 ns | 120.2 ns | 110.5 ns |
 
 Median allocations per operation:
 
-| Workload | MarshalAppend | Marshal | encoding/json | Sonic Marshal | Sonic EncodeInto |
-|---|---:|---:|---:|---:|---:|
-| `map[string]int` | 0 | 1 | 16 | 3 | 2 |
-| `map[string][]int` | 2 | 3 | 14 | 3 | 2 |
-| `map[string]any` | 0 | 1 | 18 | 3 | 2 |
-| `[]int` | 0 | 1 | 2 | 3 | 2 |
-| `float32` | 0 | 1 | 1 | 2 | 1 |
-| `float64` | 0 | 1 | 1 | 2 | 1 |
-| mixed struct | 0 | 1 | 7 | 4 | 3 |
+| Workload | MarshalAppend | Marshal | encoding/json | json/v2 Write | Sonic Marshal | Sonic EncodeInto |
+|---|---:|---:|---:|---:|---:|---:|
+| `map[string]int` | 0 | 1 | 11 | 3 | 3 | 2 |
+| `map[string][]int` | 0 | 1 | 10 | 3 | 3 | 2 |
+| `map[string]any` | 0 | 1 | 23 | 14 | 3 | 2 |
+| `[]int` | 0 | 1 | 3 | 2 | 3 | 2 |
+| `float32` | 0 | 1 | 3 | 2 | 3 | 2 |
+| `float64` | 0 | 1 | 3 | 2 | 3 | 2 |
+| mixed struct | 0 | 1 | 7 | 4 | 4 | 3 |
+| struct slice with metadata maps | 0 | 1 | 19 | 10 | 7 | 6 |
+| quoted struct fields | 0 | 1 | 6 | 2 | 3 | 2 |
+| `omitempty` / `omitzero` | 0 | 1 | 3 | 2 | 3 | 2 |
+| UTF-8 validation: ASCII | 0 | 1 | 3 | 2 | 3 | 2 |
+| UTF-8 validation: Unicode | 0 | 1 | 3 | 2 | 3 | 2 |
+| UTF-8 validation: invalid byte | 0 | 1 | 3 | 2 | 3 | 4 |
+| `encoding.TextMarshaler` | 1 | 2 | 2 | 1 | 3 | 2 |
+| `json.Marshaler` | 1 | 2 | 2 | 1 | 3 | 2 |
 
-The complete five-run output, including bytes and allocations per operation,
-is available in [`bench2.txt`](assets/benchmarks/raw/bench2.txt).
+The custom `MarshalerAppend` precedence benchmark only applies to this
+package. Its median results were 16.74 ns with zero allocations for
+`MarshalAppend`, and 47.32 ns with one allocation for `Marshal`.
 
-### Earlier single-run results
-
-Benchmark 1 predates the improved SIMD string path and does not include
-Sonic's `EncodeInto` API, is available in [`bench1.txt`](assets/benchmarks/raw/bench1.txt).
-
-![Earlier marshal benchmark comparison](assets/benchmarks/benchmark1.svg)
+The complete Benchmark 5 output, including bytes and allocations per
+operation, is available in [`bench5.txt`](assets/benchmarks/raw/bench5.txt).
+Benchmarks 1–4 and their original commentary are preserved in
+[`README-old.md`](README-old.md).
 
 ---
 

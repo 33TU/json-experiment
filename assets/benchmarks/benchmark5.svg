@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1450" height="2600" viewBox="0 0 1450 2600" role="img" aria-labelledby="title desc">
+  <title id="title">JSON marshal Benchmark 5 latency</title>
+  <desc id="desc">Five-run median latency normalized to MarshalAppend across fifteen workloads. Lower is better.</desc>
+  <style>text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:#d8dee9}.title{font-family:ui-sans-serif,system-ui,sans-serif;font-size:28px;font-weight:700}.subtitle{font-family:ui-sans-serif,system-ui,sans-serif;font-size:15px;fill:#aab4c3}.group{font-family:ui-sans-serif,system-ui,sans-serif;font-size:18px;font-weight:650}.series{font-size:13px;fill:#c4ccd8}.value{font-size:13px;font-weight:650}.tick{font-size:12px;fill:#788596}.grid{stroke:#293344;stroke-width:1}</style>
+  <rect width="1450" height="2600" rx="14" fill="#10151d"/>
+  <text class="title" x="40" y="48">Marshal latency by workload — Benchmark 5</text>
+  <text class="subtitle" x="40" y="76">Go 1.26, GOAMD64=v3, JSON v2 + SIMD; five-run median relative to MarshalAppend (1×). Shorter is faster.</text>
+  <rect x="40" y="96" width="14" height="14" rx="3" fill="#50c878"/><text class="series" x="62" y="108">MarshalAppend</text>
+  <rect x="215" y="96" width="14" height="14" rx="3" fill="#5aa9e6"/><text class="series" x="237" y="108">Marshal</text>
+  <rect x="390" y="96" width="14" height="14" rx="3" fill="#ef8354"/><text class="series" x="412" y="108">encoding/json</text>
+  <rect x="565" y="96" width="14" height="14" rx="3" fill="#e76f9a"/><text class="series" x="587" y="108">json/v2 MarshalWrite</text>
+  <rect x="775" y="96" width="14" height="14" rx="3" fill="#b388eb"/><text class="series" x="797" y="108">Sonic Marshal</text>
+  <rect x="950" y="96" width="14" height="14" rx="3" fill="#f2c14e"/><text class="series" x="972" y="108">Sonic EncodeInto</text>
+  <line class="grid" x1="405" y1="135" x2="405" y2="2550"/><text class="tick" x="397" y="2572">1×</text>
+  <line class="grid" x1="460" y1="135" x2="460" y2="2550"/><text class="tick" x="452" y="2572">2×</text>
+  <line class="grid" x1="515" y1="135" x2="515" y2="2550"/><text class="tick" x="507" y="2572">3×</text>
+  <line class="grid" x1="570" y1="135" x2="570" y2="2550"/><text class="tick" x="562" y="2572">4×</text>
+  <line class="grid" x1="625" y1="135" x2="625" y2="2550"/><text class="tick" x="617" y="2572">5×</text>
+  <line class="grid" x1="680" y1="135" x2="680" y2="2550"/><text class="tick" x="672" y="2572">6×</text>
+  <line class="grid" x1="735" y1="135" x2="735" y2="2550"/><text class="tick" x="727" y="2572">7×</text>
+  <line class="grid" x1="790" y1="135" x2="790" y2="2550"/><text class="tick" x="782" y="2572">8×</text>
+  <line class="grid" x1="845" y1="135" x2="845" y2="2550"/><text class="tick" x="837" y="2572">9×</text>
+  <line class="grid" x1="900" y1="135" x2="900" y2="2550"/><text class="tick" x="892" y="2572">10×</text>
+  <line class="grid" x1="955" y1="135" x2="955" y2="2550"/><text class="tick" x="947" y="2572">11×</text>
+  <line class="grid" x1="1010" y1="135" x2="1010" y2="2550"/><text class="tick" x="1002" y="2572">12×</text>
+  <line class="grid" x1="1065" y1="135" x2="1065" y2="2550"/><text class="tick" x="1057" y="2572">13×</text>
+  <line class="grid" x1="1120" y1="135" x2="1120" y2="2550"/><text class="tick" x="1112" y="2572">14×</text>
+  <line class="grid" x1="1175" y1="135" x2="1175" y2="2550"/><text class="tick" x="1167" y="2572">15×</text>
+  <line class="grid" x1="1230" y1="135" x2="1230" y2="2550"/><text class="tick" x="1222" y="2572">16×</text>
+  <line class="grid" x1="1285" y1="135" x2="1285" y2="2550"/><text class="tick" x="1277" y="2572">17×</text>
+  <line class="grid" x1="1340" y1="135" x2="1340" y2="2550"/><text class="tick" x="1332" y="2572">18×</text>
+  <g transform="translate(0,165)">
+    <text class="group" x="40" y="12">map[string]int</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">192.8 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="125.6" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="483.6" y="56">440.3 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="351.5" height="16" rx="4" fill="#ef8354"/><text class="value" x="709.5" y="77">1232 ns · 11 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="209.6" height="16" rx="4" fill="#e76f9a"/><text class="value" x="567.6" y="98">734.8 ns · 3 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="188.7" height="16" rx="4" fill="#b388eb"/><text class="value" x="546.7" y="119">661.4 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="121.0" height="16" rx="4" fill="#f2c14e"/><text class="value" x="479.0" y="140">424.1 ns · 2 alloc</text>
+  </g>
+  <g transform="translate(0,325)">
+    <text class="group" x="40" y="12">map[string][]int</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">210.9 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="131.0" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="489.0" y="56">502.4 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="409.7" height="16" rx="4" fill="#ef8354"/><text class="value" x="767.7" y="77">1571 ns · 10 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="231.7" height="16" rx="4" fill="#e76f9a"/><text class="value" x="589.7" y="98">888.4 ns · 3 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="187.3" height="16" rx="4" fill="#b388eb"/><text class="value" x="545.3" y="119">718.4 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="113.0" height="16" rx="4" fill="#f2c14e"/><text class="value" x="471.0" y="140">433.2 ns · 2 alloc</text>
+  </g>
+  <g transform="translate(0,485)">
+    <text class="group" x="40" y="12">map[string]any</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">320.8 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="97.4" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="455.4" y="56">567.9 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="439.9" height="16" rx="4" fill="#ef8354"/><text class="value" x="797.9" y="77">2566 ns · 23 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="316.8" height="16" rx="4" fill="#e76f9a"/><text class="value" x="674.8" y="98">1848 ns · 14 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="161.3" height="16" rx="4" fill="#b388eb"/><text class="value" x="519.3" y="119">940.6 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="93.3" height="16" rx="4" fill="#f2c14e"/><text class="value" x="451.3" y="140">544.2 ns · 2 alloc</text>
+  </g>
+  <g transform="translate(0,645)">
+    <text class="group" x="40" y="12">[]int</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">72.52 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="155.2" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="513.2" y="56">204.6 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="306.9" height="16" rx="4" fill="#ef8354"/><text class="value" x="664.9" y="77">404.6 ns · 3 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="222.7" height="16" rx="4" fill="#e76f9a"/><text class="value" x="580.7" y="98">293.7 ns · 2 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="272.2" height="16" rx="4" fill="#b388eb"/><text class="value" x="630.2" y="119">358.9 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="141.1" height="16" rx="4" fill="#f2c14e"/><text class="value" x="499.1" y="140">186.0 ns · 2 alloc</text>
+  </g>
+  <g transform="translate(0,805)">
+    <text class="group" x="40" y="12">float32</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">36.80 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="98.5" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="456.5" y="56">65.93 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="234.2" height="16" rx="4" fill="#ef8354"/><text class="value" x="592.2" y="77">156.7 ns · 3 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="213.1" height="16" rx="4" fill="#e76f9a"/><text class="value" x="571.1" y="98">142.6 ns · 2 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="195.3" height="16" rx="4" fill="#b388eb"/><text class="value" x="553.3" y="119">130.7 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="140.4" height="16" rx="4" fill="#f2c14e"/><text class="value" x="498.4" y="140">93.96 ns · 2 alloc</text>
+  </g>
+  <g transform="translate(0,965)">
+    <text class="group" x="40" y="12">float64</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">56.63 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="105.8" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="463.8" y="56">108.9 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="198.6" height="16" rx="4" fill="#ef8354"/><text class="value" x="556.6" y="77">204.5 ns · 3 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="167.0" height="16" rx="4" fill="#e76f9a"/><text class="value" x="525.0" y="98">171.9 ns · 2 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="174.2" height="16" rx="4" fill="#b388eb"/><text class="value" x="532.2" y="119">179.4 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="101.7" height="16" rx="4" fill="#f2c14e"/><text class="value" x="459.7" y="140">104.7 ns · 2 alloc</text>
+  </g>
+  <g transform="translate(0,1125)">
+    <text class="group" x="40" y="12">mixed struct</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">274.5 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="125.7" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="483.7" y="56">627.4 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="325.0" height="16" rx="4" fill="#ef8354"/><text class="value" x="683.0" y="77">1622 ns · 7 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="215.4" height="16" rx="4" fill="#e76f9a"/><text class="value" x="573.4" y="98">1075 ns · 4 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="178.0" height="16" rx="4" fill="#b388eb"/><text class="value" x="536.0" y="119">888.5 ns · 4 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="122.8" height="16" rx="4" fill="#f2c14e"/><text class="value" x="480.8" y="140">613.1 ns · 3 alloc</text>
+  </g>
+  <g transform="translate(0,1285)">
+    <text class="group" x="40" y="12">struct slice + metadata maps</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">810.1 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="104.3" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="462.3" y="56">1536 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="282.9" height="16" rx="4" fill="#ef8354"/><text class="value" x="640.9" y="77">4167 ns · 19 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="196.8" height="16" rx="4" fill="#e76f9a"/><text class="value" x="554.8" y="98">2898 ns · 10 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="161.2" height="16" rx="4" fill="#b388eb"/><text class="value" x="519.2" y="119">2374 ns · 7 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="100.8" height="16" rx="4" fill="#f2c14e"/><text class="value" x="458.8" y="140">1484 ns · 6 alloc</text>
+  </g>
+  <g transform="translate(0,1445)">
+    <text class="group" x="40" y="12">quoted struct fields</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">190.4 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="99.5" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="457.5" y="56">344.4 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="407.6" height="16" rx="4" fill="#ef8354"/><text class="value" x="765.6" y="77">1411 ns · 6 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="193.9" height="16" rx="4" fill="#e76f9a"/><text class="value" x="551.9" y="98">671.3 ns · 2 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="147.6" height="16" rx="4" fill="#b388eb"/><text class="value" x="505.6" y="119">511.1 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="78.9" height="16" rx="4" fill="#f2c14e"/><text class="value" x="436.9" y="140">273.3 ns · 2 alloc</text>
+  </g>
+  <g transform="translate(0,1605)">
+    <text class="group" x="40" y="12">omitempty / omitzero</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">97.64 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="145.9" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="503.9" y="56">259.1 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="483.9" height="16" rx="4" fill="#ef8354"/><text class="value" x="841.9" y="77">859.0 ns · 3 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="437.3" height="16" rx="4" fill="#e76f9a"/><text class="value" x="795.3" y="98">776.4 ns · 2 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="237.9" height="16" rx="4" fill="#b388eb"/><text class="value" x="595.9" y="119">422.3 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="147.2" height="16" rx="4" fill="#f2c14e"/><text class="value" x="505.2" y="140">261.3 ns · 2 alloc</text>
+  </g>
+  <g transform="translate(0,1765)">
+    <text class="group" x="40" y="12">UTF-8 validation: ASCII</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">120.4 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="369.9" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="727.9" y="56">809.7 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="916.4" height="16" rx="4" fill="#ef8354"/><text class="value" x="1274.4" y="77">2006 ns · 3 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="283.5" height="16" rx="4" fill="#e76f9a"/><text class="value" x="641.5" y="98">620.5 ns · 2 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="502.0" height="16" rx="4" fill="#b388eb"/><text class="value" x="860.0" y="119">1099 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="76.2" height="16" rx="4" fill="#f2c14e"/><text class="value" x="434.2" y="140">166.8 ns · 2 alloc</text>
+  </g>
+  <g transform="translate(0,1925)">
+    <text class="group" x="40" y="12">UTF-8 validation: Unicode</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">236.5 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="214.2" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="572.2" y="56">921.1 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="308.1" height="16" rx="4" fill="#ef8354"/><text class="value" x="666.1" y="77">1325 ns · 3 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="134.8" height="16" rx="4" fill="#e76f9a"/><text class="value" x="492.8" y="98">579.8 ns · 2 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="221.2" height="16" rx="4" fill="#b388eb"/><text class="value" x="579.2" y="119">951.3 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="39.6" height="16" rx="4" fill="#f2c14e"/><text class="value" x="397.6" y="140">170.1 ns · 2 alloc</text>
+  </g>
+  <g transform="translate(0,2085)">
+    <text class="group" x="40" y="12">UTF-8 validation: invalid byte</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">272.5 ns · 0 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="315.7" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="673.7" y="56">1564 ns · 1 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="449.5" height="16" rx="4" fill="#ef8354"/><text class="value" x="807.5" y="77">2227 ns · 3 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="149.5" height="16" rx="4" fill="#e76f9a"/><text class="value" x="507.5" y="98">740.5 ns · 2 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="578.7" height="16" rx="4" fill="#b388eb"/><text class="value" x="936.7" y="119">2867 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="706.6" height="16" rx="4" fill="#f2c14e"/><text class="value" x="1064.6" y="140">3501 ns · 4 alloc</text>
+  </g>
+  <g transform="translate(0,2245)">
+    <text class="group" x="40" y="12">encoding.TextMarshaler</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">44.08 ns · 1 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="101.3" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="459.3" y="56">81.16 ns · 2 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="237.7" height="16" rx="4" fill="#ef8354"/><text class="value" x="595.7" y="77">190.5 ns · 2 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="177.7" height="16" rx="4" fill="#e76f9a"/><text class="value" x="535.7" y="98">142.4 ns · 1 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="173.7" height="16" rx="4" fill="#b388eb"/><text class="value" x="531.7" y="119">139.2 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="131.6" height="16" rx="4" fill="#f2c14e"/><text class="value" x="489.6" y="140">105.5 ns · 2 alloc</text>
+  </g>
+  <g transform="translate(0,2405)">
+    <text class="group" x="40" y="12">json.Marshaler</text>
+    <text class="series" x="335" y="35" text-anchor="end">MarshalAppend</text><rect x="350" y="22" width="55.0" height="16" rx="4" fill="#50c878"/><text class="value" x="413.0" y="35">33.30 ns · 1 alloc</text>
+    <text class="series" x="335" y="56" text-anchor="end">Marshal</text><rect x="350" y="43" width="110.1" height="16" rx="4" fill="#5aa9e6"/><text class="value" x="468.1" y="56">66.64 ns · 2 alloc</text>
+    <text class="series" x="335" y="77" text-anchor="end">encoding/json</text><rect x="350" y="64" width="227.4" height="16" rx="4" fill="#ef8354"/><text class="value" x="585.4" y="77">137.7 ns · 2 alloc</text>
+    <text class="series" x="335" y="98" text-anchor="end">json/v2 MarshalWrite</text><rect x="350" y="85" width="202.0" height="16" rx="4" fill="#e76f9a"/><text class="value" x="560.0" y="98">122.3 ns · 1 alloc</text>
+    <text class="series" x="335" y="119" text-anchor="end">Sonic Marshal</text><rect x="350" y="106" width="198.5" height="16" rx="4" fill="#b388eb"/><text class="value" x="556.5" y="119">120.2 ns · 3 alloc</text>
+    <text class="series" x="335" y="140" text-anchor="end">Sonic EncodeInto</text><rect x="350" y="127" width="182.5" height="16" rx="4" fill="#f2c14e"/><text class="value" x="540.5" y="140">110.5 ns · 2 alloc</text>
+  </g>
+</svg>

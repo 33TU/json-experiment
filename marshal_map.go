@@ -18,43 +18,43 @@ func createMapMarshalFn(typ reflect.Type) marshalFn {
 	if keyKind == reflect.String {
 		switch valueKind {
 		case reflect.String:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-				if flags&marshalFlagEscapeHTML != 0 {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				if flags&MarshalFlagEscapeHTML != 0 {
 					return internal.AppendStringStringMapHTML(dst, *(*map[string]string)(unsafe.Pointer(&ptr))), nil
 				}
 				return internal.AppendStringStringMap(dst, *(*map[string]string)(unsafe.Pointer(&ptr))), nil
 			}
 		case reflect.Int:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-				if flags&marshalFlagEscapeHTML != 0 {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				if flags&MarshalFlagEscapeHTML != 0 {
 					return internal.AppendStringIntMapHTML(dst, *(*map[string]int)(unsafe.Pointer(&ptr))), nil
 				}
 				return internal.AppendStringIntMap(dst, *(*map[string]int)(unsafe.Pointer(&ptr))), nil
 			}
 		case reflect.Uint:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-				if flags&marshalFlagEscapeHTML != 0 {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				if flags&MarshalFlagEscapeHTML != 0 {
 					return internal.AppendStringUintMapHTML(dst, *(*map[string]uint)(unsafe.Pointer(&ptr))), nil
 				}
 				return internal.AppendStringUintMap(dst, *(*map[string]uint)(unsafe.Pointer(&ptr))), nil
 			}
 		case reflect.Bool:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-				if flags&marshalFlagEscapeHTML != 0 {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				if flags&MarshalFlagEscapeHTML != 0 {
 					return internal.AppendStringBoolMapHTML(dst, *(*map[string]bool)(unsafe.Pointer(&ptr))), nil
 				}
 				return internal.AppendStringBoolMap(dst, *(*map[string]bool)(unsafe.Pointer(&ptr))), nil
 			}
 		case reflect.Float32:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-				if flags&marshalFlagEscapeHTML != 0 {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				if flags&MarshalFlagEscapeHTML != 0 {
 					return internal.AppendStringFloat32MapHTML(dst, *(*map[string]float32)(unsafe.Pointer(&ptr)))
 				}
 				return internal.AppendStringFloat32Map(dst, *(*map[string]float32)(unsafe.Pointer(&ptr)))
 			}
 		case reflect.Float64:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-				if flags&marshalFlagEscapeHTML != 0 {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				if flags&MarshalFlagEscapeHTML != 0 {
 					return internal.AppendStringFloat64MapHTML(dst, *(*map[string]float64)(unsafe.Pointer(&ptr)))
 				}
 				return internal.AppendStringFloat64Map(dst, *(*map[string]float64)(unsafe.Pointer(&ptr)))
@@ -73,30 +73,30 @@ func createMapMarshalFn(typ reflect.Type) marshalFn {
 	if keyKind == reflect.Int {
 		switch valueKind {
 		case reflect.String:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-				if flags&marshalFlagEscapeHTML != 0 {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				if flags&MarshalFlagEscapeHTML != 0 {
 					return internal.AppendIntStringMapHTML(dst, *(*map[int]string)(unsafe.Pointer(&ptr))), nil
 				}
 				return internal.AppendIntStringMap(dst, *(*map[int]string)(unsafe.Pointer(&ptr))), nil
 			}
 		case reflect.Int:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 				return internal.AppendIntIntMap(dst, *(*map[int]int)(unsafe.Pointer(&ptr))), nil
 			}
 		case reflect.Uint:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 				return internal.AppendIntUintMap(dst, *(*map[int]uint)(unsafe.Pointer(&ptr))), nil
 			}
 		case reflect.Bool:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 				return internal.AppendIntBoolMap(dst, *(*map[int]bool)(unsafe.Pointer(&ptr))), nil
 			}
 		case reflect.Float32:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 				return internal.AppendIntFloat32Map(dst, *(*map[int]float32)(unsafe.Pointer(&ptr)))
 			}
 		case reflect.Float64:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 				return internal.AppendIntFloat64Map(dst, *(*map[int]float64)(unsafe.Pointer(&ptr)))
 			}
 		case reflect.Interface:
@@ -113,30 +113,30 @@ func createMapMarshalFn(typ reflect.Type) marshalFn {
 	if keyKind == reflect.Uint {
 		switch valueKind {
 		case reflect.String:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-				if flags&marshalFlagEscapeHTML != 0 {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				if flags&MarshalFlagEscapeHTML != 0 {
 					return internal.AppendUintStringMapHTML(dst, *(*map[uint]string)(unsafe.Pointer(&ptr))), nil
 				}
 				return internal.AppendUintStringMap(dst, *(*map[uint]string)(unsafe.Pointer(&ptr))), nil
 			}
 		case reflect.Int:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 				return internal.AppendUintIntMap(dst, *(*map[uint]int)(unsafe.Pointer(&ptr))), nil
 			}
 		case reflect.Uint:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 				return internal.AppendUintUintMap(dst, *(*map[uint]uint)(unsafe.Pointer(&ptr))), nil
 			}
 		case reflect.Bool:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 				return internal.AppendUintBoolMap(dst, *(*map[uint]bool)(unsafe.Pointer(&ptr))), nil
 			}
 		case reflect.Float32:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 				return internal.AppendUintFloat32Map(dst, *(*map[uint]float32)(unsafe.Pointer(&ptr)))
 			}
 		case reflect.Float64:
-			return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 				return internal.AppendUintFloat64Map(dst, *(*map[uint]float64)(unsafe.Pointer(&ptr)))
 			}
 		case reflect.Interface:
@@ -160,106 +160,106 @@ func createMapMarshalFn(typ reflect.Type) marshalFn {
 func createMapStringSliceMarshalFn(kind reflect.Kind) marshalFn {
 	switch kind {
 	case reflect.Bool:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringBoolSliceMapHTML(dst, *(*map[string][]bool)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringBoolSliceMap(dst, *(*map[string][]bool)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringIntSliceMapHTML(dst, *(*map[string][]int)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringIntSliceMap(dst, *(*map[string][]int)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int8:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringIntSliceMapHTML(dst, *(*map[string][]int8)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringIntSliceMap(dst, *(*map[string][]int8)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int16:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringIntSliceMapHTML(dst, *(*map[string][]int16)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringIntSliceMap(dst, *(*map[string][]int16)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int32:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringIntSliceMapHTML(dst, *(*map[string][]int32)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringIntSliceMap(dst, *(*map[string][]int32)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int64:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringIntSliceMapHTML(dst, *(*map[string][]int64)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringIntSliceMap(dst, *(*map[string][]int64)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringUintSliceMapHTML(dst, *(*map[string][]uint)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringUintSliceMap(dst, *(*map[string][]uint)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint8:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringUintSliceMapHTML(dst, *(*map[string][]uint8)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringUintSliceMap(dst, *(*map[string][]uint8)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint16:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringUintSliceMapHTML(dst, *(*map[string][]uint16)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringUintSliceMap(dst, *(*map[string][]uint16)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint32:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringUintSliceMapHTML(dst, *(*map[string][]uint32)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringUintSliceMap(dst, *(*map[string][]uint32)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint64:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringUintSliceMapHTML(dst, *(*map[string][]uint64)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringUintSliceMap(dst, *(*map[string][]uint64)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uintptr:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringUintSliceMapHTML(dst, *(*map[string][]uintptr)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringUintSliceMap(dst, *(*map[string][]uintptr)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Float32:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringFloat32SliceMapHTML(dst, *(*map[string][]float32)(unsafe.Pointer(&ptr)))
 			}
 			return internal.AppendStringFloat32SliceMap(dst, *(*map[string][]float32)(unsafe.Pointer(&ptr)))
 		}
 	case reflect.Float64:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringFloat64SliceMapHTML(dst, *(*map[string][]float64)(unsafe.Pointer(&ptr)))
 			}
 			return internal.AppendStringFloat64SliceMap(dst, *(*map[string][]float64)(unsafe.Pointer(&ptr)))
 		}
 	case reflect.String:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringStringSliceMapHTML(dst, *(*map[string][]string)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendStringStringSliceMap(dst, *(*map[string][]string)(unsafe.Pointer(&ptr))), nil
@@ -271,64 +271,64 @@ func createMapStringSliceMarshalFn(kind reflect.Kind) marshalFn {
 func createMapIntSliceMarshalFn(kind reflect.Kind) marshalFn {
 	switch kind {
 	case reflect.Bool:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntBoolSliceMap(dst, *(*map[int][]bool)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntIntSliceMap(dst, *(*map[int][]int)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int8:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntIntSliceMap(dst, *(*map[int][]int8)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int16:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntIntSliceMap(dst, *(*map[int][]int16)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int32:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntIntSliceMap(dst, *(*map[int][]int32)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int64:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntIntSliceMap(dst, *(*map[int][]int64)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntUintSliceMap(dst, *(*map[int][]uint)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint8:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntUintSliceMap(dst, *(*map[int][]uint8)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint16:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntUintSliceMap(dst, *(*map[int][]uint16)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint32:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntUintSliceMap(dst, *(*map[int][]uint32)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint64:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntUintSliceMap(dst, *(*map[int][]uint64)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uintptr:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntUintSliceMap(dst, *(*map[int][]uintptr)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Float32:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntFloat32SliceMap(dst, *(*map[int][]float32)(unsafe.Pointer(&ptr)))
 		}
 	case reflect.Float64:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendIntFloat64SliceMap(dst, *(*map[int][]float64)(unsafe.Pointer(&ptr)))
 		}
 	case reflect.String:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendIntStringSliceMapHTML(dst, *(*map[int][]string)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendIntStringSliceMap(dst, *(*map[int][]string)(unsafe.Pointer(&ptr))), nil
@@ -341,64 +341,64 @@ func createMapIntSliceMarshalFn(kind reflect.Kind) marshalFn {
 func createMapUintSliceMarshalFn(kind reflect.Kind) marshalFn {
 	switch kind {
 	case reflect.Bool:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintBoolSliceMap(dst, *(*map[uint][]bool)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintIntSliceMap(dst, *(*map[uint][]int)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int8:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintIntSliceMap(dst, *(*map[uint][]int8)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int16:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintIntSliceMap(dst, *(*map[uint][]int16)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int32:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintIntSliceMap(dst, *(*map[uint][]int32)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Int64:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintIntSliceMap(dst, *(*map[uint][]int64)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintUintSliceMap(dst, *(*map[uint][]uint)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint8:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintUintSliceMap(dst, *(*map[uint][]uint8)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint16:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintUintSliceMap(dst, *(*map[uint][]uint16)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint32:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintUintSliceMap(dst, *(*map[uint][]uint32)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uint64:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintUintSliceMap(dst, *(*map[uint][]uint64)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Uintptr:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintUintSliceMap(dst, *(*map[uint][]uintptr)(unsafe.Pointer(&ptr))), nil
 		}
 	case reflect.Float32:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintFloat32SliceMap(dst, *(*map[uint][]float32)(unsafe.Pointer(&ptr)))
 		}
 	case reflect.Float64:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUintFloat64SliceMap(dst, *(*map[uint][]float64)(unsafe.Pointer(&ptr)))
 		}
 	case reflect.String:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendUintStringSliceMapHTML(dst, *(*map[uint][]string)(unsafe.Pointer(&ptr))), nil
 			}
 			return internal.AppendUintStringSliceMap(dst, *(*map[uint][]string)(unsafe.Pointer(&ptr))), nil
@@ -419,7 +419,7 @@ func createMapStringValueMarshalFn(
 ) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
 
-	return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
 		if value.IsNil() {
 			return internal.AppendNull(dst), nil
@@ -436,7 +436,7 @@ func createMapStringValueMarshalFn(
 			keyTarget.SetIterKey(iter)
 			valTarget.SetIterValue(iter)
 
-			if flags&marshalFlagEscapeHTML != 0 {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				dst = internal.AppendStringHTML(dst, keyTarget.String())
 			} else {
 				dst = internal.AppendString(dst, keyTarget.String())
@@ -468,7 +468,7 @@ func createMapIntValueMarshalFn(
 ) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
 
-	return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
 		if value.IsNil() {
 			return internal.AppendNull(dst), nil
@@ -514,7 +514,7 @@ func createMapUintValueMarshalFn(
 ) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
 
-	return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
 		if value.IsNil() {
 			return internal.AppendNull(dst), nil
@@ -560,7 +560,7 @@ func createMapUintValueMarshalFn(
 func marshalMapStringInterface(
 	dst []byte,
 	ptr unsafe.Pointer,
-	flags marshalFlags,
+	flags MarshalFlags,
 ) ([]byte, error) {
 	m := *(*map[string]any)(unsafe.Pointer(&ptr))
 
@@ -572,7 +572,7 @@ func marshalMapStringInterface(
 
 	dst = append(dst, '{')
 	for key, value := range m {
-		if flags&marshalFlagEscapeHTML != 0 {
+		if flags&MarshalFlagEscapeHTML != 0 {
 			dst = internal.AppendStringHTML(dst, key)
 		} else {
 			dst = internal.AppendString(dst, key)
@@ -594,7 +594,7 @@ func marshalMapStringInterface(
 func marshalMapIntInterface(
 	dst []byte,
 	ptr unsafe.Pointer,
-	flags marshalFlags,
+	flags MarshalFlags,
 ) ([]byte, error) {
 	m := *(*map[int]any)(unsafe.Pointer(&ptr))
 
@@ -625,7 +625,7 @@ func marshalMapIntInterface(
 func marshalMapUintInterface(
 	dst []byte,
 	ptr unsafe.Pointer,
-	flags marshalFlags,
+	flags MarshalFlags,
 ) ([]byte, error) {
 	m := *(*map[uint]any)(unsafe.Pointer(&ptr))
 

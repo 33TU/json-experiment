@@ -6,6 +6,7 @@ import (
 	"math"
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 
 	jsonexperiment "github.com/33TU/json-experiment"
@@ -306,6 +307,71 @@ func TestMarshalEscapeHTML(t *testing.T) {
 	}
 }
 
+func TestMarshalValidateString(t *testing.T) {
+	t.Parallel()
+
+	const value = "before\xffafter"
+	options := jsonexperiment.MarshalOptions{ValidateString: true}
+
+	want, err := json.Marshal(value)
+	if err != nil {
+		t.Fatalf("json.Marshal: %v", err)
+	}
+
+	got, err := jsonexperiment.MarshalWithOptions(value, options)
+	if err != nil {
+		t.Fatalf("MarshalWithOptions: %v", err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("MarshalWithOptions = %q, want %q", got, want)
+	}
+
+	got, err = jsonexperiment.MarshalWithFlags(value, jsonexperiment.MarshalFlagValidateString)
+	if err != nil {
+		t.Fatalf("MarshalWithFlags: %v", err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("MarshalWithFlags = %q, want %q", got, want)
+	}
+
+	got, err = jsonexperiment.MarshalAppendWithOptions([]byte("prefix:\xff"), value, options)
+	if err != nil {
+		t.Fatalf("MarshalAppendWithOptions: %v", err)
+	}
+	wantAppend := append([]byte("prefix:\xff"), want...)
+	if !bytes.Equal(got, wantAppend) {
+		t.Fatalf("MarshalAppendWithOptions = %q, want %q", got, wantAppend)
+	}
+
+	nested := struct {
+		Value string            `json:"value"`
+		Map   map[string]string `json:"map"`
+	}{
+		Value: value,
+		Map:   map[string]string{"key\xff": "value\xfe"},
+	}
+
+	got, err = jsonexperiment.MarshalWithOptions(nested, options)
+	if err != nil {
+		t.Fatalf("MarshalWithOptions(nested): %v", err)
+	}
+	want, err = json.Marshal(nested)
+	if err != nil {
+		t.Fatalf("json.Marshal(nested): %v", err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("MarshalWithOptions(nested) = %q, want %q", got, want)
+	}
+
+	got, err = jsonexperiment.Marshal(value)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+	if want := []byte("\"before\xffafter\""); !bytes.Equal(got, want) {
+		t.Fatalf("Marshal without validation = %q, want %q", got, want)
+	}
+}
+
 func TestMarshalError(t *testing.T) {
 	t.Parallel()
 
@@ -525,6 +591,86 @@ func BenchmarkMarshalOmits(b *testing.B) {
 	}
 
 	benchmarkMarshalValue(b, value)
+}
+
+func BenchmarkMarshalUTF8(b *testing.B) {
+	options := jsonexperiment.MarshalOptions{ValidateString: true}
+
+	values := []struct {
+		name  string
+		value string
+	}{
+		{name: "valid_ascii", value: strings.Repeat("The quick brown fox jumps. ", 32)},
+		{name: "valid_unicode", value: strings.Repeat("Hello, 世界. ", 32)},
+		{name: "invalid_middle", value: strings.Repeat("a", 512) + "\xff" + strings.Repeat("b", 512)},
+	}
+
+	for _, tt := range values {
+		b.Run(tt.name, func(b *testing.B) {
+			var marshalResult []byte
+
+			b.Run("marshal_append", func(b *testing.B) {
+				var result []byte
+				b.ReportAllocs()
+				for b.Loop() {
+					result, _ = jsonexperiment.MarshalAppendWithOptions(result[:0], tt.value, options)
+				}
+				marshalResult = result
+			})
+
+			b.Run("marshal", func(b *testing.B) {
+				var result []byte
+				b.ReportAllocs()
+				for b.Loop() {
+					result, _ = jsonexperiment.MarshalWithOptions(tt.value, options)
+				}
+				marshalResult = result
+			})
+
+			b.Run("encoding_json", func(b *testing.B) {
+				var result []byte
+				b.ReportAllocs()
+				for b.Loop() {
+					result, _ = json.Marshal(tt.value)
+				}
+				marshalResult = result
+			})
+
+			b.Run("sonic_json", func(b *testing.B) {
+				var result []byte
+				b.ReportAllocs()
+				for b.Loop() {
+					result, _ = sonic.ConfigStd.Marshal(tt.value)
+				}
+				marshalResult = result
+			})
+
+			b.Run("sonic_encode_into", func(b *testing.B) {
+				var result []byte
+				b.ReportAllocs()
+				for b.Loop() {
+					result = result[:0]
+					_ = sonicEncoder.EncodeInto(&result, tt.value, sonicEncoder.ValidateString)
+				}
+				marshalResult = result
+			})
+
+			runtime.KeepAlive(marshalResult)
+		})
+	}
+}
+
+func BenchmarkMarshalUTF8Slice(b *testing.B) {
+	values := []struct {
+		Name  string `json:"name"`
+		Value string `json:"value"`
+	}{
+		{Name: "valid_ascii", Value: strings.Repeat("The quick brown fox jumps. ", 32)},
+		{Name: "valid_unicode", Value: strings.Repeat("Hello, 世界. ", 32)},
+		{Name: "invalid_middle", Value: strings.Repeat("a", 512) + "\xff" + strings.Repeat("b", 512)},
+	}
+
+	benchmarkMarshalValue(b, values)
 }
 
 func benchmarkMarshalValue[T any](b *testing.B, value T) {

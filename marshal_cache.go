@@ -11,7 +11,7 @@ import (
 // For maps, ptr is the map data pointer rather than a pointer to map storage.
 // Flags configure behavior that may vary between marshal operations.
 // A marshalFn must not retain ptr after returning.
-type marshalFn func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error)
+type marshalFn func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error)
 
 // map[reflect.Type]marshalFn
 var marshalFnCache sync.Map
@@ -31,7 +31,7 @@ func getOrCreateMarshalFn(typ reflect.Type) marshalFn {
 	// Recursive type construction receives this placeholder.
 	// e.g `type Node struct { Next *Node }`
 	placeholder := marshalFn(
-		func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			wg.Wait()
 			return fn(dst, ptr, flags)
 		},
@@ -69,7 +69,7 @@ func createMarshalFn(typ reflect.Type) marshalFn {
 }
 
 func unsupportedTypeMarshalFn(typ reflect.Type) marshalFn {
-	return func(dst []byte, _ unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+	return func(dst []byte, _ unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 		return dst, fmt.Errorf("jsonexperiment: unsupported type %s", typ)
 	}
 }

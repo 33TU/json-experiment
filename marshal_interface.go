@@ -15,7 +15,7 @@ import (
 //go:linkname noescape runtime.noescape
 func noescape(p unsafe.Pointer) unsafe.Pointer
 
-func marshalInterface(dst []byte, v any, flags marshalFlags) ([]byte, error) {
+func marshalInterface(dst []byte, v any, flags MarshalFlags) ([]byte, error) {
 	if v == nil {
 		return internal.AppendNull(dst), nil
 	}
@@ -55,7 +55,7 @@ func marshalInterface(dst []byte, v any, flags marshalFlags) ([]byte, error) {
 	case reflect.Float64:
 		dst, err = internal.AppendFloat64(dst, *(*float64)(ptr))
 	case reflect.String:
-		if flags&marshalFlagEscapeHTML != 0 {
+		if flags&MarshalFlagEscapeHTML != 0 {
 			dst = internal.AppendStringHTML(dst, *(*string)(ptr))
 		} else {
 			dst = internal.AppendString(dst, *(*string)(ptr))
@@ -75,12 +75,12 @@ func marshalInterface(dst []byte, v any, flags marshalFlags) ([]byte, error) {
 
 func createInterfaceMarshalFn(typ reflect.Type) marshalFn {
 	if typ.NumMethod() == 0 {
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return marshalInterface(dst, *(*any)(ptr), flags)
 		}
 	}
 
-	return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		return marshalInterface(dst, internal.NonEmptyInterfaceValue(ptr), flags)
 	}
 }

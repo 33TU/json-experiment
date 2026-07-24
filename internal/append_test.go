@@ -148,6 +148,32 @@ func TestAppendString(t *testing.T) {
 	}
 }
 
+func TestAppendValidUTF8(t *testing.T) {
+	tests := []struct {
+		name string
+		src  []byte
+		want string
+	}{
+		{name: "empty"},
+		{name: "ASCII", src: []byte("hello"), want: "hello"},
+		{name: "Unicode", src: []byte("Hello, 世界"), want: "Hello, 世界"},
+		{name: "replacement rune", src: []byte("a\uFFFDb"), want: "a\uFFFDb"},
+		{name: "invalid byte", src: []byte{'a', 0xff, 'b'}, want: `a\ufffdb`},
+		{name: "malformed sequence", src: []byte{0xe2, 0x28, 0xa1}, want: `\ufffd(\ufffd`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := internal.AppendValidUTF8([]byte("prefix:"), tt.src)
+			want := append([]byte("prefix:"), tt.want...)
+
+			if !bytes.Equal(got, want) {
+				t.Fatalf("AppendValidUTF8() = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
 func TestAppendStringHTML(t *testing.T) {
 	t.Parallel()
 

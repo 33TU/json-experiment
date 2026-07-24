@@ -167,64 +167,64 @@ func fieldOmitFn(typ reflect.Type, kind reflect.Kind, omitEmpty, omitZero bool) 
 func fieldMarshalFn(typ reflect.Type, kind reflect.Kind) marshalFn {
 	switch kind {
 	case reflect.Bool:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendBool(dst, *(*bool)(ptr)), nil
 		}
 	case reflect.Int:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendInt(dst, *(*int)(ptr)), nil
 		}
 	case reflect.Int8:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendInt(dst, *(*int8)(ptr)), nil
 		}
 	case reflect.Int16:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendInt(dst, *(*int16)(ptr)), nil
 		}
 	case reflect.Int32:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendInt(dst, *(*int32)(ptr)), nil
 		}
 	case reflect.Int64:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendInt(dst, *(*int64)(ptr)), nil
 		}
 	case reflect.Uint:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUint(dst, *(*uint)(ptr)), nil
 		}
 	case reflect.Uint8:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUint(dst, *(*uint8)(ptr)), nil
 		}
 	case reflect.Uint16:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUint(dst, *(*uint16)(ptr)), nil
 		}
 	case reflect.Uint32:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUint(dst, *(*uint32)(ptr)), nil
 		}
 	case reflect.Uint64:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUint(dst, *(*uint64)(ptr)), nil
 		}
 	case reflect.Uintptr:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendUint(dst, *(*uintptr)(ptr)), nil
 		}
 	case reflect.Float32:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendFloat32(dst, *(*float32)(ptr))
 		}
 	case reflect.Float64:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendFloat64(dst, *(*float64)(ptr))
 		}
 	case reflect.String:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendStringHTML(dst, *(*string)(ptr)), nil
 			}
 			return internal.AppendString(dst, *(*string)(ptr)), nil
@@ -238,79 +238,79 @@ func fieldMarshalFn(typ reflect.Type, kind reflect.Kind) marshalFn {
 func fieldStringMarshalFn(typ reflect.Type, kind reflect.Kind) marshalFn {
 	switch kind {
 	case reflect.Bool:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			dst = internal.AppendBool(dst, *(*bool)(ptr))
 			return append(dst, '"'), nil
 		}
 	case reflect.Int:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			dst = internal.AppendInt(dst, *(*int)(ptr))
 			return append(dst, '"'), nil
 		}
 	case reflect.Int8:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			dst = internal.AppendInt(dst, *(*int8)(ptr))
 			return append(dst, '"'), nil
 		}
 	case reflect.Int16:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			dst = internal.AppendInt(dst, *(*int16)(ptr))
 			return append(dst, '"'), nil
 		}
 	case reflect.Int32:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			dst = internal.AppendInt(dst, *(*int32)(ptr))
 			return append(dst, '"'), nil
 		}
 	case reflect.Int64:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			dst = internal.AppendInt(dst, *(*int64)(ptr))
 			return append(dst, '"'), nil
 		}
 	case reflect.Uint:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			dst = internal.AppendUint(dst, *(*uint)(ptr))
 			return append(dst, '"'), nil
 		}
 	case reflect.Uint8:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			dst = internal.AppendUint(dst, *(*uint8)(ptr))
 			return append(dst, '"'), nil
 		}
 	case reflect.Uint16:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			dst = internal.AppendUint(dst, *(*uint16)(ptr))
 			return append(dst, '"'), nil
 		}
 	case reflect.Uint32:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			dst = internal.AppendUint(dst, *(*uint32)(ptr))
 			return append(dst, '"'), nil
 		}
 	case reflect.Uint64:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			dst = internal.AppendUint(dst, *(*uint64)(ptr))
 			return append(dst, '"'), nil
 		}
 	case reflect.Uintptr:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			dst = internal.AppendUint(dst, *(*uintptr)(ptr))
 			return append(dst, '"'), nil
 		}
 	case reflect.Float32:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			var err error
 			dst, err = internal.AppendFloat32(dst, *(*float32)(ptr))
@@ -320,7 +320,7 @@ func fieldStringMarshalFn(typ reflect.Type, kind reflect.Kind) marshalFn {
 			return append(dst, '"'), nil
 		}
 	case reflect.Float64:
-		return func(dst []byte, ptr unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			dst = append(dst, '"')
 			var err error
 			dst, err = internal.AppendFloat64(dst, *(*float64)(ptr))
@@ -330,8 +330,8 @@ func fieldStringMarshalFn(typ reflect.Type, kind reflect.Kind) marshalFn {
 			return append(dst, '"'), nil
 		}
 	case reflect.String:
-		return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-			if flags&marshalFlagEscapeHTML != 0 {
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			if flags&MarshalFlagEscapeHTML != 0 {
 				return internal.AppendQuotedStringHTML(dst, *(*string)(ptr)), nil
 			}
 			return internal.AppendQuotedString(dst, *(*string)(ptr)), nil
@@ -346,6 +346,10 @@ func createStructMarshalFn(typ reflect.Type) marshalFn {
 
 	for i := range typ.NumField() {
 		field := typ.Field(i)
+		if !field.IsExported() {
+			continue
+		}
+
 		fieldKind := field.Type.Kind()
 
 		// Get the JSON field fieldName and check if the field should be ignored
@@ -394,13 +398,13 @@ func createStructMarshalFn(typ reflect.Type) marshalFn {
 	}
 
 	if len(fields) == 0 {
-		return func(dst []byte, _ unsafe.Pointer, _ marshalFlags) ([]byte, error) {
+		return func(dst []byte, _ unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
 			return append(dst, "{}"...), nil
 		}
 	}
 
-	return func(dst []byte, ptr unsafe.Pointer, flags marshalFlags) ([]byte, error) {
-		escapeHTML := flags&marshalFlagEscapeHTML != 0
+	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+		escapeHTML := flags&MarshalFlagEscapeHTML != 0
 
 		dst = append(dst, '{')
 

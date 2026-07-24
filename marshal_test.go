@@ -639,6 +639,19 @@ func BenchmarkMarshalUTF8(b *testing.B) {
 				marshalResult = result
 			})
 
+			b.Run("encoding_json_v2_write", func(b *testing.B) {
+				buf := bytes.NewBuffer(nil)
+				allowInvalidUTF8 := jsontext.AllowInvalidUTF8(true)
+
+				b.ReportAllocs()
+				for b.Loop() {
+					buf.Reset()
+					_ = jsonv2.MarshalWrite(buf, tt.value, allowInvalidUTF8)
+				}
+
+				runtime.KeepAlive(buf.Bytes())
+			})
+
 			b.Run("sonic_json", func(b *testing.B) {
 				var result []byte
 				b.ReportAllocs()
@@ -656,19 +669,6 @@ func BenchmarkMarshalUTF8(b *testing.B) {
 					_ = sonicEncoder.EncodeInto(&result, tt.value, sonicEncoder.ValidateString)
 				}
 				marshalResult = result
-			})
-
-			b.Run("encoding_json_v2_write", func(b *testing.B) {
-				buf := bytes.NewBuffer(nil)
-				allowInvalidUTF8 := jsontext.AllowInvalidUTF8(true)
-
-				b.ReportAllocs()
-				for b.Loop() {
-					buf.Reset()
-					_ = jsonv2.MarshalWrite(buf, tt.value, allowInvalidUTF8)
-				}
-
-				runtime.KeepAlive(buf.Bytes())
 			})
 
 			runtime.KeepAlive(marshalResult)
@@ -706,6 +706,18 @@ func benchmarkMarshalValue[T any](b *testing.B, value T) {
 		marshalResult = result
 	})
 
+	b.Run("encoding_json_v2_write", func(b *testing.B) {
+		buf := bytes.NewBuffer(nil)
+
+		b.ReportAllocs()
+		for b.Loop() {
+			buf.Reset()
+			_ = jsonv2.MarshalWrite(buf, value)
+		}
+
+		runtime.KeepAlive(buf.Bytes())
+	})
+
 	b.Run("sonic_json", func(b *testing.B) {
 		var result []byte
 		b.ReportAllocs()
@@ -723,18 +735,6 @@ func benchmarkMarshalValue[T any](b *testing.B, value T) {
 			_ = sonicEncoder.EncodeInto(&result, value, 0)
 		}
 		marshalResult = result
-	})
-
-	b.Run("encoding_json_v2_write", func(b *testing.B) {
-		buf := bytes.NewBuffer(nil)
-
-		b.ReportAllocs()
-		for b.Loop() {
-			buf.Reset()
-			_ = jsonv2.MarshalWrite(buf, value)
-		}
-
-		runtime.KeepAlive(buf.Bytes())
 	})
 
 	runtime.KeepAlive(marshalResult)

@@ -2,6 +2,7 @@ package jsonexperiment_test
 
 import (
 	"bytes"
+	"encoding"
 	"encoding/json"
 	"math"
 	"reflect"
@@ -25,6 +26,57 @@ type testNumber int
 
 func (n testNumber) number() int {
 	return int(n)
+}
+
+type allMarshalers struct{}
+
+var (
+	_ jsonexperiment.MarshalerAppend = allMarshalers{}
+	_ json.Marshaler                 = allMarshalers{}
+	_ encoding.TextAppender          = allMarshalers{}
+	_ encoding.TextMarshaler         = allMarshalers{}
+)
+
+func (allMarshalers) MarshalJSONAppend(dst []byte) ([]byte, error) {
+	return append(dst, `"append"`...), nil
+}
+
+func (allMarshalers) MarshalJSON() ([]byte, error) {
+	return []byte(`"json"`), nil
+}
+
+func (allMarshalers) AppendText(dst []byte) ([]byte, error) {
+	return append(dst, "text append"...), nil
+}
+
+func (allMarshalers) MarshalText() ([]byte, error) {
+	return []byte("text marshal"), nil
+}
+
+type jsonAndTextMarshaler struct{}
+
+func (jsonAndTextMarshaler) MarshalJSON() ([]byte, error) {
+	return []byte(`"json"`), nil
+}
+
+func (jsonAndTextMarshaler) AppendText(dst []byte) ([]byte, error) {
+	return append(dst, "text append"...), nil
+}
+
+type bothTextMarshalers struct{}
+
+func (bothTextMarshalers) AppendText(dst []byte) ([]byte, error) {
+	return append(dst, "<append>"...), nil
+}
+
+func (bothTextMarshalers) MarshalText() ([]byte, error) {
+	return []byte("marshal"), nil
+}
+
+type textMarshaler struct{}
+
+func (textMarshaler) MarshalText() ([]byte, error) {
+	return []byte("<marshal>"), nil
 }
 
 func TestMarshal(t *testing.T) {
@@ -157,6 +209,36 @@ func TestMarshalAppend(t *testing.T) {
 
 	if want := []byte("prefix:[1,2,3]"); !bytes.Equal(got, want) {
 		t.Fatalf("MarshalAppend = %q, want %q", got, want)
+	}
+}
+
+func TestMarshalInterfacePrecedence(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		value any
+		flags jsonexperiment.MarshalFlags
+		want  string
+	}{
+		{"MarshalerAppend", allMarshalers{}, 0, `"append"`},
+		{"json.Marshaler", jsonAndTextMarshaler{}, 0, `"json"`},
+		{"encoding.TextAppender", bothTextMarshalers{}, 0, `"<append>"`},
+		{"encoding.TextMarshaler", textMarshaler{}, 0, `"<marshal>"`},
+		{"TextAppender HTML escaping", bothTextMarshalers{}, jsonexperiment.MarshalFlagEscapeHTML, `"\u003cappend\u003e"`},
+		{"TextMarshaler HTML escaping", textMarshaler{}, jsonexperiment.MarshalFlagEscapeHTML, `"\u003cmarshal\u003e"`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := jsonexperiment.MarshalWithFlags(tt.value, tt.flags)
+			if err != nil {
+				t.Fatalf("MarshalWithFlags: %v", err)
+			}
+			if string(got) != tt.want {
+				t.Fatalf("MarshalWithFlags = %s, want %s", got, tt.want)
+			}
+		})
 	}
 }
 

@@ -9,6 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	"encoding/json/jsontext"
+	jsonv2 "encoding/json/v2"
+
 	jsonexperiment "github.com/33TU/json-experiment"
 	"github.com/bytedance/sonic"
 	sonicEncoder "github.com/bytedance/sonic/encoder"
@@ -655,22 +658,22 @@ func BenchmarkMarshalUTF8(b *testing.B) {
 				marshalResult = result
 			})
 
+			b.Run("encoding_json_v2_write", func(b *testing.B) {
+				buf := bytes.NewBuffer(nil)
+				allowInvalidUTF8 := jsontext.AllowInvalidUTF8(true)
+
+				b.ReportAllocs()
+				for b.Loop() {
+					buf.Reset()
+					_ = jsonv2.MarshalWrite(buf, tt.value, allowInvalidUTF8)
+				}
+
+				runtime.KeepAlive(buf.Bytes())
+			})
+
 			runtime.KeepAlive(marshalResult)
 		})
 	}
-}
-
-func BenchmarkMarshalUTF8Slice(b *testing.B) {
-	values := []struct {
-		Name  string `json:"name"`
-		Value string `json:"value"`
-	}{
-		{Name: "valid_ascii", Value: strings.Repeat("The quick brown fox jumps. ", 32)},
-		{Name: "valid_unicode", Value: strings.Repeat("Hello, 世界. ", 32)},
-		{Name: "invalid_middle", Value: strings.Repeat("a", 512) + "\xff" + strings.Repeat("b", 512)},
-	}
-
-	benchmarkMarshalValue(b, values)
 }
 
 func benchmarkMarshalValue[T any](b *testing.B, value T) {
@@ -720,6 +723,18 @@ func benchmarkMarshalValue[T any](b *testing.B, value T) {
 			_ = sonicEncoder.EncodeInto(&result, value, 0)
 		}
 		marshalResult = result
+	})
+
+	b.Run("encoding_json_v2_write", func(b *testing.B) {
+		buf := bytes.NewBuffer(nil)
+
+		b.ReportAllocs()
+		for b.Loop() {
+			buf.Reset()
+			_ = jsonv2.MarshalWrite(buf, value)
+		}
+
+		runtime.KeepAlive(buf.Bytes())
 	})
 
 	runtime.KeepAlive(marshalResult)

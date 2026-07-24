@@ -1,12 +1,22 @@
 package jsonexperiment
 
 import (
+	"encoding"
+	"encoding/json"
 	"reflect"
 	"runtime"
 	"unsafe"
 
 	"github.com/33TU/json-experiment/internal"
 )
+
+// MarshalerAppend is implemented by types that can append their JSON encoding
+// directly to an existing buffer.
+//
+// MarshalJSONAppend must not retain dst or modify dst[:len(dst)].
+type MarshalerAppend interface {
+	MarshalJSONAppend(dst []byte) ([]byte, error)
+}
 
 // noescape returns p while hiding it from escape analysis.
 // The returned pointer must not outlive the value referenced by p.
@@ -18,6 +28,32 @@ func noescape(p unsafe.Pointer) unsafe.Pointer
 func marshalInterface(dst []byte, v any, flags MarshalFlags) ([]byte, error) {
 	if v == nil {
 		return internal.AppendNull(dst), nil
+	}
+
+	switch value := v.(type) {
+	case MarshalerAppend:
+		return value.MarshalJSONAppend(dst)
+	case json.Marshaler:
+		buf, err := value.MarshalJSON()
+		return append(dst, buf...), err
+	case encoding.TextAppender:
+		text, err := value.AppendText(nil)
+		if err != nil {
+			return dst, err
+		}
+		if flags&MarshalFlagEscapeHTML != 0 {
+			return internal.AppendStringHTML(dst, string(text)), nil
+		}
+		return internal.AppendString(dst, string(text)), nil
+	case encoding.TextMarshaler:
+		text, err := value.MarshalText()
+		if err != nil {
+			return dst, err
+		}
+		if flags&MarshalFlagEscapeHTML != 0 {
+			return internal.AppendStringHTML(dst, string(text)), nil
+		}
+		return internal.AppendString(dst, string(text)), nil
 	}
 
 	typ := reflect.TypeOf(v)

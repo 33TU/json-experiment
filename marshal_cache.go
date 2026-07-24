@@ -50,6 +50,15 @@ func getOrCreateMarshalFn(typ reflect.Type) marshalFn {
 }
 
 func createMarshalFn(typ reflect.Type) marshalFn {
+	switch {
+	case typ.Implements(marshalerAppendType):
+		return createMarshalerAppendFn(typ)
+	case typ.Implements(stdMarshalerType):
+		return createStdMarshalerFn(typ)
+	case typ.Implements(stdTextMarshalerType):
+		return createStdTextMarshalerFn(typ)
+	}
+
 	switch typ.Kind() {
 	case reflect.Pointer:
 		return createPointerMarshalFn(typ)

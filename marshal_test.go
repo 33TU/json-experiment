@@ -2,7 +2,6 @@ package jsonexperiment_test
 
 import (
 	"bytes"
-	"encoding"
 	"encoding/json"
 	"math"
 	"reflect"
@@ -33,8 +32,6 @@ type allMarshalers struct{}
 var (
 	_ jsonexperiment.MarshalerAppend = allMarshalers{}
 	_ json.Marshaler                 = allMarshalers{}
-	_ encoding.TextAppender          = allMarshalers{}
-	_ encoding.TextMarshaler         = allMarshalers{}
 )
 
 func (allMarshalers) MarshalJSONAppend(dst []byte) ([]byte, error) {
@@ -45,38 +42,16 @@ func (allMarshalers) MarshalJSON() ([]byte, error) {
 	return []byte(`"json"`), nil
 }
 
-func (allMarshalers) AppendText(dst []byte) ([]byte, error) {
-	return append(dst, "text append"...), nil
-}
+type jsonMarshaller struct{}
 
-func (allMarshalers) MarshalText() ([]byte, error) {
-	return []byte("text marshal"), nil
-}
-
-type jsonAndTextMarshaler struct{}
-
-func (jsonAndTextMarshaler) MarshalJSON() ([]byte, error) {
+func (jsonMarshaller) MarshalJSON() ([]byte, error) {
 	return []byte(`"json"`), nil
-}
-
-func (jsonAndTextMarshaler) AppendText(dst []byte) ([]byte, error) {
-	return append(dst, "text append"...), nil
-}
-
-type bothTextMarshalers struct{}
-
-func (bothTextMarshalers) AppendText(dst []byte) ([]byte, error) {
-	return append(dst, "<append>"...), nil
-}
-
-func (bothTextMarshalers) MarshalText() ([]byte, error) {
-	return []byte("marshal"), nil
 }
 
 type textMarshaler struct{}
 
 func (textMarshaler) MarshalText() ([]byte, error) {
-	return []byte("<marshal>"), nil
+	return []byte("<text>"), nil
 }
 
 func TestMarshal(t *testing.T) {
@@ -222,11 +197,12 @@ func TestMarshalInterfacePrecedence(t *testing.T) {
 		want  string
 	}{
 		{"MarshalerAppend", allMarshalers{}, 0, `"append"`},
-		{"json.Marshaler", jsonAndTextMarshaler{}, 0, `"json"`},
-		{"encoding.TextAppender", bothTextMarshalers{}, 0, `"<append>"`},
-		{"encoding.TextMarshaler", textMarshaler{}, 0, `"<marshal>"`},
-		{"TextAppender HTML escaping", bothTextMarshalers{}, jsonexperiment.MarshalFlagEscapeHTML, `"\u003cappend\u003e"`},
-		{"TextMarshaler HTML escaping", textMarshaler{}, jsonexperiment.MarshalFlagEscapeHTML, `"\u003cmarshal\u003e"`},
+		{"json.Marshaler", jsonMarshaller{}, 0, `"json"`},
+		{"*MarshalerAppend", &allMarshalers{}, 0, `"append"`},
+		{"*json.Marshaler", &jsonMarshaller{}, 0, `"json"`},
+		{"encoding.TextMarshaler", textMarshaler{}, 0, `"<text>"`},
+		{"*encoding.TextMarshaler", &textMarshaler{}, 0, `"<text>"`},
+		{"encoding.TextMarshaler HTML", textMarshaler{}, jsonexperiment.MarshalFlagEscapeHTML, `"\u003ctext\u003e"`},
 	}
 
 	for _, tt := range tests {
@@ -756,6 +732,12 @@ func BenchmarkMarshalUTF8(b *testing.B) {
 			runtime.KeepAlive(marshalResult)
 		})
 	}
+}
+
+func BenchmarkTextMarshaler(b *testing.B) {
+	value := textMarshaler{}
+
+	benchmarkMarshalValue(b, value)
 }
 
 func benchmarkMarshalValue[T any](b *testing.B, value T) {

@@ -20,9 +20,25 @@ type interfaceTable struct {
 	typ   unsafe.Pointer // concrete type descriptor
 }
 
+// InterfaceType returns the concrete type descriptor from v's empty-interface
+// representation.
+func InterfaceType(v any) unsafe.Pointer {
+	return (*emptyInterface)(unsafe.Pointer(&v)).typ
+}
+
 // InterfaceData returns the data word from v's empty-interface representation.
 func InterfaceData(v any) unsafe.Pointer {
 	return (*emptyInterface)(unsafe.Pointer(&v)).data
+}
+
+// InterfaceValue constructs an empty interface from a concrete type descriptor
+// and its interface data word.
+func InterfaceValue(typ, data unsafe.Pointer) any {
+	var value any
+	iface := (*emptyInterface)(unsafe.Pointer(&value))
+	iface.typ = typ
+	iface.data = data
+	return value
 }
 
 // NonEmptyInterfaceValue converts the non-empty interface at ptr to an empty interface.

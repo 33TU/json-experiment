@@ -38,6 +38,37 @@ func TestInterfaceData(t *testing.T) {
 	runtime.KeepAlive(value)
 }
 
+func TestInterfaceValue(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		value any
+	}{
+		{"value", testValue(42)},
+		{"pointer", &testPointer{n: 42}},
+		{"typed nil", (*testPointer)(nil)},
+		{"nil", nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := internal.InterfaceValue(
+				internal.InterfaceType(tt.value),
+				internal.InterfaceData(tt.value),
+			)
+			if !reflect.DeepEqual(got, tt.value) {
+				t.Fatalf("InterfaceValue() = %#v (%T), want %#v (%T)", got, got, tt.value, tt.value)
+			}
+
+			runtime.KeepAlive(tt.value)
+			runtime.KeepAlive(got)
+		})
+	}
+}
+
 func TestNonEmptyInterfaceValue(t *testing.T) {
 	t.Parallel()
 
@@ -71,6 +102,20 @@ func BenchmarkInterfaceData(b *testing.B) {
 
 	for b.Loop() {
 		result = internal.InterfaceData(value)
+	}
+
+	runtime.KeepAlive(value)
+	runtime.KeepAlive(result)
+}
+
+func BenchmarkInterfaceValue(b *testing.B) {
+	value := any(testValue(123))
+	typ := internal.InterfaceType(value)
+	data := internal.InterfaceData(value)
+	var result any
+
+	for b.Loop() {
+		result = internal.InterfaceValue(typ, data)
 	}
 
 	runtime.KeepAlive(value)

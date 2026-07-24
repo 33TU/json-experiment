@@ -1,13 +1,17 @@
 package jsonexperiment
 
 import (
-	"encoding"
-	"encoding/json"
 	"reflect"
 	"runtime"
 	"unsafe"
 
 	"github.com/33TU/json-experiment/internal"
+)
+
+var (
+	marshalerAppendType  = reflect.TypeFor[MarshalerAppend]()
+	stdMarshalerType     = reflect.TypeFor[StdMarshaler]()
+	stdTextMarshalerType = reflect.TypeFor[StdTextMarshaler]()
 )
 
 // MarshalerAppend is implemented by types that can append their JSON encoding
@@ -16,6 +20,18 @@ import (
 // MarshalJSONAppend must not retain dst or modify dst[:len(dst)].
 type MarshalerAppend interface {
 	MarshalJSONAppend(dst []byte) ([]byte, error)
+}
+
+// StdMarshaler is implemented by types that can marshal themselves into valid JSON.
+// It is compatible with encoding/json.Marshaler.
+type StdMarshaler interface {
+	MarshalJSON() ([]byte, error)
+}
+
+// StdTextMarshaler is implemented by types that can marshal themselves into text.
+// It is compatible with encoding.TextMarshaler.
+type StdTextMarshaler interface {
+	MarshalText() ([]byte, error)
 }
 
 // noescape returns p while hiding it from escape analysis.
@@ -28,32 +44,6 @@ func noescape(p unsafe.Pointer) unsafe.Pointer
 func marshalInterface(dst []byte, v any, flags MarshalFlags) ([]byte, error) {
 	if v == nil {
 		return internal.AppendNull(dst), nil
-	}
-
-	switch value := v.(type) {
-	case MarshalerAppend:
-		return value.MarshalJSONAppend(dst)
-	case json.Marshaler:
-		buf, err := value.MarshalJSON()
-		return append(dst, buf...), err
-	case encoding.TextAppender:
-		text, err := value.AppendText(nil)
-		if err != nil {
-			return dst, err
-		}
-		if flags&MarshalFlagEscapeHTML != 0 {
-			return internal.AppendStringHTML(dst, string(text)), nil
-		}
-		return internal.AppendString(dst, string(text)), nil
-	case encoding.TextMarshaler:
-		text, err := value.MarshalText()
-		if err != nil {
-			return dst, err
-		}
-		if flags&MarshalFlagEscapeHTML != 0 {
-			return internal.AppendStringHTML(dst, string(text)), nil
-		}
-		return internal.AppendString(dst, string(text)), nil
 	}
 
 	typ := reflect.TypeOf(v)
@@ -118,5 +108,70 @@ func createInterfaceMarshalFn(typ reflect.Type) marshalFn {
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		return marshalInterface(dst, internal.NonEmptyInterfaceValue(ptr), flags)
+	}
+}
+
+func createMarshalerAppendFn(typ reflect.Type) marshalFn {
+	typeWord := internal.InterfaceType(reflect.Zero(typ).Interface())
+	isPointer := typ.Kind() == reflect.Pointer
+
+	return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
+		data := ptr
+		if isPointer {
+			data = *(*unsafe.Pointer)(ptr)
+			if data == nil {
+				return internal.AppendNull(dst), nil
+			}
+		}
+
+		value := internal.InterfaceValue(typeWord, data)
+		return value.(MarshalerAppend).MarshalJSONAppend(dst)
+	}
+}
+
+func createStdMarshalerFn(typ reflect.Type) marshalFn {
+	typeWord := internal.InterfaceType(reflect.Zero(typ).Interface())
+	isPointer := typ.Kind() == reflect.Pointer
+
+	return func(dst []byte, ptr unsafe.Pointer, _ MarshalFlags) ([]byte, error) {
+		data := ptr
+		if isPointer {
+			data = *(*unsafe.Pointer)(ptr)
+			if data == nil {
+				return internal.AppendNull(dst), nil
+			}
+		}
+
+		value := internal.InterfaceValue(typeWord, data)
+		buf, err := value.(StdMarshaler).MarshalJSON()
+		if err != nil {
+			return dst, err
+		}
+		return append(dst, buf...), nil
+	}
+}
+
+func createStdTextMarshalerFn(typ reflect.Type) marshalFn {
+	typeWord := internal.InterfaceType(reflect.Zero(typ).Interface())
+	isPointer := typ.Kind() == reflect.Pointer
+
+	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+		data := ptr
+		if isPointer {
+			data = *(*unsafe.Pointer)(ptr)
+			if data == nil {
+				return internal.AppendNull(dst), nil
+			}
+		}
+
+		value := internal.InterfaceValue(typeWord, data)
+		text, err := value.(StdTextMarshaler).MarshalText()
+		if err != nil {
+			return dst, err
+		}
+		if flags&MarshalFlagEscapeHTML != 0 {
+			return internal.AppendStringHTML(dst, string(text)), nil
+		}
+		return internal.AppendString(dst, string(text)), nil
 	}
 }

@@ -427,12 +427,11 @@ func createMapStringValueMarshalFn(
 			return append(dst, "{}"...), nil
 		}
 
-		iter := value.MapRange()
 		keyTarget := reflect.New(typ.Key()).Elem()
 		valTarget := reflect.New(valueType).Elem()
 
 		dst = append(dst, '{')
-		for iter.Next() {
+		for iter := value.MapRange(); iter.Next(); {
 			keyTarget.SetIterKey(iter)
 			valTarget.SetIterValue(iter)
 
@@ -476,12 +475,11 @@ func createMapIntValueMarshalFn(
 			return append(dst, "{}"...), nil
 		}
 
-		iter := value.MapRange()
 		keyTarget := reflect.New(typ.Key()).Elem()
 		valTarget := reflect.New(valueType).Elem()
 
 		dst = append(dst, '{')
-		for iter.Next() {
+		for iter := value.MapRange(); iter.Next(); {
 			keyTarget.SetIterKey(iter)
 			valTarget.SetIterValue(iter)
 
@@ -522,12 +520,11 @@ func createMapUintValueMarshalFn(
 			return append(dst, "{}"...), nil
 		}
 
-		iter := value.MapRange()
 		keyTarget := reflect.New(typ.Key()).Elem()
 		valTarget := reflect.New(valueType).Elem()
 
 		dst = append(dst, '{')
-		for iter.Next() {
+		for iter := value.MapRange(); iter.Next(); {
 			keyTarget.SetIterKey(iter)
 			valTarget.SetIterValue(iter)
 

@@ -9,7 +9,10 @@ import (
 
 // AppendValidUTF8 appends src to dst, replacing each invalid UTF-8 byte with \ufffd.
 func AppendValidUTF8(dst, src []byte) []byte {
-	const byteHighs = 0x8080808080808080
+	const (
+		byteHighs = 0x8080808080808080
+		runeError = string(utf8.RuneError)
+	)
 
 	data := unsafe.Pointer(unsafe.SliceData(src))
 	start := 0
@@ -40,7 +43,7 @@ func AppendValidUTF8(dst, src []byte) []byte {
 		}
 
 		dst = append(dst, src[start:i]...)
-		dst = append(dst, `\ufffd`...)
+		dst = append(dst, runeError...)
 		i++
 		start = i
 	}

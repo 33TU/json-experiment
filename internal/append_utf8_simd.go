@@ -14,6 +14,7 @@ func AppendValidUTF8(dst, src []byte) []byte {
 		byteHighs     = 0x8080808080808080
 		chunkSize     = 16
 		simdThreshold = 32
+		runeError     = string(utf8.RuneError)
 	)
 
 	data := unsafe.Pointer(unsafe.SliceData(src))
@@ -58,7 +59,7 @@ func AppendValidUTF8(dst, src []byte) []byte {
 		}
 
 		dst = append(dst, src[start:i]...)
-		dst = append(dst, `\ufffd`...)
+		dst = append(dst, runeError...)
 		i++
 		start = i
 	}

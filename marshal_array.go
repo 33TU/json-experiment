@@ -18,8 +18,12 @@ func createArrayMarshalFn(typ reflect.Type) marshalFn {
 
 	elemType := typ.Elem()
 	elemSize := elemType.Size()
+	elemKind := elemType.Kind()
+	if implementsMarshaler(elemType) {
+		return createArrayDefaultMarshalFn(arrayLen, elemType, elemKind, elemSize)
+	}
 
-	switch elemKind := elemType.Kind(); elemKind {
+	switch elemKind {
 	case reflect.Bool:
 		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendBoolSlice(dst, unsafe.Slice((*bool)(ptr), arrayLen)), nil
@@ -83,28 +87,32 @@ func createArrayMarshalFn(typ reflect.Type) marshalFn {
 			}
 			return internal.AppendStringSlice(dst, unsafe.Slice((*string)(ptr), arrayLen)), nil
 		}
-	default:
-		elemFn := getOrCreateMarshalFn(elemType)
-		elemIsMap := elemKind == reflect.Map
+	}
 
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			dst = append(dst, '[')
-			for i := range arrayLen {
-				elemPtr := unsafe.Add(ptr, uintptr(i)*elemSize)
-				if elemIsMap {
-					elemPtr = *(*unsafe.Pointer)(elemPtr)
-				}
+	return createArrayDefaultMarshalFn(arrayLen, elemType, elemKind, elemSize)
+}
 
-				var err error
-				if dst, err = elemFn(dst, elemPtr, flags); err != nil {
-					return dst, err
-				}
+func createArrayDefaultMarshalFn(arrayLen int, elemType reflect.Type, elemKind reflect.Kind, elemSize uintptr) marshalFn {
+	elemFn := getOrCreateMarshalFn(elemType)
+	elemIsMap := elemKind == reflect.Map
 
-				dst = append(dst, ',')
+	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+		dst = append(dst, '[')
+		for i := range arrayLen {
+			elemPtr := unsafe.Add(ptr, uintptr(i)*elemSize)
+			if elemIsMap {
+				elemPtr = *(*unsafe.Pointer)(elemPtr)
 			}
-			dst[len(dst)-1] = ']'
 
-			return dst, nil
+			var err error
+			if dst, err = elemFn(dst, elemPtr, flags); err != nil {
+				return dst, err
+			}
+
+			dst = append(dst, ',')
 		}
+		dst[len(dst)-1] = ']'
+
+		return dst, nil
 	}
 }

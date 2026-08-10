@@ -18,7 +18,12 @@ func createSliceMarshalFn(typ reflect.Type) marshalFn {
 	elemType := typ.Elem()
 	elemSize := elemType.Size()
 
-	switch elemKind := elemType.Kind(); elemKind {
+	elemKind := elemType.Kind()
+	if implementsMarshaler(elemType) {
+		return createSliceDefaultMarshalFn(elemType, elemKind, elemSize)
+	}
+
+	switch elemKind {
 	case reflect.Bool:
 		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 			return internal.AppendBoolSlice(dst, *(*[]bool)(ptr)), nil
@@ -82,37 +87,41 @@ func createSliceMarshalFn(typ reflect.Type) marshalFn {
 			}
 			return internal.AppendStringSlice(dst, *(*[]string)(ptr)), nil
 		}
-	default:
-		elemFn := getOrCreateMarshalFn(elemType)
-		elemIsMap := elemKind == reflect.Map
+	}
 
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			header := (*sliceHeader)(ptr)
+	return createSliceDefaultMarshalFn(elemType, elemKind, elemSize)
+}
 
-			if header.data == nil {
-				return internal.AppendNull(dst), nil
-			}
-			if header.len == 0 {
-				return append(dst, "[]"...), nil
-			}
+func createSliceDefaultMarshalFn(elemType reflect.Type, elemKind reflect.Kind, elemSize uintptr) marshalFn {
+	elemFn := getOrCreateMarshalFn(elemType)
+	elemIsMap := elemKind == reflect.Map
 
-			dst = append(dst, '[')
-			for i := range header.len {
-				elemPtr := unsafe.Add(header.data, uintptr(i)*elemSize)
-				if elemIsMap {
-					elemPtr = *(*unsafe.Pointer)(elemPtr)
-				}
+	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+		header := (*sliceHeader)(ptr)
 
-				var err error
-				if dst, err = elemFn(dst, elemPtr, flags); err != nil {
-					return dst, err
-				}
-
-				dst = append(dst, ',')
-			}
-			dst[len(dst)-1] = ']'
-
-			return dst, nil
+		if header.data == nil {
+			return internal.AppendNull(dst), nil
 		}
+		if header.len == 0 {
+			return append(dst, "[]"...), nil
+		}
+
+		dst = append(dst, '[')
+		for i := range header.len {
+			elemPtr := unsafe.Add(header.data, uintptr(i)*elemSize)
+			if elemIsMap {
+				elemPtr = *(*unsafe.Pointer)(elemPtr)
+			}
+
+			var err error
+			if dst, err = elemFn(dst, elemPtr, flags); err != nil {
+				return dst, err
+			}
+
+			dst = append(dst, ',')
+		}
+		dst[len(dst)-1] = ']'
+
+		return dst, nil
 	}
 }

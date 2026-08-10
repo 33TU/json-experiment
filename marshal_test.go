@@ -56,6 +56,24 @@ func (textMarshaler) MarshalText() ([]byte, error) {
 	return []byte("<text>"), nil
 }
 
+type appendInt int
+
+func (appendInt) MarshalJSONAppend(dst []byte) ([]byte, error) {
+	return append(dst, `"append"`...), nil
+}
+
+type jsonString string
+
+func (jsonString) MarshalJSON() ([]byte, error) {
+	return []byte(`"json"`), nil
+}
+
+type textBool bool
+
+func (textBool) MarshalText() ([]byte, error) {
+	return []byte("<text>"), nil
+}
+
 func TestMarshal(t *testing.T) {
 	t.Parallel()
 
@@ -217,6 +235,35 @@ func TestMarshalInterfacePrecedence(t *testing.T) {
 			}
 			if string(got) != tt.want {
 				t.Fatalf("MarshalWithFlags = %s, want %s", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMarshalCollectionElementInterfaces(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		value any
+		want  string
+	}{
+		{"slice MarshalerAppend", []appendInt{1, 2}, `["append","append"]`},
+		{"array MarshalerAppend", [2]appendInt{1, 2}, `["append","append"]`},
+		{"slice json.Marshaler", []jsonString{"one", "two"}, `["json","json"]`},
+		{"array json.Marshaler", [2]jsonString{"one", "two"}, `["json","json"]`},
+		{"slice encoding.TextMarshaler", []textBool{true, false}, `["<text>","<text>"]`},
+		{"array encoding.TextMarshaler", [2]textBool{true, false}, `["<text>","<text>"]`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := jsonexperiment.Marshal(tt.value)
+			if err != nil {
+				t.Fatalf("Marshal: %v", err)
+			}
+			if string(got) != tt.want {
+				t.Fatalf("Marshal = %s, want %s", got, tt.want)
 			}
 		})
 	}

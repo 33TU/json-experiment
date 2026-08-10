@@ -14,6 +14,12 @@ var (
 	stdTextMarshalerType = reflect.TypeFor[StdTextMarshaler]()
 )
 
+func implementsMarshaler(typ reflect.Type) bool {
+	return typ.Implements(marshalerAppendType) ||
+		typ.Implements(stdMarshalerType) ||
+		typ.Implements(stdTextMarshalerType)
+}
+
 // MarshalerAppend is implemented by types that can append their JSON encoding
 // directly to an existing buffer.
 //

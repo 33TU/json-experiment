@@ -45,6 +45,7 @@ func AppendValidUTF8(dst, src []byte) []byte {
 			i += 8
 		}
 
+		// Process the remaining bytes one by one.
 		for i < len(src) && src[i] < utf8.RuneSelf {
 			i++
 		}

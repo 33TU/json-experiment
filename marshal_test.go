@@ -962,6 +962,25 @@ func BenchmarkMarshalOmits(b *testing.B) {
 	benchmarkMarshalValue(b, value)
 }
 
+func BenchmarkMarshalOmitZero(b *testing.B) {
+	value := struct {
+		ZeroBool   bool           `json:"zero_bool,omitzero"`
+		ZeroInt    int            `json:"zero_int,omitzero"`
+		ZeroString string         `json:"zero_string,omitzero"`
+		ZeroSlice  []int          `json:"zero_slice,omitzero"`
+		ZeroMap    map[string]int `json:"zero_map,omitzero"`
+		KeepInt    int            `json:"keep_int,omitzero"`
+		KeepString string         `json:"keep_string,omitzero"`
+		KeepSlice  []int          `json:"keep_slice,omitzero"`
+	}{
+		KeepInt:    math.MaxInt,
+		KeepString: "benchmark value",
+		KeepSlice:  []int{1, 2, 3},
+	}
+
+	benchmarkMarshalValue(b, value)
+}
+
 func BenchmarkMarshalUTF8(b *testing.B) {
 	options := jsonexperiment.MarshalOptions{ValidateString: true}
 

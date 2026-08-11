@@ -80,6 +80,41 @@ func (*pointerJSONInt) MarshalJSON() ([]byte, error) {
 	return []byte(`"pointer"`), nil
 }
 
+type pointerJSONMap map[string]int
+
+func (*pointerJSONMap) MarshalJSON() ([]byte, error) {
+	return []byte(`"pointer-map"`), nil
+}
+
+type valueZeroInt int
+
+func (v valueZeroInt) IsZero() bool {
+	return v == 1
+}
+
+type pointerZeroInt int
+
+func (v *pointerZeroInt) IsZero() bool {
+	return v != nil && *v == 2
+}
+
+type neverZeroInt int
+
+func (neverZeroInt) IsZero() bool {
+	return false
+}
+
+type zeroSlice []int
+
+func (v zeroSlice) IsZero() bool {
+	return len(v) == 1 && v[0] == 1
+}
+
+type recursiveNode struct {
+	Value int            `json:"value"`
+	Next  *recursiveNode `json:"next"`
+}
+
 type textBool bool
 
 func (textBool) MarshalText() ([]byte, error) {
@@ -93,6 +128,11 @@ func TestMarshal(t *testing.T) {
 	intPointer := &intValue
 	mapValue := map[string]int{"one": 1, "two": 2}
 	mapPointer := &mapValue
+	jsonValue := jsonInt(123)
+	jsonPointer := &jsonValue
+	pointerJSONValue := pointerJSONInt(123)
+	pointerJSONPointer := &pointerJSONValue
+	recursiveValue := &recursiveNode{Value: 1, Next: &recursiveNode{Value: 2}}
 
 	tests := []struct {
 		name  string
@@ -117,6 +157,9 @@ func TestMarshal(t *testing.T) {
 		{"string", "quote: \" slash: \\ newline:\n unicode: 世界 <>&"},
 		{"pointer", intPointer},
 		{"pointer chain", &intPointer},
+		{"value marshaler pointer chain", &jsonPointer},
+		{"pointer marshaler", pointerJSONPointer},
+		{"pointer marshaler pointer chain", &pointerJSONPointer},
 		{"nil pointer", (*int)(nil)},
 		{"array", [3]int{-1, 0, 1}},
 		{"slice", []string{"one", "two"}},
@@ -152,6 +195,7 @@ func TestMarshal(t *testing.T) {
 		{"uint string slice map", map[uint][]string{1: {"one", "two"}}},
 		{"pointer to map", mapPointer},
 		{"pointer chain to map", &mapPointer},
+		{"recursive struct pointer", recursiveValue},
 		{"slice of maps", []map[string]int{{"one": 1}, nil, {"two": 2}}},
 		{"array of maps", [2]map[string]int{{"one": 1}, {"two": 2}}},
 		{"nested map", map[string]map[string]int{"outer": {"inner": 1}}},
@@ -327,6 +371,39 @@ func TestMarshalCollectionPointerReceiver(t *testing.T) {
 	}
 }
 
+func TestMarshalMapPointerReceiver(t *testing.T) {
+	t.Parallel()
+
+	value := pointerJSONMap{"value": 1}
+	pointer := &value
+	array := [2]pointerJSONMap{value, value}
+	tests := []struct {
+		name  string
+		value any
+	}{
+		{"pointer chain", &pointer},
+		{"slice", []pointerJSONMap{value}},
+		{"array", array},
+		{"array pointer", &array},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := jsonexperiment.Marshal(tt.value)
+			if err != nil {
+				t.Fatalf("Marshal(%T): %v", tt.value, err)
+			}
+
+			want, err := json.Marshal(tt.value)
+			if err != nil {
+				t.Fatalf("json.Marshal(%T): %v", tt.value, err)
+			}
+
+			assertJSONEqual(t, got, want)
+		})
+	}
+}
+
 func TestMarshalStringTag(t *testing.T) {
 	t.Parallel()
 
@@ -477,6 +554,37 @@ func TestMarshalOmitTags(t *testing.T) {
 		KeepDoublePointer: outerPointer,
 		KeepStruct:        nested{},
 		KeepSlice:         []int{},
+	}
+
+	got, err := jsonexperiment.Marshal(testValue)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+	want, err := json.Marshal(testValue)
+	if err != nil {
+		t.Fatalf("json.Marshal: %v", err)
+	}
+
+	assertJSONEqual(t, got, want)
+}
+
+func TestMarshalOmitZeroMethod(t *testing.T) {
+	t.Parallel()
+
+	type value struct {
+		ValueMethod   valueZeroInt   `json:"value_method,omitzero"`
+		PointerMethod pointerZeroInt `json:"pointer_method,omitzero"`
+		KeepZero      neverZeroInt   `json:"keep_zero,omitzero"`
+		EmptyWins     neverZeroInt   `json:"empty_wins,omitempty,omitzero"`
+		SliceMethod   zeroSlice      `json:"slice_method,omitzero"`
+		KeepSlice     zeroSlice      `json:"keep_slice,omitzero"`
+		Marshaler     jsonInt        `json:"marshaler,omitempty"`
+	}
+	testValue := value{
+		ValueMethod:   1,
+		PointerMethod: 2,
+		SliceMethod:   zeroSlice{1},
+		KeepSlice:     zeroSlice{},
 	}
 
 	got, err := jsonexperiment.Marshal(testValue)

@@ -17,175 +17,188 @@ func createPointerMarshalFn(typ reflect.Type) marshalFn {
 		elemType = elemType.Elem()
 	}
 
-	switch elemType.Kind() {
-	case reflect.Bool:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+	elemKind := elemType.Kind()
+	if !hasAddressableMarshaler(elemType) {
+		switch elemKind {
+		case reflect.Bool:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendBool(dst, *(*bool)(ptr)), nil
 			}
-			return internal.AppendBool(dst, *(*bool)(ptr)), nil
-		}
-	case reflect.Int:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Int:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendInt(dst, *(*int)(ptr)), nil
 			}
-			return internal.AppendInt(dst, *(*int)(ptr)), nil
-		}
-	case reflect.Int8:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Int8:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendInt(dst, *(*int8)(ptr)), nil
 			}
-			return internal.AppendInt(dst, *(*int8)(ptr)), nil
-		}
-	case reflect.Int16:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Int16:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendInt(dst, *(*int16)(ptr)), nil
 			}
-			return internal.AppendInt(dst, *(*int16)(ptr)), nil
-		}
-	case reflect.Int32:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Int32:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendInt(dst, *(*int32)(ptr)), nil
 			}
-			return internal.AppendInt(dst, *(*int32)(ptr)), nil
-		}
-	case reflect.Int64:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Int64:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendInt(dst, *(*int64)(ptr)), nil
 			}
-			return internal.AppendInt(dst, *(*int64)(ptr)), nil
-		}
-	case reflect.Uint:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Uint:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendUint(dst, *(*uint)(ptr)), nil
 			}
-			return internal.AppendUint(dst, *(*uint)(ptr)), nil
-		}
-	case reflect.Uint8:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Uint8:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendUint(dst, *(*uint8)(ptr)), nil
 			}
-			return internal.AppendUint(dst, *(*uint8)(ptr)), nil
-		}
-	case reflect.Uint16:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Uint16:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendUint(dst, *(*uint16)(ptr)), nil
 			}
-			return internal.AppendUint(dst, *(*uint16)(ptr)), nil
-		}
-	case reflect.Uint32:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Uint32:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendUint(dst, *(*uint32)(ptr)), nil
 			}
-			return internal.AppendUint(dst, *(*uint32)(ptr)), nil
-		}
-	case reflect.Uint64:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Uint64:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendUint(dst, *(*uint64)(ptr)), nil
 			}
-			return internal.AppendUint(dst, *(*uint64)(ptr)), nil
-		}
-	case reflect.Uintptr:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Uintptr:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendUint(dst, *(*uintptr)(ptr)), nil
 			}
-			return internal.AppendUint(dst, *(*uintptr)(ptr)), nil
-		}
-	case reflect.Float32:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Float32:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendFloat32(dst, *(*float32)(ptr))
 			}
-			return internal.AppendFloat32(dst, *(*float32)(ptr))
-		}
-	case reflect.Float64:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.Float64:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				return internal.AppendFloat64(dst, *(*float64)(ptr))
 			}
-			return internal.AppendFloat64(dst, *(*float64)(ptr))
-		}
-	case reflect.String:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
+		case reflect.String:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				for range pointerDepth {
+					ptr = *(*unsafe.Pointer)(ptr)
+					if ptr == nil {
+						return internal.AppendNull(dst), nil
+					}
 				}
+				if flags&MarshalFlagEscapeHTML != 0 {
+					return internal.AppendStringHTML(dst, *(*string)(ptr)), nil
+				}
+				return internal.AppendString(dst, *(*string)(ptr)), nil
 			}
-			if flags&MarshalFlagEscapeHTML != 0 {
-				return internal.AppendStringHTML(dst, *(*string)(ptr)), nil
-			}
-			return internal.AppendString(dst, *(*string)(ptr)), nil
 		}
-	default:
-		elemFn := getOrCreateMarshalFn(elemType)
-		elemIsMap := elemType.Kind() == reflect.Map
+	}
 
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			for range pointerDepth {
-				ptr = *(*unsafe.Pointer)(ptr)
-				if ptr == nil {
-					return internal.AppendNull(dst), nil
-				}
+	elemIsMap := elemKind == reflect.Map && !hasPointerOnlyMarshaler(elemType)
+
+	var elemFn marshalFn
+	if elemIsMap {
+		elemFn = getOrCreateMarshalFn(elemType)
+	} else {
+		elemFn = getOrCreateAddressableMarshalFn(elemType)
+	}
+
+	return createDereferenceMarshalFn(pointerDepth, elemFn, elemIsMap)
+}
+
+func createDereferenceMarshalFn(pointerDepth int, elemFn marshalFn, elemIsMap bool) marshalFn {
+	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+		for range pointerDepth {
+			ptr = *(*unsafe.Pointer)(ptr)
+			if ptr == nil {
+				return internal.AppendNull(dst), nil
 			}
-			if elemIsMap {
-				ptr = *(*unsafe.Pointer)(ptr)
-			}
-			return elemFn(dst, ptr, flags)
 		}
+		if elemIsMap {
+			ptr = *(*unsafe.Pointer)(ptr)
+		}
+		return elemFn(dst, ptr, flags)
 	}
 }

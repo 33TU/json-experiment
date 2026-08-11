@@ -19,82 +19,86 @@ func createSliceMarshalFn(typ reflect.Type) marshalFn {
 	elemSize := elemType.Size()
 
 	elemKind := elemType.Kind()
-	if implementsMarshaler(elemType) {
-		return createSliceDefaultMarshalFn(elemType, elemKind, elemSize)
-	}
-
-	switch elemKind {
-	case reflect.Bool:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendBoolSlice(dst, *(*[]bool)(ptr)), nil
-		}
-	case reflect.Int:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendIntSlice(dst, *(*[]int)(ptr)), nil
-		}
-	case reflect.Int8:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendIntSlice(dst, *(*[]int8)(ptr)), nil
-		}
-	case reflect.Int16:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendIntSlice(dst, *(*[]int16)(ptr)), nil
-		}
-	case reflect.Int32:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendIntSlice(dst, *(*[]int32)(ptr)), nil
-		}
-	case reflect.Int64:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendIntSlice(dst, *(*[]int64)(ptr)), nil
-		}
-	case reflect.Uint:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendUintSlice(dst, *(*[]uint)(ptr)), nil
-		}
-	case reflect.Uint8:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendByteSliceBase64(dst, *(*[]byte)(ptr)), nil
-		}
-	case reflect.Uint16:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendUintSlice(dst, *(*[]uint16)(ptr)), nil
-		}
-	case reflect.Uint32:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendUintSlice(dst, *(*[]uint32)(ptr)), nil
-		}
-	case reflect.Uint64:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendUintSlice(dst, *(*[]uint64)(ptr)), nil
-		}
-	case reflect.Uintptr:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendUintSlice(dst, *(*[]uintptr)(ptr)), nil
-		}
-	case reflect.Float32:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendFloat32Slice(dst, *(*[]float32)(ptr))
-		}
-	case reflect.Float64:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			return internal.AppendFloat64Slice(dst, *(*[]float64)(ptr))
-		}
-	case reflect.String:
-		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
-			if flags&MarshalFlagEscapeHTML != 0 {
-				return internal.AppendStringSliceHTML(dst, *(*[]string)(ptr)), nil
+	if !hasAddressableMarshaler(elemType) {
+		switch elemKind {
+		case reflect.Bool:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendBoolSlice(dst, *(*[]bool)(ptr)), nil
 			}
-			return internal.AppendStringSlice(dst, *(*[]string)(ptr)), nil
+		case reflect.Int:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendIntSlice(dst, *(*[]int)(ptr)), nil
+			}
+		case reflect.Int8:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendIntSlice(dst, *(*[]int8)(ptr)), nil
+			}
+		case reflect.Int16:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendIntSlice(dst, *(*[]int16)(ptr)), nil
+			}
+		case reflect.Int32:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendIntSlice(dst, *(*[]int32)(ptr)), nil
+			}
+		case reflect.Int64:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendIntSlice(dst, *(*[]int64)(ptr)), nil
+			}
+		case reflect.Uint:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendUintSlice(dst, *(*[]uint)(ptr)), nil
+			}
+		case reflect.Uint8:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendByteSliceBase64(dst, *(*[]byte)(ptr)), nil
+			}
+		case reflect.Uint16:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendUintSlice(dst, *(*[]uint16)(ptr)), nil
+			}
+		case reflect.Uint32:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendUintSlice(dst, *(*[]uint32)(ptr)), nil
+			}
+		case reflect.Uint64:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendUintSlice(dst, *(*[]uint64)(ptr)), nil
+			}
+		case reflect.Uintptr:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendUintSlice(dst, *(*[]uintptr)(ptr)), nil
+			}
+		case reflect.Float32:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendFloat32Slice(dst, *(*[]float32)(ptr))
+			}
+		case reflect.Float64:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				return internal.AppendFloat64Slice(dst, *(*[]float64)(ptr))
+			}
+		case reflect.String:
+			return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+				if flags&MarshalFlagEscapeHTML != 0 {
+					return internal.AppendStringSliceHTML(dst, *(*[]string)(ptr)), nil
+				}
+				return internal.AppendStringSlice(dst, *(*[]string)(ptr)), nil
+			}
 		}
 	}
 
-	return createSliceDefaultMarshalFn(elemType, elemKind, elemSize)
+	return createSliceDefaultMarshalFn(elemType, elemSize)
 }
 
-func createSliceDefaultMarshalFn(elemType reflect.Type, elemKind reflect.Kind, elemSize uintptr) marshalFn {
-	elemFn := getOrCreateMarshalFn(elemType)
-	elemIsMap := elemKind == reflect.Map
+func createSliceDefaultMarshalFn(elemType reflect.Type, elemSize uintptr) marshalFn {
+	elemIsMap := elemType.Kind() == reflect.Map && !hasPointerOnlyMarshaler(elemType)
+
+	var elemFn marshalFn
+	if elemIsMap {
+		elemFn = getOrCreateMarshalFn(elemType)
+	} else {
+		elemFn = getOrCreateAddressableMarshalFn(elemType)
+	}
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		header := (*sliceHeader)(ptr)

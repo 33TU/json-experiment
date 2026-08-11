@@ -11,6 +11,12 @@ import (
 
 type omitFn func(ptr unsafe.Pointer) bool
 
+type isZeroer interface {
+	IsZero() bool
+}
+
+var isZeroerType = reflect.TypeFor[isZeroer]()
+
 type structFieldFlags uint8
 
 const (
@@ -55,8 +61,137 @@ func parseJSONTag(tag string) (name string, flags structFieldFlags, format strin
 }
 
 func fieldOmitFn(typ reflect.Type, kind reflect.Kind, omitEmpty, omitZero bool) omitFn {
-	if !omitEmpty && !omitZero {
-		return nil
+	var emptyFn, zeroFn omitFn
+	if omitEmpty {
+		emptyFn = fieldEmptyFn(typ, kind)
+	}
+	if omitZero {
+		zeroFn = fieldZeroFn(typ, kind)
+	}
+
+	if emptyFn == nil {
+		return zeroFn
+	}
+	if zeroFn == nil {
+		return emptyFn
+	}
+	return func(ptr unsafe.Pointer) bool {
+		return emptyFn(ptr) || zeroFn(ptr)
+	}
+}
+
+func fieldEmptyFn(typ reflect.Type, kind reflect.Kind) omitFn {
+	switch kind {
+	case reflect.Bool:
+		return func(ptr unsafe.Pointer) bool {
+			return !*(*bool)(ptr)
+		}
+	case reflect.Int:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*int)(ptr) == 0
+		}
+	case reflect.Int8:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*int8)(ptr) == 0
+		}
+	case reflect.Int16:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*int16)(ptr) == 0
+		}
+	case reflect.Int32:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*int32)(ptr) == 0
+		}
+	case reflect.Int64:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*int64)(ptr) == 0
+		}
+	case reflect.Uint:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*uint)(ptr) == 0
+		}
+	case reflect.Uint8:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*uint8)(ptr) == 0
+		}
+	case reflect.Uint16:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*uint16)(ptr) == 0
+		}
+	case reflect.Uint32:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*uint32)(ptr) == 0
+		}
+	case reflect.Uint64:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*uint64)(ptr) == 0
+		}
+	case reflect.Uintptr:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*uintptr)(ptr) == 0
+		}
+	case reflect.Float32:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*float32)(ptr) == 0
+		}
+	case reflect.Float64:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*float64)(ptr) == 0
+		}
+	case reflect.String:
+		return func(ptr unsafe.Pointer) bool {
+			return len(*(*string)(ptr)) == 0
+		}
+	case reflect.Slice:
+		return func(ptr unsafe.Pointer) bool {
+			return (*sliceHeader)(ptr).len == 0
+		}
+	case reflect.Map:
+		return func(ptr unsafe.Pointer) bool {
+			return reflect.NewAt(typ, ptr).Elem().Len() == 0
+		}
+	case reflect.Pointer:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*unsafe.Pointer)(ptr) == nil
+		}
+
+	case reflect.Interface:
+		return func(ptr unsafe.Pointer) bool {
+			return *(*unsafe.Pointer)(ptr) == nil // A nil interface has a nil type/itab word.
+		}
+	case reflect.Array:
+		if typ.Len() == 0 {
+			return func(unsafe.Pointer) bool {
+				return true
+			}
+		}
+	}
+
+	return nil
+}
+
+func fieldZeroFn(typ reflect.Type, kind reflect.Kind) omitFn {
+	switch {
+	case kind == reflect.Interface && typ.Implements(isZeroerType):
+		return func(ptr unsafe.Pointer) bool {
+			value := reflect.NewAt(typ, ptr).Elem()
+			return value.IsNil() ||
+				(value.Elem().Kind() == reflect.Pointer && value.Elem().IsNil()) ||
+				value.Interface().(isZeroer).IsZero()
+		}
+	case kind == reflect.Pointer && typ.Implements(isZeroerType):
+		return func(ptr unsafe.Pointer) bool {
+			value := reflect.NewAt(typ, ptr).Elem()
+			return value.IsNil() || value.Interface().(isZeroer).IsZero()
+		}
+	case typ.Implements(isZeroerType):
+		return func(ptr unsafe.Pointer) bool {
+			return reflect.NewAt(typ, ptr).Elem().Interface().(isZeroer).IsZero()
+		}
+	case reflect.PointerTo(typ).Implements(isZeroerType):
+		return func(ptr unsafe.Pointer) bool {
+			return reflect.NewAt(typ, ptr).Interface().(isZeroer).IsZero()
+		}
 	}
 
 	switch kind {
@@ -121,51 +256,17 @@ func fieldOmitFn(typ reflect.Type, kind reflect.Kind, omitEmpty, omitZero bool) 
 			return len(*(*string)(ptr)) == 0
 		}
 	case reflect.Slice:
-		if omitEmpty {
-			return func(ptr unsafe.Pointer) bool {
-				return (*sliceHeader)(ptr).len == 0
-			}
-		}
 		return func(ptr unsafe.Pointer) bool {
 			return (*sliceHeader)(ptr).data == nil
 		}
-	case reflect.Map:
-		if omitEmpty {
-			return func(ptr unsafe.Pointer) bool {
-				return reflect.NewAt(typ, ptr).Elem().Len() == 0
-			}
-		}
+	case reflect.Map, reflect.Pointer, reflect.Interface:
 		return func(ptr unsafe.Pointer) bool {
 			return *(*unsafe.Pointer)(ptr) == nil
 		}
-	case reflect.Pointer:
-		return func(ptr unsafe.Pointer) bool {
-			return *(*unsafe.Pointer)(ptr) == nil
-		}
+	}
 
-	case reflect.Interface:
-		return func(ptr unsafe.Pointer) bool {
-			return *(*unsafe.Pointer)(ptr) == nil // A nil interface has a nil type/itab word.
-		}
-	case reflect.Array:
-		if omitEmpty && typ.Len() == 0 {
-			return func(unsafe.Pointer) bool {
-				return true
-			}
-		}
-		if !omitZero {
-			return nil
-		}
-		return func(ptr unsafe.Pointer) bool {
-			return reflect.NewAt(typ, ptr).Elem().IsZero()
-		}
-	default:
-		if !omitZero {
-			return nil
-		}
-		return func(ptr unsafe.Pointer) bool {
-			return reflect.NewAt(typ, ptr).Elem().IsZero()
-		}
+	return func(ptr unsafe.Pointer) bool {
+		return reflect.NewAt(typ, ptr).Elem().IsZero()
 	}
 }
 
@@ -327,7 +428,7 @@ func fieldStringMarshalFn(typ reflect.Type, kind reflect.Kind) marshalFn {
 	}
 }
 
-func createStructMarshalFn(typ reflect.Type) marshalFn {
+func createStructMarshalFn(typ reflect.Type, addressable bool) marshalFn {
 	fields := make([]structField, 0, typ.NumField())
 
 	for i := range typ.NumField() {
@@ -359,11 +460,16 @@ func createStructMarshalFn(typ reflect.Type) marshalFn {
 
 		// Determine the marshal function for the field's type
 		var fieldFn marshalFn
-		if hasFormat {
+		switch {
+		case addressable && hasAddressableMarshaler(field.Type):
+			fieldFn = getOrCreateAddressableMarshalFn(field.Type)
+		case hasFormat:
 			fieldFn = fieldFormatMarshalFn(field.Type, format)
-		} else if flags&structFieldString != 0 {
+		case flags&structFieldString != 0:
 			fieldFn = fieldStringMarshalFn(field.Type, fieldKind)
-		} else {
+		case addressable:
+			fieldFn = getOrCreateAddressableMarshalFn(field.Type)
+		default:
 			fieldFn = getOrCreateMarshalFn(field.Type)
 		}
 
@@ -381,7 +487,7 @@ func createStructMarshalFn(typ reflect.Type) marshalFn {
 			omit:    omitFn,
 			offset:  field.Offset,
 			flags:   flags,
-			isMap:   fieldKind == reflect.Map,
+			isMap:   !addressable && fieldKind == reflect.Map,
 		})
 	}
 

@@ -13,12 +13,28 @@ import (
 // A marshalFn must not retain ptr after returning.
 type marshalFn func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error)
 
-// map[reflect.Type]marshalFn
+type addressableMarshalFnCacheKey struct {
+	typ reflect.Type
+}
+
+// Normal entries use reflect.Type keys. Addressable entries use
+// addressableMarshalFnCacheKey to keep the two dispatch contexts distinct.
 var marshalFnCache sync.Map
 
 // getOrCreateMarshalFn returns a cached marshal function for typ.
 func getOrCreateMarshalFn(typ reflect.Type) marshalFn {
-	if cached, ok := marshalFnCache.Load(typ); ok {
+	return getOrCreateMarshalFnForKey(typ, typ, false)
+}
+
+// getOrCreateAddressableMarshalFn returns a cached marshal function for a value
+// whose storage is addressable. The function accepts a pointer to that storage,
+// including for map values.
+func getOrCreateAddressableMarshalFn(typ reflect.Type) marshalFn {
+	return getOrCreateMarshalFnForKey(addressableMarshalFnCacheKey{typ}, typ, true)
+}
+
+func getOrCreateMarshalFnForKey(key any, typ reflect.Type, addressable bool) marshalFn {
+	if cached, ok := marshalFnCache.Load(key); ok {
 		return cached.(marshalFn)
 	}
 
@@ -37,19 +53,23 @@ func getOrCreateMarshalFn(typ reflect.Type) marshalFn {
 		},
 	)
 
-	cached, loaded := marshalFnCache.LoadOrStore(typ, placeholder)
+	cached, loaded := marshalFnCache.LoadOrStore(key, placeholder)
 	if loaded {
 		return cached.(marshalFn)
 	}
 
-	fn = createMarshalFn(typ)
+	fn = createMarshalFn(typ, addressable)
 	wg.Done()
 
-	marshalFnCache.Store(typ, fn)
+	marshalFnCache.Store(key, fn)
 	return fn
 }
 
-func createMarshalFn(typ reflect.Type) marshalFn {
+func createMarshalFn(typ reflect.Type, addressable bool) marshalFn {
+	if addressable {
+		return createAddressableMarshalFn(typ)
+	}
+
 	switch {
 	case typ.Implements(marshalerAppendType):
 		return createMarshalerAppendFn(typ)
@@ -77,9 +97,50 @@ func createMarshalFn(typ reflect.Type) marshalFn {
 	case reflect.Map:
 		return createMapMarshalFn(typ)
 	case reflect.Struct:
-		return createStructMarshalFn(typ)
+		return createStructMarshalFn(typ, false)
 	default:
 		return unsupportedTypeMarshalFn(typ)
+	}
+}
+
+func createAddressableMarshalFn(typ reflect.Type) marshalFn {
+	if implementsMarshaler(typ) {
+		return marshalStorageFn(typ, getOrCreateMarshalFn(typ))
+	}
+
+	pointerType := reflect.PointerTo(typ)
+	if implementsMarshaler(pointerType) {
+		pointerFn := getOrCreateMarshalFn(pointerType)
+		return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+			return pointerFn(dst, noescape(unsafe.Pointer(&ptr)), flags)
+		}
+	}
+
+	switch typ.Kind() {
+	case reflect.Array:
+		return createArrayDefaultMarshalFn(typ, true)
+	case reflect.Struct:
+		return createStructMarshalFn(typ, true)
+	default:
+		return marshalStorageFn(typ, getOrCreateMarshalFn(typ))
+	}
+}
+
+func hasAddressableMarshaler(typ reflect.Type) bool {
+	return implementsMarshaler(typ) || implementsMarshaler(reflect.PointerTo(typ))
+}
+
+func hasPointerOnlyMarshaler(typ reflect.Type) bool {
+	return !implementsMarshaler(typ) && implementsMarshaler(reflect.PointerTo(typ))
+}
+
+func marshalStorageFn(typ reflect.Type, fn marshalFn) marshalFn {
+	if typ.Kind() != reflect.Map {
+		return fn
+	}
+
+	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
+		return fn(dst, *(*unsafe.Pointer)(ptr), flags)
 	}
 }
 

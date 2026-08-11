@@ -14,12 +14,6 @@ var (
 	stdTextMarshalerType = reflect.TypeFor[StdTextMarshaler]()
 )
 
-func implementsMarshaler(typ reflect.Type) bool {
-	return typ.Implements(marshalerAppendType) ||
-		typ.Implements(stdMarshalerType) ||
-		typ.Implements(stdTextMarshalerType)
-}
-
 // MarshalerAppend is implemented by types that can append their JSON encoding
 // directly to an existing buffer.
 //
@@ -40,6 +34,13 @@ type StdTextMarshaler interface {
 	MarshalText() ([]byte, error)
 }
 
+func implementsMarshaler(typ reflect.Type) bool {
+	return typ.NumMethod() != 0 &&
+		(typ.Implements(marshalerAppendType) ||
+			typ.Implements(stdMarshalerType) ||
+			typ.Implements(stdTextMarshalerType))
+}
+
 // noescape returns p while hiding it from escape analysis.
 // The returned pointer must not outlive the value referenced by p.
 //
@@ -56,6 +57,16 @@ func marshalInterface(dst []byte, v any, flags MarshalFlags) ([]byte, error) {
 	ptr := internal.InterfaceData(v)
 
 	var err error
+	if implementsMarshaler(typ) {
+		fn := getOrCreateMarshalFn(typ)
+		marshalPtr := ptr
+		if typ.Kind() == reflect.Pointer {
+			marshalPtr = unsafe.Pointer(&ptr)
+		}
+		dst, err = fn(dst, noescape(marshalPtr), flags)
+		runtime.KeepAlive(v)
+		return dst, err
+	}
 
 	switch kind := typ.Kind(); kind {
 	case reflect.Bool:

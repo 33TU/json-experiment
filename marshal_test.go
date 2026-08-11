@@ -68,6 +68,12 @@ func (jsonString) MarshalJSON() ([]byte, error) {
 	return []byte(`"json"`), nil
 }
 
+type jsonInt int
+
+func (jsonInt) MarshalJSON() ([]byte, error) {
+	return []byte(`"custom"`), nil
+}
+
 type textBool bool
 
 func (textBool) MarshalText() ([]byte, error) {
@@ -220,6 +226,7 @@ func TestMarshalInterfacePrecedence(t *testing.T) {
 	}{
 		{"MarshalerAppend", allMarshalers{}, 0, `"append"`},
 		{"json.Marshaler", jsonMarshaller{}, 0, `"json"`},
+		{"integer json.Marshaler", jsonInt(123), 0, `"custom"`},
 		{"*MarshalerAppend", &allMarshalers{}, 0, `"append"`},
 		{"*json.Marshaler", &jsonMarshaller{}, 0, `"json"`},
 		{"encoding.TextMarshaler", textMarshaler{}, 0, `"<text>"`},

@@ -74,6 +74,12 @@ func (jsonInt) MarshalJSON() ([]byte, error) {
 	return []byte(`"custom"`), nil
 }
 
+type pointerJSONInt int
+
+func (*pointerJSONInt) MarshalJSON() ([]byte, error) {
+	return []byte(`"pointer"`), nil
+}
+
 type textBool bool
 
 func (textBool) MarshalText() ([]byte, error) {
@@ -99,6 +105,7 @@ func TestMarshal(t *testing.T) {
 		{"int16", int16(-16)},
 		{"int32", int32(-32)},
 		{"int64", int64(math.MinInt64)},
+		{"defined int", testNumber(42)},
 		{"uint", uint(1)},
 		{"uint8", uint8(8)},
 		{"uint16", uint16(16)},
@@ -151,6 +158,12 @@ func TestMarshal(t *testing.T) {
 		{"nil map", map[string]int(nil)},
 		{"empty map", map[string]int{}},
 		{"empty struct", struct{}{}},
+		{"struct json.Marshaler field", struct {
+			Value jsonInt `json:"value"`
+		}{Value: 123}},
+		{"struct string-tagged json.Marshaler field", struct {
+			Value jsonInt `json:"value,string"`
+		}{Value: 123}},
 		{"struct", struct {
 			Bool    bool              `json:"bool"`
 			Int     int               `json:"integer"`
@@ -276,6 +289,44 @@ func TestMarshalCollectionElementInterfaces(t *testing.T) {
 	}
 }
 
+func TestMarshalCollectionPointerReceiver(t *testing.T) {
+	t.Parallel()
+
+	array := [2]pointerJSONInt{1, 2}
+	structArray := struct {
+		Values [2]pointerJSONInt `json:"values"`
+	}{Values: array}
+	tests := []struct {
+		name  string
+		value any
+	}{
+		{"slice", []pointerJSONInt{1, 2}},
+		{"array", array},
+		{"array pointer", &array},
+		{"struct slice field", struct {
+			Values []pointerJSONInt `json:"values"`
+		}{Values: []pointerJSONInt{1, 2}}},
+		{"struct array field", structArray},
+		{"struct array field pointer", &structArray},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := jsonexperiment.Marshal(tt.value)
+			if err != nil {
+				t.Fatalf("Marshal(%T): %v", tt.value, err)
+			}
+
+			want, err := json.Marshal(tt.value)
+			if err != nil {
+				t.Fatalf("json.Marshal(%T): %v", tt.value, err)
+			}
+
+			assertJSONEqual(t, got, want)
+		})
+	}
+}
+
 func TestMarshalStringTag(t *testing.T) {
 	t.Parallel()
 
@@ -378,6 +429,23 @@ func TestMarshalByteSliceFormatError(t *testing.T) {
 				t.Fatal("Marshal error = nil")
 			}
 		})
+	}
+}
+
+func TestMarshalFormatMarshalerPrecedence(t *testing.T) {
+	t.Parallel()
+
+	value := struct {
+		Value jsonInt `json:"value,format:hex"`
+	}{Value: 123}
+
+	got, gotErr := jsonexperiment.Marshal(value)
+	want, wantErr := jsonv2.Marshal(value)
+	if (gotErr != nil) != (wantErr != nil) {
+		t.Fatalf("Marshal error = %v, jsonv2.Marshal error = %v", gotErr, wantErr)
+	}
+	if gotErr == nil {
+		assertJSONEqual(t, got, want)
 	}
 }
 
@@ -874,6 +942,12 @@ func BenchmarkTextMarshaler(b *testing.B) {
 
 func BenchmarkJsonMarshaler(b *testing.B) {
 	value := jsonMarshaller{}
+
+	benchmarkMarshalValue(b, value)
+}
+
+func BenchmarkJsonIntMarshaler(b *testing.B) {
+	value := jsonInt(123)
 
 	benchmarkMarshalValue(b, value)
 }

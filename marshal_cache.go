@@ -16,7 +16,7 @@ type marshalFn func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte,
 // map[reflect.Type]marshalFn
 var marshalFnCache sync.Map
 
-// getOrCreateMarshalFn returns a cached marshal function for a non-primitive type.
+// getOrCreateMarshalFn returns a cached marshal function for typ.
 func getOrCreateMarshalFn(typ reflect.Type) marshalFn {
 	if cached, ok := marshalFnCache.Load(typ); ok {
 		return cached.(marshalFn)
@@ -59,7 +59,13 @@ func createMarshalFn(typ reflect.Type) marshalFn {
 		return createStdTextMarshalerFn(typ)
 	}
 
-	switch typ.Kind() {
+	kind := typ.Kind()
+
+	if fn := tryCreatePrimitiveMarshalFn(kind); fn != nil {
+		return fn
+	}
+
+	switch kind {
 	case reflect.Pointer:
 		return createPointerMarshalFn(typ)
 	case reflect.Interface:

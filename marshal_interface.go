@@ -34,11 +34,10 @@ type StdTextMarshaler interface {
 	MarshalText() ([]byte, error)
 }
 
+// implementsMarshaler reports whether typ implements any of the supported marshaler interfaces.
 func implementsMarshaler(typ reflect.Type) bool {
 	return typ.NumMethod() != 0 &&
-		(typ.Implements(marshalerAppendType) ||
-			typ.Implements(stdMarshalerType) ||
-			typ.Implements(stdTextMarshalerType))
+		(typ.Implements(marshalerAppendType) || typ.Implements(stdMarshalerType) || typ.Implements(stdTextMarshalerType))
 }
 
 // noescape returns p while hiding it from escape analysis.
@@ -55,64 +54,59 @@ func marshalInterface(dst []byte, v any, flags MarshalFlags) ([]byte, error) {
 
 	typ := reflect.TypeOf(v)
 	ptr := internal.InterfaceData(v)
+	kind := typ.Kind()
 
 	var err error
-	if implementsMarshaler(typ) {
-		fn := getOrCreateMarshalFn(typ)
-		marshalPtr := ptr
-		if typ.Kind() == reflect.Pointer {
-			marshalPtr = unsafe.Pointer(&ptr)
-		}
-		dst, err = fn(dst, noescape(marshalPtr), flags)
-		runtime.KeepAlive(v)
-		return dst, err
-	}
 
-	switch kind := typ.Kind(); kind {
-	case reflect.Bool:
-		dst = internal.AppendBool(dst, *(*bool)(ptr))
-	case reflect.Int:
-		dst = internal.AppendInt(dst, *(*int)(ptr))
-	case reflect.Int8:
-		dst = internal.AppendInt(dst, *(*int8)(ptr))
-	case reflect.Int16:
-		dst = internal.AppendInt(dst, *(*int16)(ptr))
-	case reflect.Int32:
-		dst = internal.AppendInt(dst, *(*int32)(ptr))
-	case reflect.Int64:
-		dst = internal.AppendInt(dst, *(*int64)(ptr))
-	case reflect.Uint:
-		dst = internal.AppendUint(dst, *(*uint)(ptr))
-	case reflect.Uint8:
-		dst = internal.AppendUint(dst, *(*uint8)(ptr))
-	case reflect.Uint16:
-		dst = internal.AppendUint(dst, *(*uint16)(ptr))
-	case reflect.Uint32:
-		dst = internal.AppendUint(dst, *(*uint32)(ptr))
-	case reflect.Uint64:
-		dst = internal.AppendUint(dst, *(*uint64)(ptr))
-	case reflect.Uintptr:
-		dst = internal.AppendUint(dst, *(*uintptr)(ptr))
-	case reflect.Float32:
-		dst, err = internal.AppendFloat32(dst, *(*float32)(ptr))
-	case reflect.Float64:
-		dst, err = internal.AppendFloat64(dst, *(*float64)(ptr))
-	case reflect.String:
-		if flags&MarshalFlagEscapeHTML != 0 {
-			dst = internal.AppendStringHTML(dst, *(*string)(ptr))
-		} else {
-			dst = internal.AppendString(dst, *(*string)(ptr))
+	if isBuiltinScalar(typ, kind) {
+		switch kind {
+		case reflect.Bool:
+			dst = internal.AppendBool(dst, *(*bool)(ptr))
+		case reflect.Int:
+			dst = internal.AppendInt(dst, *(*int)(ptr))
+		case reflect.Int8:
+			dst = internal.AppendInt(dst, *(*int8)(ptr))
+		case reflect.Int16:
+			dst = internal.AppendInt(dst, *(*int16)(ptr))
+		case reflect.Int32:
+			dst = internal.AppendInt(dst, *(*int32)(ptr))
+		case reflect.Int64:
+			dst = internal.AppendInt(dst, *(*int64)(ptr))
+		case reflect.Uint:
+			dst = internal.AppendUint(dst, *(*uint)(ptr))
+		case reflect.Uint8:
+			dst = internal.AppendUint(dst, *(*uint8)(ptr))
+		case reflect.Uint16:
+			dst = internal.AppendUint(dst, *(*uint16)(ptr))
+		case reflect.Uint32:
+			dst = internal.AppendUint(dst, *(*uint32)(ptr))
+		case reflect.Uint64:
+			dst = internal.AppendUint(dst, *(*uint64)(ptr))
+		case reflect.Uintptr:
+			dst = internal.AppendUint(dst, *(*uintptr)(ptr))
+		case reflect.Float32:
+			dst, err = internal.AppendFloat32(dst, *(*float32)(ptr))
+		case reflect.Float64:
+			dst, err = internal.AppendFloat64(dst, *(*float64)(ptr))
+		case reflect.String:
+			if flags&MarshalFlagEscapeHTML != 0 {
+				dst = internal.AppendStringHTML(dst, *(*string)(ptr))
+			} else {
+				dst = internal.AppendString(dst, *(*string)(ptr))
+			}
 		}
-	case reflect.Pointer:
-		fn := getOrCreateMarshalFn(typ)
-		dst, err = fn(dst, noescape(unsafe.Pointer(&ptr)), flags)
-	default:
-		fn := getOrCreateMarshalFn(typ)
-		dst, err = fn(dst, noescape(ptr), flags)
+	} else {
+		switch kind {
+		case reflect.Pointer:
+			fn := getOrCreateMarshalFn(typ)
+			dst, err = fn(dst, noescape(unsafe.Pointer(&ptr)), flags)
+		default:
+			fn := getOrCreateMarshalFn(typ)
+			dst, err = fn(dst, noescape(ptr), flags)
+		}
 	}
 
 	runtime.KeepAlive(v)
-
 	return dst, err
 }
 

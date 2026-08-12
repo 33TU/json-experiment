@@ -3,6 +3,7 @@ package jsonexperiment_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"math"
 	"reflect"
 	"runtime"
@@ -86,6 +87,42 @@ func (*pointerJSONMap) MarshalJSON() ([]byte, error) {
 	return []byte(`"pointer-map"`), nil
 }
 
+type jsonIntSlice []int
+
+func (jsonIntSlice) MarshalJSON() ([]byte, error) {
+	return []byte(`"custom-slice"`), nil
+}
+
+type textMapKey int
+
+func (textMapKey) MarshalText() ([]byte, error) {
+	return []byte("text-key"), nil
+}
+
+type stringTextMapKey string
+
+func (stringTextMapKey) MarshalText() ([]byte, error) {
+	return []byte("ignored-text-key"), nil
+}
+
+type pointerTextMapKey int
+
+func (*pointerTextMapKey) MarshalText() ([]byte, error) {
+	return []byte("pointer-text-key"), nil
+}
+
+type errorTextMapKey int
+
+func (errorTextMapKey) MarshalText() ([]byte, error) {
+	return nil, errors.New("map key error")
+}
+
+type jsonMap map[string]int
+
+func (jsonMap) MarshalJSON() ([]byte, error) {
+	return []byte(`"custom-map"`), nil
+}
+
 type valueZeroInt int
 
 func (v valueZeroInt) IsZero() bool {
@@ -132,6 +169,7 @@ func TestMarshal(t *testing.T) {
 	jsonPointer := &jsonValue
 	pointerJSONValue := pointerJSONInt(123)
 	pointerJSONPointer := &pointerJSONValue
+	pointerTextKey := pointerTextMapKey(1)
 	recursiveValue := &recursiveNode{Value: 1, Next: &recursiveNode{Value: 2}}
 
 	tests := []struct {
@@ -173,8 +211,24 @@ func TestMarshal(t *testing.T) {
 		{"int string map", map[int]string{-1: "negative", 1: "positive"}},
 		{"uint bool map", map[uint]bool{1: true, 2: false}},
 		{"string any map", map[string]any{"bool": true, "int": 1, "slice": []int{1, 2}}},
+		{"string json.Marshaler map", map[string]jsonInt{"value": 1}},
+		{"named map json.Marshaler", jsonMap{"value": 1}},
+		{"named map json.Marshaler value", map[string]jsonMap{"value": {"nested": 1}}},
+		{"string pointer-receiver value map", map[string]pointerJSONInt{"value": 1}},
+		{"string pointer value map", map[string]*pointerJSONInt{"value": &pointerJSONValue}},
+		{"string json.Marshaler slice map", map[string]jsonIntSlice{"value": {1, 2}}},
+		{"string json.Marshaler element slice map", map[string][]jsonInt{"value": {1, 2}}},
+		{"string pointer-receiver element slice map", map[string][]pointerJSONInt{"value": {1, 2}}},
+		{"string byte slice map", map[string][]byte{"value": {1, 2, 3}}},
 		{"int any map", map[int]any{1: "one", 2: []int{2, 3}}},
 		{"uint any map", map[uint]any{1: true, 2: "two"}},
+		{"int8 key map", map[int8]string{-1: "negative", 1: "positive"}},
+		{"uintptr key map", map[uintptr]bool{1: true, 2: false}},
+		{"text key map", map[textMapKey]int{1: 1}},
+		{"string text key map", map[stringTextMapKey]int{"raw-key": 1}},
+		{"pointer text key map", map[*pointerTextMapKey]int{&pointerTextKey: 1}},
+		{"nil pointer text key map", map[*pointerTextMapKey]int{nil: 1}},
+		{"json.Marshaler key map", map[jsonInt]string{1: "one"}},
 		{"composite map value", map[string][]int{"numbers": {1, 2, 3}}},
 		{"named int slice map", map[string][]testNumber{"numbers": {1, 2, 3}}},
 		{"bool slice map", map[string][]bool{"values": {true, false}}},
@@ -252,6 +306,94 @@ func TestMarshal(t *testing.T) {
 			}
 
 			assertJSONEqual(t, got, want)
+		})
+	}
+}
+
+func TestMarshalMapKinds(t *testing.T) {
+	t.Parallel()
+
+	type item struct {
+		Value int `json:"value"`
+	}
+
+	tests := []struct {
+		name  string
+		value any
+	}{
+		// Every key kind supported by encoding/json.
+		{"string key", map[string]int{"one": 1}},
+		{"int key", map[int]int{-1: 1}},
+		{"int8 key", map[int8]int{-1: 1}},
+		{"int16 key", map[int16]int{-1: 1}},
+		{"int32 key", map[int32]int{-1: 1}},
+		{"int64 key", map[int64]int{-1: 1}},
+		{"uint key", map[uint]int{1: 1}},
+		{"uint8 key", map[uint8]int{1: 1}},
+		{"uint16 key", map[uint16]int{1: 1}},
+		{"uint32 key", map[uint32]int{1: 1}},
+		{"uint64 key", map[uint64]int{1: 1}},
+		{"uintptr key", map[uintptr]int{1: 1}},
+		{"text key", map[textMapKey]int{1: 1}},
+
+		// Every scalar value kind.
+		{"bool value", map[string]bool{"value": true}},
+		{"int value", map[string]int{"value": -1}},
+		{"int8 value", map[string]int8{"value": -1}},
+		{"int16 value", map[string]int16{"value": -1}},
+		{"int32 value", map[string]int32{"value": -1}},
+		{"int64 value", map[string]int64{"value": -1}},
+		{"uint value", map[string]uint{"value": 1}},
+		{"uint8 value", map[string]uint8{"value": 1}},
+		{"uint16 value", map[string]uint16{"value": 1}},
+		{"uint32 value", map[string]uint32{"value": 1}},
+		{"uint64 value", map[string]uint64{"value": 1}},
+		{"uintptr value", map[string]uintptr{"value": 1}},
+		{"float32 value", map[string]float32{"value": 1.25}},
+		{"float64 value", map[string]float64{"value": 1.25}},
+		{"string value", map[string]string{"value": "text"}},
+
+		// Every primitive slice element kind, including []byte's base64 rule.
+		{"bool slice", map[string][]bool{"value": {true, false}}},
+		{"int slice", map[string][]int{"value": {-1, 1}}},
+		{"int8 slice", map[string][]int8{"value": {-1, 1}}},
+		{"int16 slice", map[string][]int16{"value": {-1, 1}}},
+		{"int32 slice", map[string][]int32{"value": {-1, 1}}},
+		{"int64 slice", map[string][]int64{"value": {-1, 1}}},
+		{"uint slice", map[string][]uint{"value": {0, 1}}},
+		{"byte slice", map[string][]byte{"value": {0, 1, 255}}},
+		{"uint16 slice", map[string][]uint16{"value": {0, 1}}},
+		{"uint32 slice", map[string][]uint32{"value": {0, 1}}},
+		{"uint64 slice", map[string][]uint64{"value": {0, 1}}},
+		{"uintptr slice", map[string][]uintptr{"value": {0, 1}}},
+		{"float32 slice", map[string][]float32{"value": {-1.25, 1.25}}},
+		{"float64 slice", map[string][]float64{"value": {-1.25, 1.25}}},
+		{"string slice", map[string][]string{"value": {"one", "two"}}},
+		{"int-key slice fast path", map[int][]int{1: {1, 2}}},
+		{"uint-key slice fast path", map[uint][]int{1: {1, 2}}},
+
+		// Generic value encoders.
+		{"pointer value", map[string]*int{"value": nil}},
+		{"array value", map[string][2]int{"value": {1, 2}}},
+		{"map value", map[string]map[string]int{"value": {"nested": 1}}},
+		{"struct value", map[string]item{"value": {Value: 1}}},
+		{"interface value", map[string]any{"value": item{Value: 1}}},
+		{"json marshaler value", map[string]jsonInt{"value": 1}},
+		{"text marshaler value", map[string]textBool{"value": true}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, gotErr := jsonexperiment.Marshal(tt.value)
+			want, wantErr := json.Marshal(tt.value)
+			if (gotErr != nil) != (wantErr != nil) {
+				t.Fatalf("Marshal(%T) error = %v, json.Marshal error = %v", tt.value, gotErr, wantErr)
+			}
+			if gotErr == nil {
+				assertJSONEqual(t, got, want)
+			}
 		})
 	}
 }
@@ -753,6 +895,8 @@ func TestMarshalError(t *testing.T) {
 		{"float64 negative infinity", math.Inf(-1)},
 		{"int float slice infinity", map[int][]float64{1: {math.Inf(1)}}},
 		{"uint float slice NaN", map[uint][]float32{1: {float32(math.NaN())}}},
+		{"unsupported map key", map[float64]int{1: 1}},
+		{"map key text marshaler error", map[errorTextMapKey]int{1: 1}},
 		{"unsupported channel", make(chan int)},
 	}
 

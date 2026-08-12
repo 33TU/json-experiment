@@ -7,6 +7,9 @@ type MarshalOptions struct {
 
 	// ValidateString replaces invalid UTF-8 bytes with the Unicode replacement character.
 	ValidateString bool
+
+	// SortMapKeys sorts map keys by their encoded JSON object name.
+	SortMapKeys bool
 }
 
 // MarshalFlags represents flags that control the behavior of the marshaling process.
@@ -15,6 +18,7 @@ type MarshalFlags uint32
 const (
 	MarshalFlagEscapeHTML MarshalFlags = 1 << iota
 	MarshalFlagValidateString
+	MarshalFlagSortMapKeys
 )
 
 func (o MarshalOptions) Flags() MarshalFlags {
@@ -24,6 +28,9 @@ func (o MarshalOptions) Flags() MarshalFlags {
 	}
 	if o.ValidateString {
 		flags |= MarshalFlagValidateString
+	}
+	if o.SortMapKeys {
+		flags |= MarshalFlagSortMapKeys
 	}
 	return flags
 }

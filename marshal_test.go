@@ -117,6 +117,12 @@ func (errorTextMapKey) MarshalText() ([]byte, error) {
 	return nil, errors.New("map key error")
 }
 
+type sortedTextMapKey string
+
+func (k sortedTextMapKey) MarshalText() ([]byte, error) {
+	return []byte(k), nil
+}
+
 type jsonMap map[string]int
 
 func (jsonMap) MarshalJSON() ([]byte, error) {
@@ -212,6 +218,8 @@ func TestMarshal(t *testing.T) {
 		{"uint bool map", map[uint]bool{1: true, 2: false}},
 		{"string any map", map[string]any{"bool": true, "int": 1, "slice": []int{1, 2}}},
 		{"string json.Marshaler map", map[string]jsonInt{"value": 1}},
+		{"int json.Marshaler map", map[int]jsonInt{-1: 1}},
+		{"uint json.Marshaler map", map[uint]jsonInt{1: 1}},
 		{"named map json.Marshaler", jsonMap{"value": 1}},
 		{"named map json.Marshaler value", map[string]jsonMap{"value": {"nested": 1}}},
 		{"string pointer-receiver value map", map[string]pointerJSONInt{"value": 1}},
@@ -220,6 +228,9 @@ func TestMarshal(t *testing.T) {
 		{"string json.Marshaler element slice map", map[string][]jsonInt{"value": {1, 2}}},
 		{"string pointer-receiver element slice map", map[string][]pointerJSONInt{"value": {1, 2}}},
 		{"string byte slice map", map[string][]byte{"value": {1, 2, 3}}},
+		{"string named byte slice map", map[string][]testByte{"value": {1, 2, 3}}},
+		{"int byte slice map", map[int][]byte{-1: {1, 2, 3}}},
+		{"uint byte slice map", map[uint][]byte{1: {1, 2, 3}}},
 		{"int any map", map[int]any{1: "one", 2: []int{2, 3}}},
 		{"uint any map", map[uint]any{1: true, 2: "two"}},
 		{"int8 key map", map[int8]string{-1: "negative", 1: "positive"}},
@@ -411,6 +422,78 @@ func TestMarshalAppend(t *testing.T) {
 
 	if want := []byte("prefix:[1,2,3]"); !bytes.Equal(got, want) {
 		t.Fatalf("MarshalAppend = %q, want %q", got, want)
+	}
+}
+
+func TestMarshalSortMapKeys(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		value any
+		want  string
+	}{
+		{"string fast path", map[string]int{"z": 1, "a": 2}, `{"a":2,"z":1}`},
+		{"int fast path", map[int]string{2: "two", 10: "ten", -1: "negative"}, `{"-1":"negative","10":"ten","2":"two"}`},
+		{"uint fast path", map[uint]string{2: "two", 10: "ten"}, `{"10":"ten","2":"two"}`},
+		{"text keys", map[sortedTextMapKey]int{"z": 1, "a": 2}, `{"a":2,"z":1}`},
+		{"nil pointer text key", map[*pointerTextMapKey]int{nil: 1}, `{"":1}`},
+		{"custom values", map[string]jsonInt{"z": 1, "a": 2}, `{"a":"custom","z":"custom"}`},
+		{"nested maps", map[string]map[string]int{
+			"z": {"z": 1, "a": 2},
+			"a": {"z": 3, "a": 4},
+		}, `{"a":{"a":4,"z":3},"z":{"a":2,"z":1}}`},
+	}
+
+	options := jsonexperiment.MarshalOptions{SortMapKeys: true}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := jsonexperiment.MarshalWithOptions(tt.value, options)
+			if err != nil {
+				t.Fatalf("MarshalWithOptions(%T): %v", tt.value, err)
+			}
+			if string(got) != tt.want {
+				t.Fatalf("MarshalWithOptions(%T) = %s, want %s", tt.value, got, tt.want)
+			}
+		})
+	}
+
+	got, err := jsonexperiment.MarshalWithFlags(
+		map[string]int{"z": 1, "a": 2},
+		jsonexperiment.MarshalFlagSortMapKeys,
+	)
+	if err != nil {
+		t.Fatalf("MarshalWithFlags: %v", err)
+	}
+	if want := `{"a":2,"z":1}`; string(got) != want {
+		t.Fatalf("MarshalWithFlags = %s, want %s", got, want)
+	}
+
+	got, err = jsonexperiment.MarshalWithFlags(
+		map[string]int{"&": 1, "A": 2},
+		jsonexperiment.MarshalFlagSortMapKeys|jsonexperiment.MarshalFlagEscapeHTML,
+	)
+	if err != nil {
+		t.Fatalf("MarshalWithFlags HTML: %v", err)
+	}
+	if want := `{"\u0026":1,"A":2}`; string(got) != want {
+		t.Fatalf("MarshalWithFlags HTML = %s, want %s", got, want)
+	}
+
+	if _, err = jsonexperiment.MarshalWithFlags(
+		map[errorTextMapKey]int{1: 1},
+		jsonexperiment.MarshalFlagSortMapKeys,
+	); err == nil {
+		t.Fatal("MarshalWithFlags text key error = nil")
+	}
+
+	if _, err = jsonexperiment.MarshalWithFlags(
+		map[float64]int{1: 1},
+		jsonexperiment.MarshalFlagSortMapKeys,
+	); err == nil {
+		t.Fatal("MarshalWithFlags unsupported map key error = nil")
 	}
 }
 

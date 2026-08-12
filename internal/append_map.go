@@ -22,7 +22,7 @@ func AppendStringBoolMap(dst []byte, values map[string]bool) []byte {
 }
 
 // AppendStringIntMap appends the JSON representation of values to dst.
-func AppendStringIntMap[T signedInteger](dst []byte, values map[string]T) []byte {
+func AppendStringIntMap[T SignedInteger](dst []byte, values map[string]T) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -43,7 +43,7 @@ func AppendStringIntMap[T signedInteger](dst []byte, values map[string]T) []byte
 }
 
 // AppendStringUintMap appends the JSON representation of values to dst.
-func AppendStringUintMap[T unsignedInteger](dst []byte, values map[string]T) []byte {
+func AppendStringUintMap[T UnsignedInteger](dst []byte, values map[string]T) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -139,7 +139,7 @@ func AppendStringStringMap(dst []byte, values map[string]string) []byte {
 }
 
 // AppendIntBoolMap appends the JSON representation of values to dst.
-func AppendIntBoolMap[K signedInteger](dst []byte, values map[K]bool) []byte {
+func AppendIntBoolMap[K SignedInteger](dst []byte, values map[K]bool) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -161,7 +161,7 @@ func AppendIntBoolMap[K signedInteger](dst []byte, values map[K]bool) []byte {
 }
 
 // AppendIntIntMap appends the JSON representation of values to dst.
-func AppendIntIntMap[K signedInteger, V signedInteger](dst []byte, values map[K]V) []byte {
+func AppendIntIntMap[K SignedInteger, V SignedInteger](dst []byte, values map[K]V) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -183,7 +183,7 @@ func AppendIntIntMap[K signedInteger, V signedInteger](dst []byte, values map[K]
 }
 
 // AppendIntUintMap appends the JSON representation of values to dst.
-func AppendIntUintMap[K signedInteger, V unsignedInteger](dst []byte, values map[K]V) []byte {
+func AppendIntUintMap[K SignedInteger, V UnsignedInteger](dst []byte, values map[K]V) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -206,7 +206,7 @@ func AppendIntUintMap[K signedInteger, V unsignedInteger](dst []byte, values map
 
 // AppendIntFloat32Map appends the JSON representation of values to dst.
 // It returns an error if any value is NaN or infinite.
-func AppendIntFloat32Map[K signedInteger](dst []byte, values map[K]float32) ([]byte, error) {
+func AppendIntFloat32Map[K SignedInteger](dst []byte, values map[K]float32) ([]byte, error) {
 	if values == nil {
 		return AppendNull(dst), nil
 	}
@@ -234,7 +234,7 @@ func AppendIntFloat32Map[K signedInteger](dst []byte, values map[K]float32) ([]b
 
 // AppendIntFloat64Map appends the JSON representation of values to dst.
 // It returns an error if any value is NaN or infinite.
-func AppendIntFloat64Map[K signedInteger](dst []byte, values map[K]float64) ([]byte, error) {
+func AppendIntFloat64Map[K SignedInteger](dst []byte, values map[K]float64) ([]byte, error) {
 	if values == nil {
 		return AppendNull(dst), nil
 	}
@@ -261,7 +261,7 @@ func AppendIntFloat64Map[K signedInteger](dst []byte, values map[K]float64) ([]b
 }
 
 // AppendIntStringMap appends the JSON representation of values to dst.
-func AppendIntStringMap[K signedInteger](dst []byte, values map[K]string) []byte {
+func AppendIntStringMap[K SignedInteger](dst []byte, values map[K]string) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -283,7 +283,7 @@ func AppendIntStringMap[K signedInteger](dst []byte, values map[K]string) []byte
 }
 
 // AppendUintBoolMap appends the JSON representation of values to dst.
-func AppendUintBoolMap[K unsignedInteger](dst []byte, values map[K]bool) []byte {
+func AppendUintBoolMap[K UnsignedInteger](dst []byte, values map[K]bool) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -305,7 +305,7 @@ func AppendUintBoolMap[K unsignedInteger](dst []byte, values map[K]bool) []byte 
 }
 
 // AppendUintIntMap appends the JSON representation of values to dst.
-func AppendUintIntMap[K unsignedInteger, V signedInteger](dst []byte, values map[K]V) []byte {
+func AppendUintIntMap[K UnsignedInteger, V SignedInteger](dst []byte, values map[K]V) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -327,7 +327,7 @@ func AppendUintIntMap[K unsignedInteger, V signedInteger](dst []byte, values map
 }
 
 // AppendUintUintMap appends the JSON representation of values to dst.
-func AppendUintUintMap[K unsignedInteger, V unsignedInteger](dst []byte, values map[K]V) []byte {
+func AppendUintUintMap[K UnsignedInteger, V UnsignedInteger](dst []byte, values map[K]V) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -350,7 +350,7 @@ func AppendUintUintMap[K unsignedInteger, V unsignedInteger](dst []byte, values 
 
 // AppendUintFloat32Map appends the JSON representation of values to dst.
 // It returns an error if any value is NaN or infinite.
-func AppendUintFloat32Map[K unsignedInteger](dst []byte, values map[K]float32) ([]byte, error) {
+func AppendUintFloat32Map[K UnsignedInteger](dst []byte, values map[K]float32) ([]byte, error) {
 	if values == nil {
 		return AppendNull(dst), nil
 	}
@@ -378,7 +378,7 @@ func AppendUintFloat32Map[K unsignedInteger](dst []byte, values map[K]float32) (
 
 // AppendUintFloat64Map appends the JSON representation of values to dst.
 // It returns an error if any value is NaN or infinite.
-func AppendUintFloat64Map[K unsignedInteger](dst []byte, values map[K]float64) ([]byte, error) {
+func AppendUintFloat64Map[K UnsignedInteger](dst []byte, values map[K]float64) ([]byte, error) {
 	if values == nil {
 		return AppendNull(dst), nil
 	}
@@ -405,7 +405,7 @@ func AppendUintFloat64Map[K unsignedInteger](dst []byte, values map[K]float64) (
 }
 
 // AppendUintStringMap appends the JSON representation of values to dst.
-func AppendUintStringMap[K unsignedInteger](dst []byte, values map[K]string) []byte {
+func AppendUintStringMap[K UnsignedInteger](dst []byte, values map[K]string) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -448,7 +448,7 @@ func AppendStringBoolMapHTML(dst []byte, values map[string]bool) []byte {
 }
 
 // AppendStringIntMapHTML appends the JSON representation of values to dst.
-func AppendStringIntMapHTML[T signedInteger](dst []byte, values map[string]T) []byte {
+func AppendStringIntMapHTML[T SignedInteger](dst []byte, values map[string]T) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -469,7 +469,7 @@ func AppendStringIntMapHTML[T signedInteger](dst []byte, values map[string]T) []
 }
 
 // AppendStringUintMapHTML appends the JSON representation of values to dst.
-func AppendStringUintMapHTML[T unsignedInteger](dst []byte, values map[string]T) []byte {
+func AppendStringUintMapHTML[T UnsignedInteger](dst []byte, values map[string]T) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -565,7 +565,7 @@ func AppendStringStringMapHTML(dst []byte, values map[string]string) []byte {
 }
 
 // AppendIntBoolMapHTML appends the JSON representation of values to dst.
-func AppendIntStringMapHTML[K signedInteger](dst []byte, values map[K]string) []byte {
+func AppendIntStringMapHTML[K SignedInteger](dst []byte, values map[K]string) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -587,7 +587,7 @@ func AppendIntStringMapHTML[K signedInteger](dst []byte, values map[K]string) []
 }
 
 // AppendUintBoolMapHTML appends the JSON representation of values to dst.
-func AppendUintStringMapHTML[K unsignedInteger](dst []byte, values map[K]string) []byte {
+func AppendUintStringMapHTML[K UnsignedInteger](dst []byte, values map[K]string) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}

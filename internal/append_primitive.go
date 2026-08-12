@@ -6,11 +6,11 @@ import (
 	"strconv"
 )
 
-type signedInteger interface {
+type SignedInteger interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64
 }
 
-type unsignedInteger interface {
+type UnsignedInteger interface {
 	~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr
 }
 
@@ -28,12 +28,12 @@ func AppendBool(dst []byte, v bool) []byte {
 }
 
 // AppendInt appends the base-10 JSON representation of v to dst.
-func AppendInt[T signedInteger](dst []byte, v T) []byte {
+func AppendInt[T SignedInteger](dst []byte, v T) []byte {
 	return AppendIntJeaiii(dst, int64(v))
 }
 
 // AppendUint appends the base-10 JSON representation of v to dst.
-func AppendUint[T unsignedInteger](dst []byte, v T) []byte {
+func AppendUint[T UnsignedInteger](dst []byte, v T) []byte {
 	return AppendUintJeaiii(dst, uint64(v))
 }
 

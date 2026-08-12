@@ -26,7 +26,7 @@ func AppendBoolSlice(dst []byte, values []bool) []byte {
 }
 
 // AppendIntSlice appends the JSON representation of values to dst.
-func AppendIntSlice[T signedInteger](dst []byte, values []T) []byte {
+func AppendIntSlice[T SignedInteger](dst []byte, values []T) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -45,7 +45,7 @@ func AppendIntSlice[T signedInteger](dst []byte, values []T) []byte {
 }
 
 // AppendUintSlice appends the JSON representation of values to dst.
-func AppendUintSlice[T unsignedInteger](dst []byte, values []T) []byte {
+func AppendUintSlice[T UnsignedInteger](dst []byte, values []T) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}

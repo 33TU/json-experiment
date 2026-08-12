@@ -22,7 +22,7 @@ func AppendStringBoolSliceMap(dst []byte, values map[string][]bool) []byte {
 }
 
 // AppendStringIntSliceMap appends the JSON representation of values to dst.
-func AppendStringIntSliceMap[T signedInteger](dst []byte, values map[string][]T) []byte {
+func AppendStringIntSliceMap[T SignedInteger](dst []byte, values map[string][]T) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -43,7 +43,7 @@ func AppendStringIntSliceMap[T signedInteger](dst []byte, values map[string][]T)
 }
 
 // AppendStringUintSliceMap appends the JSON representation of values to dst.
-func AppendStringUintSliceMap[T unsignedInteger](dst []byte, values map[string][]T) []byte {
+func AppendStringUintSliceMap[T UnsignedInteger](dst []byte, values map[string][]T) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -138,8 +138,30 @@ func AppendStringStringSliceMap(dst []byte, values map[string][]string) []byte {
 	return dst
 }
 
+// AppendStringByteSliceBase64Map appends byte-slice values as standard
+// Base64-encoded JSON strings.
+func AppendStringByteSliceBase64Map(dst []byte, values map[string][]byte) []byte {
+	if values == nil {
+		return AppendNull(dst)
+	}
+	if len(values) == 0 {
+		return append(dst, "{}"...)
+	}
+
+	dst = append(dst, '{')
+	for key, value := range values {
+		dst = AppendString(dst, key)
+		dst = append(dst, ':')
+		dst = AppendByteSliceBase64(dst, value)
+		dst = append(dst, ',')
+	}
+	dst[len(dst)-1] = '}'
+
+	return dst
+}
+
 // AppendIntBoolSliceMap appends the JSON representation of values to dst.
-func AppendIntBoolSliceMap[K signedInteger](dst []byte, values map[K][]bool) []byte {
+func AppendIntBoolSliceMap[K SignedInteger](dst []byte, values map[K][]bool) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -159,7 +181,7 @@ func AppendIntBoolSliceMap[K signedInteger](dst []byte, values map[K][]bool) []b
 }
 
 // AppendIntIntSliceMap appends the JSON representation of values to dst.
-func AppendIntIntSliceMap[K signedInteger, V signedInteger](dst []byte, values map[K][]V) []byte {
+func AppendIntIntSliceMap[K SignedInteger, V SignedInteger](dst []byte, values map[K][]V) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -179,7 +201,7 @@ func AppendIntIntSliceMap[K signedInteger, V signedInteger](dst []byte, values m
 }
 
 // AppendIntUintSliceMap appends the JSON representation of values to dst.
-func AppendIntUintSliceMap[K signedInteger, V unsignedInteger](dst []byte, values map[K][]V) []byte {
+func AppendIntUintSliceMap[K SignedInteger, V UnsignedInteger](dst []byte, values map[K][]V) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -200,7 +222,7 @@ func AppendIntUintSliceMap[K signedInteger, V unsignedInteger](dst []byte, value
 
 // AppendIntFloat32SliceMap appends the JSON representation of values to dst.
 // It returns an error if any value is NaN or infinite.
-func AppendIntFloat32SliceMap[K signedInteger](dst []byte, values map[K][]float32) ([]byte, error) {
+func AppendIntFloat32SliceMap[K SignedInteger](dst []byte, values map[K][]float32) ([]byte, error) {
 	if values == nil {
 		return AppendNull(dst), nil
 	}
@@ -225,7 +247,7 @@ func AppendIntFloat32SliceMap[K signedInteger](dst []byte, values map[K][]float3
 
 // AppendIntFloat64SliceMap appends the JSON representation of values to dst.
 // It returns an error if any value is NaN or infinite.
-func AppendIntFloat64SliceMap[K signedInteger](dst []byte, values map[K][]float64) ([]byte, error) {
+func AppendIntFloat64SliceMap[K SignedInteger](dst []byte, values map[K][]float64) ([]byte, error) {
 	if values == nil {
 		return AppendNull(dst), nil
 	}
@@ -249,7 +271,7 @@ func AppendIntFloat64SliceMap[K signedInteger](dst []byte, values map[K][]float6
 }
 
 // AppendIntStringSliceMap appends the JSON representation of values to dst.
-func AppendIntStringSliceMap[K signedInteger](dst []byte, values map[K][]string) []byte {
+func AppendIntStringSliceMap[K SignedInteger](dst []byte, values map[K][]string) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -268,8 +290,29 @@ func AppendIntStringSliceMap[K signedInteger](dst []byte, values map[K][]string)
 	return dst
 }
 
+// AppendIntByteSliceBase64Map appends byte-slice values as standard
+// Base64-encoded JSON strings.
+func AppendIntByteSliceBase64Map[K SignedInteger](dst []byte, values map[K][]byte) []byte {
+	if values == nil {
+		return AppendNull(dst)
+	}
+	if len(values) == 0 {
+		return append(dst, "{}"...)
+	}
+	dst = append(dst, '{')
+	for key, value := range values {
+		dst = append(dst, '"')
+		dst = AppendInt(dst, key)
+		dst = append(dst, '"', ':')
+		dst = AppendByteSliceBase64(dst, value)
+		dst = append(dst, ',')
+	}
+	dst[len(dst)-1] = '}'
+	return dst
+}
+
 // AppendUintBoolSliceMap appends the JSON representation of values to dst.
-func AppendUintBoolSliceMap[K unsignedInteger](dst []byte, values map[K][]bool) []byte {
+func AppendUintBoolSliceMap[K UnsignedInteger](dst []byte, values map[K][]bool) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -289,7 +332,7 @@ func AppendUintBoolSliceMap[K unsignedInteger](dst []byte, values map[K][]bool) 
 }
 
 // AppendUintIntSliceMap appends the JSON representation of values to dst.
-func AppendUintIntSliceMap[K unsignedInteger, V signedInteger](dst []byte, values map[K][]V) []byte {
+func AppendUintIntSliceMap[K UnsignedInteger, V SignedInteger](dst []byte, values map[K][]V) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -309,7 +352,7 @@ func AppendUintIntSliceMap[K unsignedInteger, V signedInteger](dst []byte, value
 }
 
 // AppendUintUintSliceMap appends the JSON representation of values to dst.
-func AppendUintUintSliceMap[K unsignedInteger, V unsignedInteger](dst []byte, values map[K][]V) []byte {
+func AppendUintUintSliceMap[K UnsignedInteger, V UnsignedInteger](dst []byte, values map[K][]V) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -330,7 +373,7 @@ func AppendUintUintSliceMap[K unsignedInteger, V unsignedInteger](dst []byte, va
 
 // AppendUintFloat32SliceMap appends the JSON representation of values to dst.
 // It returns an error if any value is NaN or infinite.
-func AppendUintFloat32SliceMap[K unsignedInteger](dst []byte, values map[K][]float32) ([]byte, error) {
+func AppendUintFloat32SliceMap[K UnsignedInteger](dst []byte, values map[K][]float32) ([]byte, error) {
 	if values == nil {
 		return AppendNull(dst), nil
 	}
@@ -355,7 +398,7 @@ func AppendUintFloat32SliceMap[K unsignedInteger](dst []byte, values map[K][]flo
 
 // AppendUintFloat64SliceMap appends the JSON representation of values to dst.
 // It returns an error if any value is NaN or infinite.
-func AppendUintFloat64SliceMap[K unsignedInteger](dst []byte, values map[K][]float64) ([]byte, error) {
+func AppendUintFloat64SliceMap[K UnsignedInteger](dst []byte, values map[K][]float64) ([]byte, error) {
 	if values == nil {
 		return AppendNull(dst), nil
 	}
@@ -379,7 +422,7 @@ func AppendUintFloat64SliceMap[K unsignedInteger](dst []byte, values map[K][]flo
 }
 
 // AppendUintStringSliceMap appends the JSON representation of values to dst.
-func AppendUintStringSliceMap[K unsignedInteger](dst []byte, values map[K][]string) []byte {
+func AppendUintStringSliceMap[K UnsignedInteger](dst []byte, values map[K][]string) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -392,6 +435,27 @@ func AppendUintStringSliceMap[K unsignedInteger](dst []byte, values map[K][]stri
 		dst = AppendUint(dst, key)
 		dst = append(dst, '"', ':')
 		dst = AppendStringSlice(dst, value)
+		dst = append(dst, ',')
+	}
+	dst[len(dst)-1] = '}'
+	return dst
+}
+
+// AppendUintByteSliceBase64Map appends byte-slice values as standard
+// Base64-encoded JSON strings.
+func AppendUintByteSliceBase64Map[K UnsignedInteger](dst []byte, values map[K][]byte) []byte {
+	if values == nil {
+		return AppendNull(dst)
+	}
+	if len(values) == 0 {
+		return append(dst, "{}"...)
+	}
+	dst = append(dst, '{')
+	for key, value := range values {
+		dst = append(dst, '"')
+		dst = AppendUint(dst, key)
+		dst = append(dst, '"', ':')
+		dst = AppendByteSliceBase64(dst, value)
 		dst = append(dst, ',')
 	}
 	dst[len(dst)-1] = '}'
@@ -420,7 +484,7 @@ func AppendStringBoolSliceMapHTML(dst []byte, values map[string][]bool) []byte {
 }
 
 // AppendStringIntSliceMapHTML appends the JSON representation of values to dst.
-func AppendStringIntSliceMapHTML[T signedInteger](dst []byte, values map[string][]T) []byte {
+func AppendStringIntSliceMapHTML[T SignedInteger](dst []byte, values map[string][]T) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -441,7 +505,7 @@ func AppendStringIntSliceMapHTML[T signedInteger](dst []byte, values map[string]
 }
 
 // AppendStringUintSliceMapHTML appends the JSON representation of values to dst.
-func AppendStringUintSliceMapHTML[T unsignedInteger](dst []byte, values map[string][]T) []byte {
+func AppendStringUintSliceMapHTML[T UnsignedInteger](dst []byte, values map[string][]T) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -536,8 +600,30 @@ func AppendStringStringSliceMapHTML(dst []byte, values map[string][]string) []by
 	return dst
 }
 
+// AppendStringByteSliceBase64MapHTML appends byte-slice values as standard
+// Base64-encoded JSON strings and HTML-escapes map keys.
+func AppendStringByteSliceBase64MapHTML(dst []byte, values map[string][]byte) []byte {
+	if values == nil {
+		return AppendNull(dst)
+	}
+	if len(values) == 0 {
+		return append(dst, "{}"...)
+	}
+
+	dst = append(dst, '{')
+	for key, value := range values {
+		dst = AppendStringHTML(dst, key)
+		dst = append(dst, ':')
+		dst = AppendByteSliceBase64(dst, value)
+		dst = append(dst, ',')
+	}
+	dst[len(dst)-1] = '}'
+
+	return dst
+}
+
 // AppendIntBoolSliceMapHTML appends the JSON representation of values to dst.
-func AppendIntStringSliceMapHTML[K signedInteger](dst []byte, values map[K][]string) []byte {
+func AppendIntStringSliceMapHTML[K SignedInteger](dst []byte, values map[K][]string) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}
@@ -557,7 +643,7 @@ func AppendIntStringSliceMapHTML[K signedInteger](dst []byte, values map[K][]str
 }
 
 // AppendUintBoolSliceMapHTML appends the JSON representation of values to dst.
-func AppendUintStringSliceMapHTML[K unsignedInteger](dst []byte, values map[K][]string) []byte {
+func AppendUintStringSliceMapHTML[K UnsignedInteger](dst []byte, values map[K][]string) []byte {
 	if values == nil {
 		return AppendNull(dst)
 	}

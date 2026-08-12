@@ -174,6 +174,56 @@ func TestAppendByteSliceBase64(t *testing.T) {
 	}
 }
 
+func TestAppendByteSliceBase64Map(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		got  []byte
+		want string
+	}{
+		{
+			"string key",
+			internal.AppendStringByteSliceBase64Map([]byte("prefix:"), map[string][]byte{"<": {0xfb, 0xff}}),
+			`prefix:{"<":"+/8="}`,
+		},
+		{
+			"HTML string key",
+			internal.AppendStringByteSliceBase64MapHTML([]byte("prefix:"), map[string][]byte{"<": {0xfb, 0xff}}),
+			`prefix:{"\u003c":"+/8="}`,
+		},
+		{
+			"int key",
+			internal.AppendIntByteSliceBase64Map([]byte("prefix:"), map[int][]byte{-1: nil}),
+			`prefix:{"-1":null}`,
+		},
+		{
+			"uint key",
+			internal.AppendUintByteSliceBase64Map([]byte("prefix:"), map[uint][]byte{2: {}}),
+			`prefix:{"2":""}`,
+		},
+		{
+			"nil map",
+			internal.AppendStringByteSliceBase64Map([]byte("prefix:"), nil),
+			"prefix:null",
+		},
+		{
+			"empty map",
+			internal.AppendStringByteSliceBase64Map([]byte("prefix:"), map[string][]byte{}),
+			"prefix:{}",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if string(tt.got) != tt.want {
+				t.Fatalf("got %q, want %q", tt.got, tt.want)
+			}
+		})
+	}
+}
+
 func TestAppendByteSliceBase64URL(t *testing.T) {
 	t.Parallel()
 

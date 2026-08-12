@@ -1209,7 +1209,7 @@ func BenchmarkMarshalOmitZero(b *testing.B) {
 }
 
 func BenchmarkMarshalUTF8(b *testing.B) {
-	options := jsonexperiment.MarshalOptions{ValidateString: true}
+	flags := jsonexperiment.MarshalOptions{ValidateString: true}.Flags()
 
 	values := []struct {
 		name  string
@@ -1228,7 +1228,7 @@ func BenchmarkMarshalUTF8(b *testing.B) {
 				var result []byte
 				b.ReportAllocs()
 				for b.Loop() {
-					result, _ = jsonexperiment.MarshalAppendWithOptions(result[:0], tt.value, options)
+					result, _ = jsonexperiment.MarshalAppendWithFlags(result[:0], tt.value, flags)
 				}
 				marshalResult = result
 			})
@@ -1237,7 +1237,7 @@ func BenchmarkMarshalUTF8(b *testing.B) {
 				var result []byte
 				b.ReportAllocs()
 				for b.Loop() {
-					result, _ = jsonexperiment.MarshalWithOptions(tt.value, options)
+					result, _ = jsonexperiment.MarshalWithFlags(tt.value, flags)
 				}
 				marshalResult = result
 			})

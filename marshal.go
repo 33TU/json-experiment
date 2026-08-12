@@ -1,9 +1,7 @@
 package jsonexperiment
 
 import (
-	"slices"
 	"sync"
-	"unicode/utf8"
 
 	"github.com/33TU/json-experiment/internal"
 )
@@ -43,7 +41,7 @@ func MarshalAppendWithFlags(dst []byte, value any, flags MarshalFlags) ([]byte, 
 		return buf, err
 	}
 
-	return toValidUTF8(buf, start), nil
+	return internal.ReplaceInvalidUTF8(buf, start), nil
 }
 
 // Marshal returns the JSON encoding of value.
@@ -66,7 +64,7 @@ func MarshalWithFlags(value any, flags MarshalFlags) ([]byte, error) {
 
 	buf, err := marshalInterface(pb.b[:0], value, flags)
 	if err == nil && flags&MarshalFlagValidateString != 0 {
-		buf = toValidUTF8(buf, 0)
+		buf = internal.ReplaceInvalidUTF8(buf, 0)
 	}
 	out := append([]byte(nil), buf...)
 
@@ -74,24 +72,4 @@ func MarshalWithFlags(value any, flags MarshalFlags) ([]byte, error) {
 	bytesPool.Put(pb)
 
 	return out, err
-}
-
-func toValidUTF8(buf []byte, start int) []byte {
-	src := buf[start:]
-	if utf8.Valid(src) {
-		return buf
-	}
-
-	pb := bytesPool.Get().(*pooledBuffer)
-	corrected := internal.AppendValidUTF8(
-		slices.Grow(pb.b[:0], len(src)),
-		src,
-	)
-
-	buf = append(buf[:start], corrected...)
-
-	pb.b = corrected[:0]
-	bytesPool.Put(pb)
-
-	return buf
 }

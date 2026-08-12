@@ -94,7 +94,7 @@ func replaceInvalidUTF8(src []byte) ([]byte, *utf8ScratchBuffer) {
 		}
 
 		if !remainderKnownInvalid {
-			if utf8.Valid(src[i:]) {
+			if validUTF8(src[i:]) {
 				return src, nil
 			}
 			remainderKnownInvalid = true

@@ -4,81 +4,102 @@ An experimental, performance-focused JSON marshaler for Go.
 
 ## Benchmarks
 
-Benchmark 5 compares:
+Benchmark 6 compares matching output-ownership contracts:
 
-- `MarshalAppend`, which reuses caller-provided destination capacity.
-- `Marshal`, which returns an independently owned byte slice.
-- Go's `encoding/json`.
-- Go's experimental `encoding/json/v2` using `MarshalWrite`.
-- `sonic.ConfigFastest.Marshal`.
-- Sonic's reusable-buffer `EncodeInto` API.
+- Owned output: `Marshal`, Go's `encoding/json`, and
+  `sonic.ConfigFastest.Marshal`.
+- Reusable output: `MarshalAppend`, Go's experimental `encoding/json/v2`
+  using `MarshalWrite`, and Sonic's `EncodeInto` API.
 
-For like-for-like comparisons, `MarshalAppend` corresponds to `MarshalWrite`
-and `EncodeInto`, while `Marshal` corresponds to the marshal APIs that return
-owned output. The append path can avoid output allocation when the destination
-has sufficient capacity.
+The append path can avoid output allocation when the destination has sufficient
+capacity. The charts show owned and reusable APIs side by side, but scale each
+workload independently so both small values and large composite values remain
+readable. Exact median latency and allocation counts are printed on every bar.
 
-### Benchmark 5
+### Benchmark 6
 
 This is a five-run median on Go 1.26 using `GOAMD64=v3` with the JSON v2 and
 SIMD experiments enabled. The suite includes maps, primitive slices, numbers,
 struct variants, UTF-8 validation, and standard marshaling interfaces.
 
-![Marshal benchmark 5 comparison](assets/benchmarks/benchmark5.svg)
+#### Values and structs
+
+![Benchmark 6 values and structs](assets/benchmarks/benchmark6-values.svg)
+
+#### Maps and field options
+
+![Benchmark 6 maps and field options](assets/benchmarks/benchmark6-maps-options.svg)
+
+#### UTF-8 and marshaling interfaces
+
+![Benchmark 6 UTF-8 and marshaling interfaces](assets/benchmarks/benchmark6-utf8-interfaces.svg)
 
 ```sh
 GOAMD64=v3 GOEXPERIMENT=jsonv2,simd go test \
   -benchmem -run='^$' -count=5 -bench='^Benchmark' .
 ```
 
-Five-run median latency (lower is better):
+Five-run median latency for owned-output APIs (lower is better):
 
-| Workload | MarshalAppend | Marshal | encoding/json | json/v2 Write | Sonic Marshal | Sonic EncodeInto |
-|---|---:|---:|---:|---:|---:|---:|
-| `map[string]int` | 192.8 ns | 440.3 ns | 1232 ns | 734.8 ns | 661.4 ns | 424.1 ns |
-| `map[string][]int` | 210.9 ns | 502.4 ns | 1571 ns | 888.4 ns | 718.4 ns | 433.2 ns |
-| `map[string]any` | 320.8 ns | 567.9 ns | 2566 ns | 1848 ns | 940.6 ns | 544.2 ns |
-| `[]int` | 72.52 ns | 204.6 ns | 404.6 ns | 293.7 ns | 358.9 ns | 186.0 ns |
-| `float32` | 36.80 ns | 65.93 ns | 156.7 ns | 142.6 ns | 130.7 ns | 93.96 ns |
-| `float64` | 56.63 ns | 108.9 ns | 204.5 ns | 171.9 ns | 179.4 ns | 104.7 ns |
-| mixed struct | 274.5 ns | 627.4 ns | 1622 ns | 1075 ns | 888.5 ns | 613.1 ns |
-| struct slice with metadata maps | 810.1 ns | 1536 ns | 4167 ns | 2898 ns | 2374 ns | 1484 ns |
-| quoted struct fields | 190.4 ns | 344.4 ns | 1411 ns | 671.3 ns | 511.1 ns | 273.3 ns |
-| `omitempty` / `omitzero` | 97.64 ns | 259.1 ns | 859.0 ns | 776.4 ns | 422.3 ns | 261.3 ns |
-| UTF-8 validation: ASCII | 120.4 ns | 809.7 ns | 2006 ns | 620.5 ns | 1099 ns | 166.8 ns |
-| UTF-8 validation: Unicode | 236.5 ns | 921.1 ns | 1325 ns | 579.8 ns | 951.3 ns | 170.1 ns |
-| UTF-8 validation: invalid byte | 272.5 ns | 1564 ns | 2227 ns | 740.5 ns | 2867 ns | 3501 ns |
-| `encoding.TextMarshaler` | 44.08 ns | 81.16 ns | 190.5 ns | 142.4 ns | 139.2 ns | 105.5 ns |
-| `json.Marshaler` | 33.30 ns | 66.64 ns | 137.7 ns | 122.3 ns | 120.2 ns | 110.5 ns |
+| Workload | Marshal | encoding/json | Sonic Marshal |
+|---|---:|---:|---:|
+| `map[string]int` | 391.7 ns | 1200 ns | 587.9 ns |
+| `map[string][]int` | 406.9 ns | 1622 ns | 643.6 ns |
+| `map[string]any` | 531.8 ns | 2450 ns | 787.0 ns |
+| `[]int` | 181.7 ns | 353.6 ns | 292.4 ns |
+| `float32` | 65.04 ns | 149.6 ns | 123.3 ns |
+| `float64` | 103.9 ns | 199.7 ns | 160.9 ns |
+| mixed struct | 572.5 ns | 1444 ns | 739.1 ns |
+| struct slice with metadata maps | 1309 ns | 4021 ns | 1907 ns |
+| quoted struct fields | 368.4 ns | 1345 ns | 396.0 ns |
+| `omitempty` / `omitzero` | 226.6 ns | 743.4 ns | 318.8 ns |
+| `omitzero` fields | 205.3 ns | 709.1 ns | 489.0 ns |
+| UTF-8 validation: ASCII | 641.9 ns | 1433 ns | 833.7 ns |
+| UTF-8 validation: Unicode | 629.4 ns | 1107 ns | 671.7 ns |
+| UTF-8 validation: invalid byte | 887.9 ns | 1699 ns | 2298 ns |
+| `encoding.TextMarshaler` | 76.52 ns | 181.3 ns | 130.3 ns |
+| `json.Marshaler` | 69.22 ns | 135.0 ns | 124.7 ns |
+| integer `json.Marshaler` | 69.32 ns | 148.9 ns | 115.4 ns |
 
-Median allocations per operation:
+Five-run median latency for reusable-output APIs (lower is better):
 
-| Workload | MarshalAppend | Marshal | encoding/json | json/v2 Write | Sonic Marshal | Sonic EncodeInto |
-|---|---:|---:|---:|---:|---:|---:|
-| `map[string]int` | 0 | 1 | 11 | 3 | 3 | 2 |
-| `map[string][]int` | 0 | 1 | 10 | 3 | 3 | 2 |
-| `map[string]any` | 0 | 1 | 23 | 14 | 3 | 2 |
-| `[]int` | 0 | 1 | 3 | 2 | 3 | 2 |
-| `float32` | 0 | 1 | 3 | 2 | 3 | 2 |
-| `float64` | 0 | 1 | 3 | 2 | 3 | 2 |
-| mixed struct | 0 | 1 | 7 | 4 | 4 | 3 |
-| struct slice with metadata maps | 0 | 1 | 19 | 10 | 7 | 6 |
-| quoted struct fields | 0 | 1 | 6 | 2 | 3 | 2 |
-| `omitempty` / `omitzero` | 0 | 1 | 3 | 2 | 3 | 2 |
-| UTF-8 validation: ASCII | 0 | 1 | 3 | 2 | 3 | 2 |
-| UTF-8 validation: Unicode | 0 | 1 | 3 | 2 | 3 | 2 |
-| UTF-8 validation: invalid byte | 0 | 1 | 3 | 2 | 3 | 4 |
-| `encoding.TextMarshaler` | 1 | 2 | 2 | 1 | 3 | 2 |
-| `json.Marshaler` | 1 | 2 | 2 | 1 | 3 | 2 |
+| Workload | MarshalAppend | json/v2 Write | Sonic EncodeInto |
+|---|---:|---:|---:|
+| `map[string]int` | 184.1 ns | 726.7 ns | 387.5 ns |
+| `map[string][]int` | 210.5 ns | 889.6 ns | 434.4 ns |
+| `map[string]any` | 306.6 ns | 1790 ns | 516.0 ns |
+| `[]int` | 77.08 ns | 278.9 ns | 157.4 ns |
+| `float32` | 36.99 ns | 139.8 ns | 85.34 ns |
+| `float64` | 57.02 ns | 152.0 ns | 99.80 ns |
+| mixed struct | 262.9 ns | 1053 ns | 536.2 ns |
+| struct slice with metadata maps | 766.8 ns | 2815 ns | 1270 ns |
+| quoted struct fields | 178.9 ns | 653.8 ns | 232.2 ns |
+| `omitempty` / `omitzero` | 99.26 ns | 721.9 ns | 218.1 ns |
+| `omitzero` fields | 89.56 ns | 597.2 ns | 360.6 ns |
+| UTF-8 validation: ASCII | 110.2 ns | 602.0 ns | 138.1 ns |
+| UTF-8 validation: Unicode | 209.8 ns | 571.4 ns | 158.9 ns |
+| UTF-8 validation: invalid byte | 185.2 ns | 710.3 ns | 2506 ns |
+| `encoding.TextMarshaler` | 42.25 ns | 140.9 ns | 95.82 ns |
+| `json.Marshaler` | 31.32 ns | 124.2 ns | 102.7 ns |
+| integer `json.Marshaler` | 32.98 ns | 131.5 ns | 103.8 ns |
+
+`MarshalAppend` records zero allocations for ordinary values and one allocation
+when invoking the marshaling interfaces. Allocation counts for every
+implementation are included directly in the charts and raw output.
 
 The custom `MarshalerAppend` precedence benchmark only applies to this
-package. Its median results were 16.74 ns with zero allocations for
-`MarshalAppend`, and 47.32 ns with one allocation for `Marshal`.
+package, so it is omitted from the comparison charts. Its median results were
+18.13 ns with zero allocations for `MarshalAppend`, and 48.11 ns with one
+allocation for `Marshal`.
 
-The complete Benchmark 5 output, including bytes and allocations per
-operation, is available in [`bench5.txt`](assets/benchmarks/raw/bench5.txt).
-Benchmarks 1–4 and their original commentary are preserved in
-[`README-old.md`](README-old.md).
+The complete Benchmark 6 output is available in
+[`bench6.txt`](assets/benchmarks/raw/bench6.txt). Earlier benchmark SVGs and
+raw outputs remain under [`assets/benchmarks`](assets/benchmarks), with older
+commentary preserved in [`README-old.md`](README-old.md).
+
+### Complete Benchmark 6 overview
+
+![Complete Benchmark 6 comparison](assets/benchmarks/benchmark6.svg)
 
 ---
 

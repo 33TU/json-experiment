@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1224" viewBox="0 0 1500 1224" role="img" aria-labelledby="title desc">
+  <title id="title">Values and structs — Benchmark 6</title>
+  <desc id="desc">Five-run median JSON marshal latency. Owned-output and reusable-output APIs are compared separately. Lower is better.</desc>
+  <style>text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:#d8dee9}.title{font-family:ui-sans-serif,system-ui,sans-serif;font-size:28px;font-weight:700}.subtitle{font-family:ui-sans-serif,system-ui,sans-serif;font-size:15px;fill:#aab4c3}.group{font-family:ui-sans-serif,system-ui,sans-serif;font-size:18px;font-weight:650}.contract{font-family:ui-sans-serif,system-ui,sans-serif;font-size:14px;font-weight:650;fill:#9eabbc}.series{font-size:13px;fill:#c4ccd8}.value{font-size:13px;font-weight:650}.divider{stroke:#293344;stroke-width:1}.panel{fill:#151c27}</style>
+  <rect width="1500" height="1224" rx="14" fill="#10151d"/>
+  <text class="title" x="40" y="48">Values and structs — Benchmark 6</text>
+  <text class="subtitle" x="40" y="76">Go 1.26 · GOAMD64=v3 · JSON v2 + SIMD · five-run median · lower is better</text>
+  <rect x="40" y="94" width="14" height="14" rx="3" fill="#50c878"/><text class="series" x="62" y="106">json-experiment</text>
+  <rect x="225" y="94" width="14" height="14" rx="3" fill="#ef8354"/><text class="series" x="247" y="106">Go standard library</text>
+  <rect x="445" y="94" width="14" height="14" rx="3" fill="#b388eb"/><text class="series" x="467" y="106">Sonic</text>
+  <text class="subtitle" x="1460" y="106" text-anchor="end">Each workload uses its own linear scale; labels show ns/op and allocations.</text>
+  <g transform="translate(0,145)">
+    <rect class="panel" x="25" y="0" width="1450" height="158" rx="10"/>
+    <text class="group" x="45" y="27">float32</text>
+    <text class="contract" x="45" y="53">Owned output</text>
+    <text class="contract" x="785" y="53">Reusable output</text>
+    <text class="series" x="193" y="81" text-anchor="end">json-experiment</text>
+    <rect x="205" y="68" width="156.5" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="369.5" y="81">65.04 ns · 1 alloc</text>
+    <text class="series" x="193" y="106" text-anchor="end">encoding/json</text>
+    <rect x="205" y="93" width="360.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="573.0" y="106">149.6 ns · 3 allocs</text>
+    <text class="series" x="193" y="131" text-anchor="end">Sonic</text>
+    <rect x="205" y="118" width="296.7" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="509.7" y="131">123.3 ns · 3 allocs</text>
+    <text class="series" x="933" y="81" text-anchor="end">json-experiment</text>
+    <rect x="945" y="68" width="89.0" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="1042.0" y="81">36.99 ns · 0 allocs</text>
+    <text class="series" x="933" y="106" text-anchor="end">json/v2</text>
+    <rect x="945" y="93" width="336.4" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1289.4" y="106">139.8 ns · 2 allocs</text>
+    <text class="series" x="933" y="131" text-anchor="end">Sonic</text>
+    <rect x="945" y="118" width="205.4" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="1158.4" y="131">85.34 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,319)">
+    <rect class="panel" x="25" y="0" width="1450" height="158" rx="10"/>
+    <text class="group" x="45" y="27">float64</text>
+    <text class="contract" x="45" y="53">Owned output</text>
+    <text class="contract" x="785" y="53">Reusable output</text>
+    <text class="series" x="193" y="81" text-anchor="end">json-experiment</text>
+    <rect x="205" y="68" width="187.3" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="400.3" y="81">103.9 ns · 1 alloc</text>
+    <text class="series" x="193" y="106" text-anchor="end">encoding/json</text>
+    <rect x="205" y="93" width="360.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="573.0" y="106">199.7 ns · 3 allocs</text>
+    <text class="series" x="193" y="131" text-anchor="end">Sonic</text>
+    <rect x="205" y="118" width="290.1" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="503.1" y="131">160.9 ns · 3 allocs</text>
+    <text class="series" x="933" y="81" text-anchor="end">json-experiment</text>
+    <rect x="945" y="68" width="102.8" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="1055.8" y="81">57.02 ns · 0 allocs</text>
+    <text class="series" x="933" y="106" text-anchor="end">json/v2</text>
+    <rect x="945" y="93" width="274.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1227.0" y="106">152.0 ns · 2 allocs</text>
+    <text class="series" x="933" y="131" text-anchor="end">Sonic</text>
+    <rect x="945" y="118" width="179.9" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="1132.9" y="131">99.80 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,493)">
+    <rect class="panel" x="25" y="0" width="1450" height="158" rx="10"/>
+    <text class="group" x="45" y="27">[]int</text>
+    <text class="contract" x="45" y="53">Owned output</text>
+    <text class="contract" x="785" y="53">Reusable output</text>
+    <text class="series" x="193" y="81" text-anchor="end">json-experiment</text>
+    <rect x="205" y="68" width="185.0" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="398.0" y="81">181.7 ns · 1 alloc</text>
+    <text class="series" x="193" y="106" text-anchor="end">encoding/json</text>
+    <rect x="205" y="93" width="360.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="573.0" y="106">353.6 ns · 3 allocs</text>
+    <text class="series" x="193" y="131" text-anchor="end">Sonic</text>
+    <rect x="205" y="118" width="297.7" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="510.7" y="131">292.4 ns · 3 allocs</text>
+    <text class="series" x="933" y="81" text-anchor="end">json-experiment</text>
+    <rect x="945" y="68" width="78.5" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="1031.5" y="81">77.08 ns · 0 allocs</text>
+    <text class="series" x="933" y="106" text-anchor="end">json/v2</text>
+    <rect x="945" y="93" width="283.9" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1236.9" y="106">278.9 ns · 2 allocs</text>
+    <text class="series" x="933" y="131" text-anchor="end">Sonic</text>
+    <rect x="945" y="118" width="160.2" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="1113.2" y="131">157.4 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,667)">
+    <rect class="panel" x="25" y="0" width="1450" height="158" rx="10"/>
+    <text class="group" x="45" y="27">mixed struct</text>
+    <text class="contract" x="45" y="53">Owned output</text>
+    <text class="contract" x="785" y="53">Reusable output</text>
+    <text class="series" x="193" y="81" text-anchor="end">json-experiment</text>
+    <rect x="205" y="68" width="142.7" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="355.7" y="81">572.5 ns · 1 alloc</text>
+    <text class="series" x="193" y="106" text-anchor="end">encoding/json</text>
+    <rect x="205" y="93" width="360.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="573.0" y="106">1444 ns · 7 allocs</text>
+    <text class="series" x="193" y="131" text-anchor="end">Sonic</text>
+    <rect x="205" y="118" width="184.3" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="397.3" y="131">739.1 ns · 4 allocs</text>
+    <text class="series" x="933" y="81" text-anchor="end">json-experiment</text>
+    <rect x="945" y="68" width="65.5" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="1018.5" y="81">262.9 ns · 0 allocs</text>
+    <text class="series" x="933" y="106" text-anchor="end">json/v2</text>
+    <rect x="945" y="93" width="262.5" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1215.5" y="106">1053 ns · 4 allocs</text>
+    <text class="series" x="933" y="131" text-anchor="end">Sonic</text>
+    <rect x="945" y="118" width="133.7" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="1086.7" y="131">536.2 ns · 3 allocs</text>
+  </g>
+  <g transform="translate(0,841)">
+    <rect class="panel" x="25" y="0" width="1450" height="158" rx="10"/>
+    <text class="group" x="45" y="27">quoted struct fields</text>
+    <text class="contract" x="45" y="53">Owned output</text>
+    <text class="contract" x="785" y="53">Reusable output</text>
+    <text class="series" x="193" y="81" text-anchor="end">json-experiment</text>
+    <rect x="205" y="68" width="98.6" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="311.6" y="81">368.4 ns · 1 alloc</text>
+    <text class="series" x="193" y="106" text-anchor="end">encoding/json</text>
+    <rect x="205" y="93" width="360.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="573.0" y="106">1345 ns · 6 allocs</text>
+    <text class="series" x="193" y="131" text-anchor="end">Sonic</text>
+    <rect x="205" y="118" width="106.0" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="319.0" y="131">396.0 ns · 3 allocs</text>
+    <text class="series" x="933" y="81" text-anchor="end">json-experiment</text>
+    <rect x="945" y="68" width="47.9" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="1000.9" y="81">178.9 ns · 0 allocs</text>
+    <text class="series" x="933" y="106" text-anchor="end">json/v2</text>
+    <rect x="945" y="93" width="175.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1128.0" y="106">653.8 ns · 2 allocs</text>
+    <text class="series" x="933" y="131" text-anchor="end">Sonic</text>
+    <rect x="945" y="118" width="62.2" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="1015.2" y="131">232.2 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,1015)">
+    <rect class="panel" x="25" y="0" width="1450" height="158" rx="10"/>
+    <text class="group" x="45" y="27">struct slice with metadata maps</text>
+    <text class="contract" x="45" y="53">Owned output</text>
+    <text class="contract" x="785" y="53">Reusable output</text>
+    <text class="series" x="193" y="81" text-anchor="end">json-experiment</text>
+    <rect x="205" y="68" width="117.2" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="330.2" y="81">1309 ns · 1 alloc</text>
+    <text class="series" x="193" y="106" text-anchor="end">encoding/json</text>
+    <rect x="205" y="93" width="360.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="573.0" y="106">4021 ns · 19 allocs</text>
+    <text class="series" x="193" y="131" text-anchor="end">Sonic</text>
+    <rect x="205" y="118" width="170.7" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="383.7" y="131">1907 ns · 7 allocs</text>
+    <text class="series" x="933" y="81" text-anchor="end">json-experiment</text>
+    <rect x="945" y="68" width="68.7" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="1021.7" y="81">766.8 ns · 0 allocs</text>
+    <text class="series" x="933" y="106" text-anchor="end">json/v2</text>
+    <rect x="945" y="93" width="252.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1205.0" y="106">2815 ns · 10 allocs</text>
+    <text class="series" x="933" y="131" text-anchor="end">Sonic</text>
+    <rect x="945" y="118" width="113.7" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="1066.7" y="131">1270 ns · 6 allocs</text>
+  </g>
+</svg>

@@ -128,3 +128,35 @@ while `MarshalAppend` is 1.43× faster than Sonic EncodeInto and remains
 allocation-free once the destination buffer has sufficient reusable capacity.
 The complete five-run output is available in
 [`bench-large-struct.txt`](assets/benchmarks/raw/bench-large-struct.txt).
+
+### Parallel scaling
+
+The same payload was also measured with `b.RunParallel`, giving each worker its
+own reusable destination buffer. The table reports aggregate throughput from
+three-run medians at each `GOMAXPROCS` setting; 16 corresponds to the physical
+core count of the 9950X3D, while 32 includes SMT threads.
+
+![Large nested struct parallel scaling](assets/benchmarks/large-struct-parallel.svg)
+
+| CPUs | MarshalAppend | Sonic EncodeInto | Reusable advantage | Marshal | Sonic Marshal | Owned advantage |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1 | **1.81 GB/s** | 1.09 GB/s | **1.66×** | **1.39 GB/s** | 0.98 GB/s | **1.43×** |
+| 2 | **3.60 GB/s** | 2.07 GB/s | **1.74×** | **2.53 GB/s** | 1.75 GB/s | **1.45×** |
+| 4 | **7.04 GB/s** | 4.37 GB/s | **1.61×** | **4.45 GB/s** | 3.04 GB/s | **1.46×** |
+| 8 | **13.74 GB/s** | 6.68 GB/s | **2.06×** | **6.17 GB/s** | 4.20 GB/s | **1.47×** |
+| 16 | **24.99 GB/s** | 8.39 GB/s | **2.98×** | **7.72 GB/s** | 4.84 GB/s | **1.60×** |
+| 32 | **28.09 GB/s** | 9.80 GB/s | **2.87×** | **8.65 GB/s** | 5.40 GB/s | **1.60×** |
+
+`MarshalAppend` scales by 13.78× from one to 16 CPUs and remains at zero bytes
+and zero allocations per operation throughout. Sonic EncodeInto scales by
+7.68× over the same range and records 18 allocations per operation. These are
+aggregate throughput measurements rather than per-request tail-latency results.
+The complete three-run scaling output is available in
+[`bench-large-struct-parallel.txt`](assets/benchmarks/raw/bench-large-struct-parallel.txt).
+
+```sh
+cd bench
+GOAMD64=v3 GOEXPERIMENT=jsonv2,simd go test -run='^$' -benchmem \
+  -count=3 -benchtime=300ms -cpu=1,2,4,8,16,32 \
+  -bench='^BenchmarkMarshalLargeStruct/parallel' .
+```

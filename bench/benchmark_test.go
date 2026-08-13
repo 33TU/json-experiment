@@ -306,6 +306,10 @@ func BenchmarkMarshalLargeStruct(b *testing.B) {
 	}
 
 	benchmarkMarshalValue(b, value)
+
+	b.Run("parallel", func(b *testing.B) {
+		benchmarkMarshalValueParallel(b, value)
+	})
 }
 
 func BenchmarkMarshalStructQuoted(b *testing.B) {
@@ -587,4 +591,86 @@ func benchmarkMarshalValue[T any](b *testing.B, value T) {
 	})
 
 	runtime.KeepAlive(marshalResult)
+}
+
+func benchmarkMarshalValueParallel[T any](b *testing.B, value T) {
+	reference, err := json.Marshal(value)
+	if err != nil {
+		b.Fatal(err)
+	}
+	encodedBytes := int64(len(reference))
+
+	b.Run("marshal_append", func(b *testing.B) {
+		b.SetBytes(encodedBytes)
+		b.ReportAllocs()
+		b.RunParallel(func(pb *testing.PB) {
+			var result []byte
+			for pb.Next() {
+				result, _ = jsonexperiment.MarshalAppend(result[:0], value)
+			}
+			runtime.KeepAlive(result)
+		})
+	})
+
+	b.Run("marshal", func(b *testing.B) {
+		b.SetBytes(encodedBytes)
+		b.ReportAllocs()
+		b.RunParallel(func(pb *testing.PB) {
+			var result []byte
+			for pb.Next() {
+				result, _ = jsonexperiment.Marshal(value)
+			}
+			runtime.KeepAlive(result)
+		})
+	})
+
+	b.Run("encoding_json", func(b *testing.B) {
+		b.SetBytes(encodedBytes)
+		b.ReportAllocs()
+		b.RunParallel(func(pb *testing.PB) {
+			var result []byte
+			for pb.Next() {
+				result, _ = json.Marshal(value)
+			}
+			runtime.KeepAlive(result)
+		})
+	})
+
+	b.Run("encoding_json_v2_write", func(b *testing.B) {
+		b.SetBytes(encodedBytes)
+		b.ReportAllocs()
+		b.RunParallel(func(pb *testing.PB) {
+			buf := bytes.NewBuffer(nil)
+			for pb.Next() {
+				buf.Reset()
+				_ = jsonv2.MarshalWrite(buf, value)
+			}
+			runtime.KeepAlive(buf.Bytes())
+		})
+	})
+
+	b.Run("sonic_json", func(b *testing.B) {
+		b.SetBytes(encodedBytes)
+		b.ReportAllocs()
+		b.RunParallel(func(pb *testing.PB) {
+			var result []byte
+			for pb.Next() {
+				result, _ = sonicJson.Marshal(value)
+			}
+			runtime.KeepAlive(result)
+		})
+	})
+
+	b.Run("sonic_encode_into", func(b *testing.B) {
+		b.SetBytes(encodedBytes)
+		b.ReportAllocs()
+		b.RunParallel(func(pb *testing.PB) {
+			var result []byte
+			for pb.Next() {
+				result = result[:0]
+				_ = sonicEncoder.EncodeInto(&result, value, 0)
+			}
+			runtime.KeepAlive(result)
+		})
+	})
 }

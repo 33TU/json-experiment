@@ -104,3 +104,27 @@ commentary preserved in [`README-old.md`](README-old.md).
 
 Results vary by hardware, Go version, and workload. Run the benchmarks on the
 target system before drawing conclusions for a particular application.
+
+## Large-struct benchmark
+
+This focused benchmark encodes a 4,740-byte payload containing nested structs,
+slices, maps, field options, ASCII, and Unicode. Results are five-run medians on
+an AMD Ryzen 9 9950X3D using Go 1.26, `GOAMD64=v3`, and the JSON v2 and SIMD
+experiments.
+
+![Large nested struct benchmark](assets/benchmarks/large-struct.svg)
+
+| Output contract | Encoder | Latency | Throughput | Allocated bytes | Allocations |
+|---|---|---:|---:|---:|---:|
+| Reusable | MarshalAppend | **2.520 µs** | **1881 MB/s** | **0 B** | **0** |
+| Owned | Marshal | **3.100 µs** | **1529 MB/s** | **4873 B** | **1** |
+| Reusable | Sonic EncodeInto | 3.609 µs | 1313 MB/s | 2153 B | 18 |
+| Owned | Sonic Marshal | 4.291 µs | 1105 MB/s | 7203 B | 19 |
+| Reusable | json/v2 Write | 8.797 µs | 539 MB/s | 1651 B | 34 |
+| Owned | encoding/json | 10.803 µs | 439 MB/s | 7200 B | 81 |
+
+For matching output contracts, `Marshal` is 1.38× faster than Sonic Marshal,
+while `MarshalAppend` is 1.43× faster than Sonic EncodeInto and remains
+allocation-free once the destination buffer has sufficient reusable capacity.
+The complete five-run output is available in
+[`bench-large-struct.txt`](assets/benchmarks/raw/bench-large-struct.txt).

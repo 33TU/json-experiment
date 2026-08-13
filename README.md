@@ -151,6 +151,10 @@ core count of the 9950X3D, while 32 includes SMT threads.
 and zero allocations per operation throughout. Sonic EncodeInto scales by
 7.68× over the same range and records 18 allocations per operation. These are
 aggregate throughput measurements rather than per-request tail-latency results.
+At 16 CPUs, json/v2 Write reaches 4.45 GB/s and `encoding/json` reaches
+2.44 GB/s, making `MarshalAppend` 5.6× and 10.2× faster, respectively. The
+standard-library series are omitted from the chart to keep the closer Sonic
+comparison readable, but their complete measurements remain in the raw output.
 The complete three-run scaling output is available in
 [`bench-large-struct-parallel.txt`](assets/benchmarks/raw/bench-large-struct-parallel.txt).
 

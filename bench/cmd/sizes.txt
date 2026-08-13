@@ -1,0 +1,19 @@
+Stripped executable size comparison
+===================================
+
+Environment:
+  Go:   go1.26.5
+  OS:   linux
+  Arch: amd64
+
+Build command used from bench/:
+  GOAMD64=v3 GOEXPERIMENT=jsonv2,simd go build -trimpath -ldflags="-s -w"
+
+Executable                         Bytes       MiB
+-------------------------------------------------
+size-experiment/size-experiment  2,789,538      2.66
+size-stdlib/size-stdlib          2,633,890      2.51
+size-sonic/size-sonic            6,426,786      6.13
+
+json-experiment is 155,648 bytes (about 5.9%) larger than encoding/json.
+Sonic is approximately 2.30x the size of json-experiment.

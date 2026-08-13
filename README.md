@@ -35,8 +35,7 @@ struct variants, UTF-8 validation, and standard marshaling interfaces.
 ![Benchmark 6 UTF-8 and marshaling interfaces](assets/benchmarks/benchmark6-utf8-interfaces.svg)
 
 ```sh
-GOAMD64=v3 GOEXPERIMENT=jsonv2,simd go test \
-  -benchmem -run='^$' -count=5 -bench='^Benchmark' .
+just bench
 ```
 
 Five-run median latency for owned-output APIs (lower is better):

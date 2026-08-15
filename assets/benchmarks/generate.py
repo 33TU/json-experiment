@@ -386,8 +386,8 @@ def main() -> None:
         "benchmark7-maps-options.svg": comparison_svg(benchmark, "Maps and field options", MAPS_OPTIONS),
         "benchmark7-utf8-interfaces.svg": comparison_svg(benchmark, "UTF-8 and marshaling interfaces", UTF8_INTERFACES),
         "benchmark7.svg": overview_svg(benchmark),
-        "large-struct.svg": large_struct_svg(benchmark),
-        "large-struct-parallel.svg": parallel_svg(parallel),
+        "large-struct7.svg": large_struct_svg(benchmark),
+        "large-struct-parallel7.svg": parallel_svg(parallel),
     }
     for name, contents in outputs.items():
         (HERE / name).write_text(contents)

@@ -113,7 +113,7 @@ slices, maps, field options, ASCII, and Unicode. Results are five-run medians on
 an AMD Ryzen 9 9950X3D using Go 1.26, `GOAMD64=v3`, and the JSON v2 and SIMD
 experiments.
 
-![Large nested struct benchmark](assets/benchmarks/large-struct.svg)
+![Large nested struct benchmark](assets/benchmarks/large-struct7.svg)
 
 | Output contract | Encoder          |      Latency |    Throughput | Allocated bytes | Allocations |
 | --------------- | ---------------- | -----------: | ------------: | --------------: | ----------: |
@@ -137,7 +137,7 @@ own reusable destination buffer. The table reports aggregate throughput from
 three-run medians at each `GOMAXPROCS` setting; 16 corresponds to the physical
 core count of the 9950X3D, while 32 includes SMT threads.
 
-![Large nested struct parallel scaling](assets/benchmarks/large-struct-parallel.svg)
+![Large nested struct parallel scaling](assets/benchmarks/large-struct-parallel7.svg)
 
 | CPUs |  MarshalAppend | Sonic EncodeInto | Reusable advantage |       Marshal | Sonic Marshal | Owned advantage |
 | ---: | -------------: | ---------------: | -----------------: | ------------: | ------------: | --------------: |

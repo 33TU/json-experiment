@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"sync/atomic"
 	"unsafe"
 )
 
@@ -21,6 +22,26 @@ type addressableMarshalFnCacheKey struct {
 // addressableMarshalFnCacheKey to keep the two dispatch contexts distinct.
 var marshalFnCache sync.Map
 
+const (
+	marshalFnFastCacheBits = 8
+	marshalFnFastCacheSize = 1 << marshalFnFastCacheBits
+)
+
+type marshalFnFastCacheEntry struct {
+	typ unsafe.Pointer
+	fn  marshalFn
+}
+
+type marshalFnCacheValue struct {
+	placeholder marshalFn
+	ready       atomic.Pointer[marshalFnFastCacheEntry]
+}
+
+// Completed codecs use a direct-mapped atomic cache on the hot path. Separate
+// tables keep normal and addressable codecs distinct. Collisions fall through
+// to marshalFnCache and repopulate the slot with the most recently used codec.
+var marshalFnFastCaches [2][marshalFnFastCacheSize]atomic.Pointer[marshalFnFastCacheEntry]
+
 // getOrCreateMarshalFn returns a cached marshal function for typ.
 func getOrCreateMarshalFn(typ reflect.Type) marshalFn {
 	return getOrCreateMarshalFnForKey(typ, typ, false)
@@ -34,8 +55,18 @@ func getOrCreateAddressableMarshalFn(typ reflect.Type) marshalFn {
 }
 
 func getOrCreateMarshalFnForKey(key any, typ reflect.Type, addressable bool) marshalFn {
+	cacheIndex := 0
+	if addressable {
+		cacheIndex = 1
+	}
+	fastKey := reflectTypePointer(typ)
+	fastSlot := &marshalFnFastCaches[cacheIndex][marshalFnFastCacheIndex(fastKey)]
+	if entry := fastSlot.Load(); entry != nil && entry.typ == fastKey {
+		return entry.fn
+	}
+
 	if cached, ok := marshalFnCache.Load(key); ok {
-		return cached.(marshalFn)
+		return loadMarshalFnCacheValue(cached.(*marshalFnCacheValue), fastSlot)
 	}
 
 	var (
@@ -52,17 +83,45 @@ func getOrCreateMarshalFnForKey(key any, typ reflect.Type, addressable bool) mar
 			return fn(dst, ptr, flags)
 		},
 	)
+	cacheValue := &marshalFnCacheValue{placeholder: placeholder}
 
-	cached, loaded := marshalFnCache.LoadOrStore(key, placeholder)
+	cached, loaded := marshalFnCache.LoadOrStore(key, cacheValue)
 	if loaded {
-		return cached.(marshalFn)
+		return loadMarshalFnCacheValue(cached.(*marshalFnCacheValue), fastSlot)
 	}
 
 	fn = createMarshalFn(typ, addressable)
+	ready := &marshalFnFastCacheEntry{typ: fastKey, fn: fn}
+	cacheValue.ready.Store(ready)
 	wg.Done()
 
-	marshalFnCache.Store(key, fn)
+	fastSlot.Store(ready)
 	return fn
+}
+
+func loadMarshalFnCacheValue(
+	value *marshalFnCacheValue,
+	fastSlot *atomic.Pointer[marshalFnFastCacheEntry],
+) marshalFn {
+	if ready := value.ready.Load(); ready != nil {
+		fastSlot.Store(ready)
+		return ready.fn
+	}
+	return value.placeholder
+}
+
+func marshalFnFastCacheIndex(typ unsafe.Pointer) int {
+	const fibonacci = uint64(11400714819323198485)
+	return int(uint64(uintptr(typ)) * fibonacci >> (64 - marshalFnFastCacheBits))
+}
+
+func reflectTypePointer(typ reflect.Type) unsafe.Pointer {
+	type reflectTypeInterface struct {
+		tab  unsafe.Pointer
+		data unsafe.Pointer
+	}
+
+	return (*reflectTypeInterface)(unsafe.Pointer(&typ)).data
 }
 
 func createMarshalFn(typ reflect.Type, addressable bool) marshalFn {

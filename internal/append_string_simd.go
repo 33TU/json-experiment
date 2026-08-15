@@ -399,6 +399,8 @@ func appendStringSIMDAVX2(dst []byte, s string) ([]byte, int, int) {
 		}
 	}
 
+	archsimd.ClearAVXUpperBits()
+
 	return dst, start, i
 }
 
@@ -432,6 +434,8 @@ func appendStringHTMLSIMDAVX2(dst []byte, s string) ([]byte, int, int) {
 			maskBits &= maskBits - 1
 		}
 	}
+
+	archsimd.ClearAVXUpperBits()
 
 	return dst, start, i
 }

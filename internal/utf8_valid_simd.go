@@ -7,6 +7,8 @@ import (
 	"unicode/utf8"
 )
 
+const utf8AVX2Threshold = 384
+
 var (
 	utf8FirstHigh = [16]byte{
 		0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02,
@@ -20,6 +22,24 @@ var (
 		0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
 		0xe6, 0xae, 0xba, 0xba, 0x01, 0x01, 0x01, 0x01,
 	}
+	utf8FirstHighAVX2 = [32]byte{
+		0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02,
+		0x80, 0x80, 0x80, 0x80, 0x21, 0x01, 0x15, 0x49,
+		0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02,
+		0x80, 0x80, 0x80, 0x80, 0x21, 0x01, 0x15, 0x49,
+	}
+	utf8FirstLowAVX2 = [32]byte{
+		0xe7, 0xa3, 0x83, 0x83, 0x8b, 0xcb, 0xcb, 0xcb,
+		0xcb, 0xcb, 0xcb, 0xcb, 0xcb, 0xdb, 0xcb, 0xcb,
+		0xe7, 0xa3, 0x83, 0x83, 0x8b, 0xcb, 0xcb, 0xcb,
+		0xcb, 0xcb, 0xcb, 0xcb, 0xcb, 0xdb, 0xcb, 0xcb,
+	}
+	utf8SecondHighAVX2 = [32]byte{
+		0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+		0xe6, 0xae, 0xba, 0xba, 0x01, 0x01, 0x01, 0x01,
+		0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+		0xe6, 0xae, 0xba, 0xba, 0x01, 0x01, 0x01, 0x01,
+	}
 )
 
 func validUTF8(src []byte) bool {
@@ -27,14 +47,74 @@ func validUTF8(src []byte) bool {
 		return utf8.Valid(src)
 	}
 
-	const width = 16
-
 	original := src
 	r, size := utf8.DecodeRune(src)
 	if r == utf8.RuneError && size == 1 {
 		return false
 	}
 	src = src[size:]
+
+	if len(original) >= utf8AVX2Threshold && archsimd.X86.AVX2() {
+		return validUTF8AVX2(original, src, size)
+	}
+	return validUTF8SIMD(original, src)
+}
+
+func validUTF8AVX2(original, src []byte, processed int) bool {
+	const width = 32
+
+	firstHighTable := archsimd.LoadUint8x32(&utf8FirstHighAVX2)
+	firstLowTable := archsimd.LoadUint8x32(&utf8FirstLowAVX2)
+	secondHighTable := archsimd.LoadUint8x32(&utf8SecondHighAVX2)
+	lowNibble := archsimd.BroadcastUint8x32(0x0f)
+	continuationBit := archsimd.BroadcastUint8x32(0x80)
+	thirdThreshold := archsimd.BroadcastUint8x32(0xdf)
+	fourthThreshold := archsimd.BroadcastUint8x32(0xef)
+	zero := archsimd.BroadcastUint8x32(0)
+
+	var previous archsimd.Uint8x32
+	for len(src) >= width {
+		input := archsimd.LoadUint8x32Slice(src)
+
+		// AVX2 byte shifts operate independently on 128-bit lanes. Arrange the
+		// preceding lane beside each current lane so UTF-8 sequences spanning
+		// either the vector or lane boundary retain their prior three bytes.
+		prior := input.SetLo(previous.GetHi()).SetHi(input.GetLo())
+		previous1 := input.ConcatShiftBytesRightGrouped(15, prior)
+		previous2 := input.ConcatShiftBytesRightGrouped(14, prior)
+		previous3 := input.ConcatShiftBytesRightGrouped(13, prior)
+
+		previous1High := previous1.AsUint16x16().ShiftAllRight(4).AsUint8x32().And(lowNibble)
+		inputHigh := input.AsUint16x16().ShiftAllRight(4).AsUint8x32().And(lowNibble)
+		special := firstHighTable.PermuteOrZeroGrouped(previous1High.AsInt8x32()).
+			And(firstLowTable.PermuteOrZeroGrouped(previous1.And(lowNibble).AsInt8x32())).
+			And(secondHighTable.PermuteOrZeroGrouped(inputHigh.AsInt8x32()))
+
+		mustContinue := previous2.SubSaturated(thirdThreshold).
+			Or(previous3.SubSaturated(fourthThreshold)).
+			Greater(zero)
+		required := continuationBit.Masked(mustContinue)
+		if !required.Xor(special).IsZero() {
+			archsimd.ClearAVXUpperBits()
+			return false
+		}
+
+		previous = input
+		src = src[width:]
+		processed += width
+	}
+
+	archsimd.ClearAVXUpperBits()
+
+	tailStart := processed - 1
+	for tailStart > 0 && original[tailStart]&0xc0 == 0x80 {
+		tailStart--
+	}
+	return utf8.Valid(original[tailStart:])
+}
+
+func validUTF8SIMD(original, src []byte) bool {
+	const width = 16
 
 	firstHighTable := archsimd.LoadUint8x16(&utf8FirstHigh)
 	firstLowTable := archsimd.LoadUint8x16(&utf8FirstLow)

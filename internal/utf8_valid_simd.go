@@ -46,9 +46,51 @@ func validUTF8(src []byte) bool {
 	zero := archsimd.BroadcastUint8x16(0)
 
 	var previous archsimd.Uint8x16
-	for len(src) != 0 {
-		n := min(len(src), width)
-		input := archsimd.LoadUint8x16SlicePart(src[:n])
+	for len(src) >= 2*width {
+		input0 := archsimd.LoadUint8x16Slice(src)
+		previous01 := input0.ConcatShiftBytesRight(15, previous)
+		previous02 := input0.ConcatShiftBytesRight(14, previous)
+		previous03 := input0.ConcatShiftBytesRight(13, previous)
+
+		previous01High := previous01.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
+		input0High := input0.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
+		special0 := firstHighTable.PermuteOrZero(previous01High.AsInt8x16()).
+			And(firstLowTable.PermuteOrZero(previous01.And(lowNibble).AsInt8x16())).
+			And(secondHighTable.PermuteOrZero(input0High.AsInt8x16()))
+
+		mustContinue0 := previous02.SubSaturated(thirdThreshold).
+			Or(previous03.SubSaturated(fourthThreshold)).
+			Greater(zero)
+		required0 := continuationBit.Masked(mustContinue0)
+		if !required0.Xor(special0).IsZero() {
+			return false
+		}
+
+		input1 := archsimd.LoadUint8x16Slice(src[width:])
+		previous11 := input1.ConcatShiftBytesRight(15, input0)
+		previous12 := input1.ConcatShiftBytesRight(14, input0)
+		previous13 := input1.ConcatShiftBytesRight(13, input0)
+
+		previous11High := previous11.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
+		input1High := input1.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
+		special1 := firstHighTable.PermuteOrZero(previous11High.AsInt8x16()).
+			And(firstLowTable.PermuteOrZero(previous11.And(lowNibble).AsInt8x16())).
+			And(secondHighTable.PermuteOrZero(input1High.AsInt8x16()))
+
+		mustContinue1 := previous12.SubSaturated(thirdThreshold).
+			Or(previous13.SubSaturated(fourthThreshold)).
+			Greater(zero)
+		required1 := continuationBit.Masked(mustContinue1)
+		if !required1.Xor(special1).IsZero() {
+			return false
+		}
+
+		previous = input1
+		src = src[2*width:]
+	}
+
+	for len(src) >= width {
+		input := archsimd.LoadUint8x16Slice(src)
 		previous1 := input.ConcatShiftBytesRight(15, previous)
 		previous2 := input.ConcatShiftBytesRight(14, previous)
 		previous3 := input.ConcatShiftBytesRight(13, previous)
@@ -68,7 +110,28 @@ func validUTF8(src []byte) bool {
 		}
 
 		previous = input
-		src = src[n:]
+		src = src[width:]
+	}
+
+	if len(src) != 0 {
+		input := archsimd.LoadUint8x16SlicePart(src)
+		previous1 := input.ConcatShiftBytesRight(15, previous)
+		previous2 := input.ConcatShiftBytesRight(14, previous)
+		previous3 := input.ConcatShiftBytesRight(13, previous)
+
+		previous1High := previous1.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
+		inputHigh := input.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
+		special := firstHighTable.PermuteOrZero(previous1High.AsInt8x16()).
+			And(firstLowTable.PermuteOrZero(previous1.And(lowNibble).AsInt8x16())).
+			And(secondHighTable.PermuteOrZero(inputHigh.AsInt8x16()))
+
+		mustContinue := previous2.SubSaturated(thirdThreshold).
+			Or(previous3.SubSaturated(fourthThreshold)).
+			Greater(zero)
+		required := continuationBit.Masked(mustContinue)
+		if !required.Xor(special).IsZero() {
+			return false
+		}
 	}
 
 	last := len(original) - 1

@@ -2,12 +2,38 @@ package internal_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 	"unicode/utf8"
 	"unsafe"
 
 	"github.com/33TU/json-experiment/internal"
 )
+
+var replaceUTF8Result []byte
+
+func BenchmarkReplaceInvalidUTF8(b *testing.B) {
+	benchmarks := []struct {
+		name  string
+		value []byte
+	}{
+		{name: "ASCII_4K", value: []byte(strings.Repeat("plain ASCII text ", 256))},
+		{name: "Unicode_3K", value: []byte(strings.Repeat("世界", 512))},
+		{name: "mixed_4K", value: []byte(strings.Repeat("JSON text 世界 ", 256))},
+	}
+
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func(b *testing.B) {
+			var result []byte
+			b.SetBytes(int64(len(bm.value)))
+			b.ReportAllocs()
+			for b.Loop() {
+				result = internal.ReplaceInvalidUTF8(bm.value, 0)
+			}
+			replaceUTF8Result = result
+		})
+	}
+}
 
 func TestReplaceInvalidUTF8(t *testing.T) {
 	tests := []struct {
@@ -49,7 +75,7 @@ func TestReplaceInvalidUTF8(t *testing.T) {
 	}
 
 	state := uint64(0x9e3779b97f4a7c15)
-	for length := range 64 {
+	for length := range 256 {
 		for range 100 {
 			src := make([]byte, length)
 			for i := range src {

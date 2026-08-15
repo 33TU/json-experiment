@@ -22,8 +22,9 @@ const (
 	greaterWord   = byteOnes * uint64('>')
 	ampersandWord = byteOnes * uint64('&')
 
-	simdChunkSize = 16
-	simdThreshold = 32
+	simdChunkSize       = 16
+	simdUnrollChunkSize = 2 * simdChunkSize
+	simdThreshold       = 32
 )
 
 // AppendString appends the JSON representation of s to dst.
@@ -35,33 +36,9 @@ func AppendString(dst []byte, s string) []byte {
 	start := 0
 	i := 0
 
-	// SIMD: Process 16 bytes at a time using SIMD operations to detect special characters.
+	// SIMD: Process two 16-byte chunks at a time to detect special characters.
 	if len(s) >= simdThreshold {
-		control := archsimd.BroadcastUint8x16(0x20)
-		quote := archsimd.BroadcastUint8x16('"')
-		backslash := archsimd.BroadcastUint8x16('\\')
-
-		src := unsafe.Slice((*byte)(data), len(s))
-
-		for ; i+simdChunkSize <= len(src); i += simdChunkSize {
-			chunk := archsimd.LoadUint8x16Slice(src[i:])
-
-			maskBits := chunk.
-				Less(control).
-				Or(chunk.Equal(quote)).
-				Or(chunk.Equal(backslash)).
-				ToBits()
-
-			for maskBits != 0 {
-				j := i + bits.TrailingZeros16(maskBits)
-
-				dst = append(dst, s[start:j]...)
-				dst = appendEscapedByte(dst, s[j])
-				start = j + 1
-
-				maskBits &= maskBits - 1
-			}
-		}
+		dst, start, i = appendStringSIMDUnrolled(dst, s)
 	}
 
 	// SWAR: Process 8 bytes at a time using bitwise operations to detect special characters.
@@ -189,39 +166,9 @@ func AppendStringHTML(dst []byte, s string) []byte {
 	start := 0
 	i := 0
 
-	// SIMD: Process 16 bytes at a time using SIMD operations to detect special characters.
+	// SIMD: Process two 16-byte chunks at a time to detect special characters.
 	if len(s) >= simdThreshold {
-		control := archsimd.BroadcastUint8x16(0x20)
-		quote := archsimd.BroadcastUint8x16('"')
-		backslash := archsimd.BroadcastUint8x16('\\')
-		less := archsimd.BroadcastUint8x16('<')
-		greater := archsimd.BroadcastUint8x16('>')
-		ampersand := archsimd.BroadcastUint8x16('&')
-
-		src := unsafe.Slice((*byte)(data), len(s))
-
-		for ; i+simdChunkSize <= len(src); i += simdChunkSize {
-			chunk := archsimd.LoadUint8x16Slice(src[i:])
-
-			maskBits := chunk.
-				Less(control).
-				Or(chunk.Equal(quote)).
-				Or(chunk.Equal(backslash)).
-				Or(chunk.Equal(less)).
-				Or(chunk.Equal(greater)).
-				Or(chunk.Equal(ampersand)).
-				ToBits()
-
-			for maskBits != 0 {
-				j := i + bits.TrailingZeros16(maskBits)
-
-				dst = append(dst, s[start:j]...)
-				dst = appendEscapedByte(dst, s[j])
-				start = j + 1
-
-				maskBits &= maskBits - 1
-			}
-		}
+		dst, start, i = appendStringHTMLSIMDUnrolled(dst, s)
 	}
 
 	// SWAR: Process 8 bytes at a time using bitwise operations to detect special characters.
@@ -350,6 +297,148 @@ func AppendQuotedStringHTML(dst []byte, s string) []byte {
 
 	dst = append(dst, s[start:]...)
 	return append(dst, '\\', '"', '"')
+}
+
+func appendStringSIMDUnrolled(dst []byte, s string) ([]byte, int, int) {
+	control := archsimd.BroadcastUint8x16(0x20)
+	quote := archsimd.BroadcastUint8x16('"')
+	backslash := archsimd.BroadcastUint8x16('\\')
+	src := unsafe.Slice(unsafe.StringData(s), len(s))
+	start := 0
+	i := 0
+
+	for ; i+simdUnrollChunkSize <= len(src); i += simdUnrollChunkSize {
+		chunk0 := archsimd.LoadUint8x16Slice(src[i:])
+		chunk1 := archsimd.LoadUint8x16Slice(src[i+simdChunkSize:])
+
+		mask0 := chunk0.
+			Less(control).
+			Or(chunk0.Equal(quote)).
+			Or(chunk0.Equal(backslash)).
+			ToBits()
+		mask1 := chunk1.
+			Less(control).
+			Or(chunk1.Equal(quote)).
+			Or(chunk1.Equal(backslash)).
+			ToBits()
+
+		if mask0|mask1 == 0 {
+			continue
+		}
+
+		for mask0 != 0 {
+			j := i + bits.TrailingZeros16(mask0)
+			dst = append(dst, s[start:j]...)
+			dst = appendEscapedByte(dst, s[j])
+			start = j + 1
+			mask0 &= mask0 - 1
+		}
+
+		for mask1 != 0 {
+			j := i + simdChunkSize + bits.TrailingZeros16(mask1)
+			dst = append(dst, s[start:j]...)
+			dst = appendEscapedByte(dst, s[j])
+			start = j + 1
+			mask1 &= mask1 - 1
+		}
+	}
+
+	if i+simdChunkSize <= len(src) {
+		chunk := archsimd.LoadUint8x16Slice(src[i:])
+		maskBits := chunk.
+			Less(control).
+			Or(chunk.Equal(quote)).
+			Or(chunk.Equal(backslash)).
+			ToBits()
+
+		for maskBits != 0 {
+			j := i + bits.TrailingZeros16(maskBits)
+			dst = append(dst, s[start:j]...)
+			dst = appendEscapedByte(dst, s[j])
+			start = j + 1
+			maskBits &= maskBits - 1
+		}
+		i += simdChunkSize
+	}
+
+	return dst, start, i
+}
+
+func appendStringHTMLSIMDUnrolled(dst []byte, s string) ([]byte, int, int) {
+	control := archsimd.BroadcastUint8x16(0x20)
+	quote := archsimd.BroadcastUint8x16('"')
+	backslash := archsimd.BroadcastUint8x16('\\')
+	less := archsimd.BroadcastUint8x16('<')
+	greater := archsimd.BroadcastUint8x16('>')
+	ampersand := archsimd.BroadcastUint8x16('&')
+	src := unsafe.Slice(unsafe.StringData(s), len(s))
+	start := 0
+	i := 0
+
+	for ; i+simdUnrollChunkSize <= len(src); i += simdUnrollChunkSize {
+		chunk0 := archsimd.LoadUint8x16Slice(src[i:])
+		chunk1 := archsimd.LoadUint8x16Slice(src[i+simdChunkSize:])
+
+		mask0 := chunk0.
+			Less(control).
+			Or(chunk0.Equal(quote)).
+			Or(chunk0.Equal(backslash)).
+			Or(chunk0.Equal(less)).
+			Or(chunk0.Equal(greater)).
+			Or(chunk0.Equal(ampersand)).
+			ToBits()
+		mask1 := chunk1.
+			Less(control).
+			Or(chunk1.Equal(quote)).
+			Or(chunk1.Equal(backslash)).
+			Or(chunk1.Equal(less)).
+			Or(chunk1.Equal(greater)).
+			Or(chunk1.Equal(ampersand)).
+			ToBits()
+
+		if mask0|mask1 == 0 {
+			continue
+		}
+
+		for mask0 != 0 {
+			j := i + bits.TrailingZeros16(mask0)
+			dst = append(dst, s[start:j]...)
+			dst = appendEscapedByte(dst, s[j])
+			start = j + 1
+			mask0 &= mask0 - 1
+		}
+
+		for mask1 != 0 {
+			j := i + simdChunkSize + bits.TrailingZeros16(mask1)
+			dst = append(dst, s[start:j]...)
+			dst = appendEscapedByte(dst, s[j])
+			start = j + 1
+			mask1 &= mask1 - 1
+		}
+	}
+
+	if i+simdChunkSize <= len(src) {
+		chunk := archsimd.LoadUint8x16Slice(src[i:])
+		maskBits := chunk.
+			Less(control).
+			Or(chunk.Equal(quote)).
+			Or(chunk.Equal(backslash)).
+			Or(chunk.Equal(less)).
+			Or(chunk.Equal(greater)).
+			Or(chunk.Equal(ampersand)).
+			ToBits()
+
+		for maskBits != 0 {
+			j := i + bits.TrailingZeros16(maskBits)
+			dst = append(dst, s[start:j]...)
+			dst = appendEscapedByte(dst, s[j])
+			start = j + 1
+			maskBits &= maskBits - 1
+		}
+		i += simdChunkSize
+	}
+
+	return dst, start, i
 }
 
 func appendEscapedByte(dst []byte, c byte) []byte {

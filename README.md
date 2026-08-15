@@ -165,3 +165,7 @@ GOAMD64=v3 GOEXPERIMENT=jsonv2,simd go test -run='^$' -benchmem \
   -count=3 -benchtime=300ms -cpu=1,2,4,8,16,32 \
   -bench='^BenchmarkMarshalLargeStruct/parallel' .
 ```
+
+## License
+
+json-experiment is available under the [MIT License](LICENSE).

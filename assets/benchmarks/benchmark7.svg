@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="3764" viewBox="0 0 1500 3764" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="4188" viewBox="0 0 1500 4188" role="img" aria-labelledby="title desc">
   <title id="title">Complete JSON marshal comparison — Benchmark 7</title>
   <desc id="desc">Five-run median JSON marshal latency across six APIs. Lower is better.</desc>
   <style>text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:#d8dee9}.title{font-family:ui-sans-serif,system-ui,sans-serif;font-size:28px;font-weight:700}.subtitle{font-family:ui-sans-serif,system-ui,sans-serif;font-size:15px;fill:#aab4c3}.group{font-family:ui-sans-serif,system-ui,sans-serif;font-size:18px;font-weight:650}.series{font-size:13px;fill:#c4ccd8}.value{font-size:13px;font-weight:650}.panel{fill:#151c27}</style>
-  <rect width="1500" height="3764" rx="14" fill="#10151d"/>
+  <rect width="1500" height="4188" rx="14" fill="#10151d"/>
   <text class="title" x="40" y="48">Complete JSON marshal comparison — Benchmark 7</text>
   <text class="subtitle" x="40" y="76">Go 1.26 · GOAMD64=v3 · JSON v2 + SIMD · Ryzen 9 9950X3D · five-run median · lower is better</text>
   <text class="subtitle" x="1460" y="76" text-anchor="end">Each workload uses its own linear scale; labels show ns/op and allocations.</text>
@@ -140,6 +140,50 @@
   </g>
   <g transform="translate(0,1397)">
     <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">time.Time</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="225.6" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="623.6" y="56">36.57 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="354.0" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="752.0" y="81">57.37 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">116.7 ns · 3 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="642.3" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="1040.3" y="131">104.1 ns · 2 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="669.4" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="1067.4" y="156">108.5 ns · 4 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="615.7" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="1013.7" y="181">99.79 ns · 3 allocs</text>
+  </g>
+  <g transform="translate(0,1609)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">struct with 10 time.Time fields</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="371.9" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="769.9" y="56">370.9 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="457.6" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="855.6" y="81">456.3 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">718.0 ns · 3 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="637.0" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="1035.0" y="131">635.2 ns · 2 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="653.1" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="1051.1" y="156">651.3 ns · 13 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="693.3" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="1091.3" y="181">691.4 ns · 12 allocs</text>
+  </g>
+  <g transform="translate(0,1821)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
     <text class="group" x="45" y="28">mixed struct</text>
     <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
     <rect x="390" y="43" width="151.1" height="17" rx="4" fill="#50c878"/>
@@ -160,7 +204,7 @@
     <rect x="390" y="168" width="204.4" height="17" rx="4" fill="#f2c14e"/>
     <text class="value" x="602.4" y="181">206.2 ns · 3 allocs</text>
   </g>
-  <g transform="translate(0,1609)">
+  <g transform="translate(0,2033)">
     <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
     <text class="group" x="45" y="28">struct slice with metadata maps</text>
     <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
@@ -182,7 +226,7 @@
     <rect x="390" y="168" width="192.2" height="17" rx="4" fill="#f2c14e"/>
     <text class="value" x="590.2" y="181">553.2 ns · 6 allocs</text>
   </g>
-  <g transform="translate(0,1821)">
+  <g transform="translate(0,2245)">
     <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
     <text class="group" x="45" y="28">quoted struct fields</text>
     <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
@@ -204,7 +248,7 @@
     <rect x="390" y="168" width="102.6" height="17" rx="4" fill="#f2c14e"/>
     <text class="value" x="500.6" y="181">94.09 ns · 2 allocs</text>
   </g>
-  <g transform="translate(0,2033)">
+  <g transform="translate(0,2457)">
     <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
     <text class="group" x="45" y="28">omitempty / omitzero</text>
     <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
@@ -226,7 +270,7 @@
     <rect x="390" y="168" width="174.0" height="17" rx="4" fill="#f2c14e"/>
     <text class="value" x="572.0" y="181">73.67 ns · 2 allocs</text>
   </g>
-  <g transform="translate(0,2245)">
+  <g transform="translate(0,2669)">
     <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
     <text class="group" x="45" y="28">omitzero fields</text>
     <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
@@ -248,7 +292,7 @@
     <rect x="390" y="168" width="397.6" height="17" rx="4" fill="#f2c14e"/>
     <text class="value" x="795.6" y="181">143.8 ns · 2 allocs</text>
   </g>
-  <g transform="translate(0,2457)">
+  <g transform="translate(0,2881)">
     <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
     <text class="group" x="45" y="28">UTF-8 validation: ASCII</text>
     <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
@@ -270,7 +314,7 @@
     <rect x="390" y="168" width="86.7" height="17" rx="4" fill="#f2c14e"/>
     <text class="value" x="484.7" y="181">64.87 ns · 2 allocs</text>
   </g>
-  <g transform="translate(0,2669)">
+  <g transform="translate(0,3093)">
     <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
     <text class="group" x="45" y="28">UTF-8 validation: Unicode</text>
     <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
@@ -292,7 +336,7 @@
     <rect x="390" y="168" width="119.5" height="17" rx="4" fill="#f2c14e"/>
     <text class="value" x="517.5" y="181">71.00 ns · 2 allocs</text>
   </g>
-  <g transform="translate(0,2881)">
+  <g transform="translate(0,3305)">
     <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
     <text class="group" x="45" y="28">UTF-8 validation: invalid byte</text>
     <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
@@ -314,7 +358,7 @@
     <rect x="390" y="168" width="717.4" height="17" rx="4" fill="#f2c14e"/>
     <text class="value" x="1115.4" y="181">879.6 ns · 4 allocs</text>
   </g>
-  <g transform="translate(0,3093)">
+  <g transform="translate(0,3517)">
     <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
     <text class="group" x="45" y="28">encoding.TextMarshaler</text>
     <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
@@ -336,7 +380,7 @@
     <rect x="390" y="168" width="330.4" height="17" rx="4" fill="#f2c14e"/>
     <text class="value" x="728.4" y="181">41.94 ns · 2 allocs</text>
   </g>
-  <g transform="translate(0,3305)">
+  <g transform="translate(0,3729)">
     <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
     <text class="group" x="45" y="28">json.Marshaler</text>
     <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
@@ -358,7 +402,7 @@
     <rect x="390" y="168" width="530.2" height="17" rx="4" fill="#f2c14e"/>
     <text class="value" x="928.2" y="181">52.08 ns · 2 allocs</text>
   </g>
-  <g transform="translate(0,3517)">
+  <g transform="translate(0,3941)">
     <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
     <text class="group" x="45" y="28">integer json.Marshaler</text>
     <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>

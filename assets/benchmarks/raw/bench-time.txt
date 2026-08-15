@@ -1,0 +1,66 @@
+goos: linux
+goarch: amd64
+pkg: github.com/33TU/json-experiment/bench
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor
+BenchmarkMarshalTime/marshal_append-32         	32154007	        36.57 ns/op	1011.83 MB/s	       0 B/op	       0 allocs/op
+BenchmarkMarshalTime/marshal_append-32         	32876233	        36.53 ns/op	1012.78 MB/s	       0 B/op	       0 allocs/op
+BenchmarkMarshalTime/marshal_append-32         	31953625	        36.57 ns/op	1011.65 MB/s	       0 B/op	       0 allocs/op
+BenchmarkMarshalTime/marshal_append-32         	32794218	        36.55 ns/op	1012.19 MB/s	       0 B/op	       0 allocs/op
+BenchmarkMarshalTime/marshal_append-32         	31897128	        36.69 ns/op	1008.56 MB/s	       0 B/op	       0 allocs/op
+BenchmarkMarshalTime/marshal-32                	22311307	        57.16 ns/op	 647.36 MB/s	      48 B/op	       1 allocs/op
+BenchmarkMarshalTime/marshal-32                	20682056	        57.31 ns/op	 645.62 MB/s	      48 B/op	       1 allocs/op
+BenchmarkMarshalTime/marshal-32                	20912302	        57.41 ns/op	 644.46 MB/s	      48 B/op	       1 allocs/op
+BenchmarkMarshalTime/marshal-32                	20693408	        57.37 ns/op	 644.91 MB/s	      48 B/op	       1 allocs/op
+BenchmarkMarshalTime/marshal-32                	20961511	        57.38 ns/op	 644.87 MB/s	      48 B/op	       1 allocs/op
+BenchmarkMarshalTime/encoding_json-32          	10132291	       116.9 ns/op	 316.42 MB/s	      96 B/op	       3 allocs/op
+BenchmarkMarshalTime/encoding_json-32          	10388158	       116.7 ns/op	 317.16 MB/s	      96 B/op	       3 allocs/op
+BenchmarkMarshalTime/encoding_json-32          	10214515	       116.3 ns/op	 318.23 MB/s	      96 B/op	       3 allocs/op
+BenchmarkMarshalTime/encoding_json-32          	10269987	       116.4 ns/op	 317.85 MB/s	      96 B/op	       3 allocs/op
+BenchmarkMarshalTime/encoding_json-32          	10281231	       116.8 ns/op	 316.78 MB/s	      96 B/op	       3 allocs/op
+BenchmarkMarshalTime/encoding_json_v2_write-32 	11590102	       104.1 ns/op	 355.34 MB/s	      48 B/op	       2 allocs/op
+BenchmarkMarshalTime/encoding_json_v2_write-32 	11421925	       104.4 ns/op	 354.38 MB/s	      48 B/op	       2 allocs/op
+BenchmarkMarshalTime/encoding_json_v2_write-32 	11544954	       104.1 ns/op	 355.45 MB/s	      48 B/op	       2 allocs/op
+BenchmarkMarshalTime/encoding_json_v2_write-32 	11477637	       103.7 ns/op	 356.88 MB/s	      48 B/op	       2 allocs/op
+BenchmarkMarshalTime/encoding_json_v2_write-32 	11593705	       104.0 ns/op	 355.93 MB/s	      48 B/op	       2 allocs/op
+BenchmarkMarshalTime/sonic_json-32             	11277436	       107.7 ns/op	 343.53 MB/s	     144 B/op	       4 allocs/op
+BenchmarkMarshalTime/sonic_json-32             	10925811	       108.8 ns/op	 339.94 MB/s	     143 B/op	       4 allocs/op
+BenchmarkMarshalTime/sonic_json-32             	11022825	       108.5 ns/op	 341.16 MB/s	     143 B/op	       4 allocs/op
+BenchmarkMarshalTime/sonic_json-32             	11035776	       108.7 ns/op	 340.51 MB/s	     143 B/op	       4 allocs/op
+BenchmarkMarshalTime/sonic_json-32             	11175361	       107.8 ns/op	 343.28 MB/s	     144 B/op	       4 allocs/op
+BenchmarkMarshalTime/sonic_encode_into-32      	12248599	        99.85 ns/op	 370.57 MB/s	      94 B/op	       3 allocs/op
+BenchmarkMarshalTime/sonic_encode_into-32      	11919135	       100.1 ns/op	 369.77 MB/s	      94 B/op	       3 allocs/op
+BenchmarkMarshalTime/sonic_encode_into-32      	12202386	        99.63 ns/op	 371.37 MB/s	      94 B/op	       3 allocs/op
+BenchmarkMarshalTime/sonic_encode_into-32      	12236904	        99.02 ns/op	 373.67 MB/s	      94 B/op	       3 allocs/op
+BenchmarkMarshalTime/sonic_encode_into-32      	12021823	        99.79 ns/op	 370.77 MB/s	      94 B/op	       3 allocs/op
+BenchmarkMarshalTimeStruct/marshal_append-32   	 3226305	       371.5 ns/op	1383.74 MB/s	       0 B/op	       0 allocs/op
+BenchmarkMarshalTimeStruct/marshal_append-32   	 3228778	       371.2 ns/op	1384.86 MB/s	       0 B/op	       0 allocs/op
+BenchmarkMarshalTimeStruct/marshal_append-32   	 3217879	       370.4 ns/op	1387.72 MB/s	       0 B/op	       0 allocs/op
+BenchmarkMarshalTimeStruct/marshal_append-32   	 3231987	       370.9 ns/op	1385.85 MB/s	       0 B/op	       0 allocs/op
+BenchmarkMarshalTimeStruct/marshal_append-32   	 3248674	       369.3 ns/op	1391.75 MB/s	       0 B/op	       0 allocs/op
+BenchmarkMarshalTimeStruct/marshal-32          	 2612874	       458.4 ns/op	1121.24 MB/s	     577 B/op	       1 allocs/op
+BenchmarkMarshalTimeStruct/marshal-32          	 2634022	       456.3 ns/op	1126.52 MB/s	     577 B/op	       1 allocs/op
+BenchmarkMarshalTimeStruct/marshal-32          	 2623216	       457.0 ns/op	1124.81 MB/s	     577 B/op	       1 allocs/op
+BenchmarkMarshalTimeStruct/marshal-32          	 2645330	       455.2 ns/op	1129.13 MB/s	     577 B/op	       1 allocs/op
+BenchmarkMarshalTimeStruct/marshal-32          	 2638249	       454.3 ns/op	1131.31 MB/s	     577 B/op	       1 allocs/op
+BenchmarkMarshalTimeStruct/encoding_json-32    	 1670348	       719.6 ns/op	 714.26 MB/s	    1058 B/op	       3 allocs/op
+BenchmarkMarshalTimeStruct/encoding_json-32    	 1682702	       714.1 ns/op	 719.77 MB/s	    1058 B/op	       3 allocs/op
+BenchmarkMarshalTimeStruct/encoding_json-32    	 1670163	       718.0 ns/op	 715.91 MB/s	    1058 B/op	       3 allocs/op
+BenchmarkMarshalTimeStruct/encoding_json-32    	 1663324	       720.7 ns/op	 713.16 MB/s	    1058 B/op	       3 allocs/op
+BenchmarkMarshalTimeStruct/encoding_json-32    	 1671626	       718.0 ns/op	 715.89 MB/s	    1058 B/op	       3 allocs/op
+BenchmarkMarshalTimeStruct/encoding_json_v2_write-32         	 1879353	       637.5 ns/op	 806.32 MB/s	     480 B/op	       2 allocs/op
+BenchmarkMarshalTimeStruct/encoding_json_v2_write-32         	 1893424	       635.7 ns/op	 808.58 MB/s	     480 B/op	       2 allocs/op
+BenchmarkMarshalTimeStruct/encoding_json_v2_write-32         	 1886910	       635.2 ns/op	 809.25 MB/s	     480 B/op	       2 allocs/op
+BenchmarkMarshalTimeStruct/encoding_json_v2_write-32         	 1896660	       634.6 ns/op	 809.93 MB/s	     480 B/op	       2 allocs/op
+BenchmarkMarshalTimeStruct/encoding_json_v2_write-32         	 1887084	       635.0 ns/op	 809.50 MB/s	     480 B/op	       2 allocs/op
+BenchmarkMarshalTimeStruct/sonic_json-32                     	 1834918	       652.7 ns/op	 787.51 MB/s	    1364 B/op	      13 allocs/op
+BenchmarkMarshalTimeStruct/sonic_json-32                     	 1846560	       651.3 ns/op	 789.21 MB/s	    1360 B/op	      13 allocs/op
+BenchmarkMarshalTimeStruct/sonic_json-32                     	 1844022	       651.1 ns/op	 789.41 MB/s	    1363 B/op	      13 allocs/op
+BenchmarkMarshalTimeStruct/sonic_json-32                     	 1863435	       644.8 ns/op	 797.18 MB/s	    1363 B/op	      13 allocs/op
+BenchmarkMarshalTimeStruct/sonic_json-32                     	 1825977	       652.7 ns/op	 787.48 MB/s	    1362 B/op	      13 allocs/op
+BenchmarkMarshalTimeStruct/sonic_encode_into-32              	 1733136	       691.4 ns/op	 743.41 MB/s	     771 B/op	      12 allocs/op
+BenchmarkMarshalTimeStruct/sonic_encode_into-32              	 1747908	       686.6 ns/op	 748.63 MB/s	     771 B/op	      12 allocs/op
+BenchmarkMarshalTimeStruct/sonic_encode_into-32              	 1723633	       696.0 ns/op	 738.53 MB/s	     771 B/op	      12 allocs/op
+BenchmarkMarshalTimeStruct/sonic_encode_into-32              	 1737622	       689.8 ns/op	 745.11 MB/s	     774 B/op	      12 allocs/op
+BenchmarkMarshalTimeStruct/sonic_encode_into-32              	 1726380	       692.0 ns/op	 742.74 MB/s	     772 B/op	      12 allocs/op
+PASS
+ok  	github.com/33TU/json-experiment/bench	71.992s

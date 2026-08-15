@@ -20,8 +20,8 @@ readable. Exact median latency and allocation counts are printed on every bar.
 
 This is a five-run median on Go 1.26 using `GOAMD64=v3` with the JSON v2 and
 SIMD experiments enabled, measured on an AMD Ryzen 9 9950X3D. The suite
-includes maps, primitive slices, numbers, struct variants, UTF-8 validation,
-and standard marshaling interfaces.
+includes maps, primitive slices, numbers, timestamps, struct variants, UTF-8
+validation, and standard marshaling interfaces.
 
 #### Values and structs
 
@@ -49,6 +49,8 @@ Five-run median latency for owned-output APIs (lower is better):
 | `[]int`                         | 68.23 ns |      165.4 ns |      84.74 ns |
 | `float32`                       | 41.16 ns |      80.34 ns |      54.73 ns |
 | `float64`                       | 57.02 ns |      104.8 ns |      68.41 ns |
+| `time.Time`                     | 57.37 ns |      116.7 ns |      108.5 ns |
+| struct with 10 `time.Time`s     | 456.3 ns |      718.0 ns |      651.3 ns |
 | mixed struct                    | 211.6 ns |      726.3 ns |      243.0 ns |
 | struct slice with metadata maps | 542.1 ns |       2072 ns |      664.3 ns |
 | quoted struct fields            | 139.9 ns |      660.1 ns |      133.6 ns |
@@ -71,6 +73,8 @@ Five-run median latency for reusable-output APIs (lower is better):
 | `[]int`                         |      41.26 ns |      148.0 ns |         57.53 ns |
 | `float32`                       |      26.66 ns |      77.85 ns |         40.04 ns |
 | `float64`                       |      37.44 ns |      88.63 ns |         44.22 ns |
+| `time.Time`                     |      36.57 ns |      104.1 ns |         99.79 ns |
+| struct with 10 `time.Time`s     |      370.9 ns |      635.2 ns |         691.4 ns |
 | mixed struct                    |      152.4 ns |      582.6 ns |         206.2 ns |
 | struct slice with metadata maps |      441.2 ns |       1603 ns |         553.2 ns |
 | quoted struct fields            |      97.38 ns |      332.9 ns |         94.09 ns |
@@ -87,15 +91,21 @@ Five-run median latency for reusable-output APIs (lower is better):
 when invoking the marshaling interfaces. Allocation counts for every
 implementation are included directly in the charts and raw output.
 
+The specialized `time.Time` append path writes RFC 3339 text directly into the
+destination. It records zero allocations for both a standalone timestamp and a
+struct containing ten timestamp fields.
+
 The custom `MarshalerAppend` precedence benchmark only applies to this package,
 so it is omitted from the comparison charts. Its median results were 5.893 ns
 with zero allocations for `MarshalAppend`, and 22.75 ns with one allocation for
 `Marshal`.
 
 The complete Benchmark 7 output is available in
-[`bench7.txt`](assets/benchmarks/raw/bench7.txt). Earlier benchmark SVGs and raw
-outputs remain under [`assets/benchmarks`](assets/benchmarks), with older
-commentary preserved in [`README-old.md`](README-old.md).
+[`bench7.txt`](assets/benchmarks/raw/bench7.txt), with the supplemental five-run
+timestamp results in
+[`bench-time.txt`](assets/benchmarks/raw/bench-time.txt). Earlier benchmark SVGs
+and raw outputs remain under [`assets/benchmarks`](assets/benchmarks), with
+older commentary preserved in [`README-old.md`](README-old.md).
 
 ### Complete Benchmark 7 overview
 

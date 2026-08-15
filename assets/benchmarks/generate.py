@@ -4,6 +4,7 @@
 Usage:
     python3 assets/benchmarks/generate.py \
         assets/benchmarks/raw/bench7.txt \
+        assets/benchmarks/raw/bench-time.txt \
         assets/benchmarks/raw/bench-large-struct-parallel.txt
 """
 
@@ -87,6 +88,8 @@ WORKLOADS = {
     "BenchmarkMarshalIntSlice": "[]int",
     "BenchmarkMarshalFloat32": "float32",
     "BenchmarkMarshalFloat64": "float64",
+    "BenchmarkMarshalTime": "time.Time",
+    "BenchmarkMarshalTimeStruct": "struct with 10 time.Time fields",
     "BenchmarkMarshalStruct": "mixed struct",
     "BenchmarkMarshalStructSlice": "struct slice with metadata maps",
     "BenchmarkMarshalStructQuoted": "quoted struct fields",
@@ -103,6 +106,8 @@ WORKLOADS = {
 VALUES = [
     "BenchmarkMarshalFloat32",
     "BenchmarkMarshalFloat64",
+    "BenchmarkMarshalTime",
+    "BenchmarkMarshalTimeStruct",
     "BenchmarkMarshalIntSlice",
     "BenchmarkMarshalStruct",
     "BenchmarkMarshalStructQuoted",
@@ -133,6 +138,8 @@ OVERVIEW = [
     "BenchmarkMarshalIntSlice",
     "BenchmarkMarshalFloat32",
     "BenchmarkMarshalFloat64",
+    "BenchmarkMarshalTime",
+    "BenchmarkMarshalTimeStruct",
     "BenchmarkMarshalStruct",
     "BenchmarkMarshalStructSlice",
     "BenchmarkMarshalStructQuoted",
@@ -376,10 +383,14 @@ def parallel_svg(data: dict[tuple[str, int], Result]) -> str:
 
 
 def main() -> None:
-    if len(sys.argv) != 3:
-        raise SystemExit(f"usage: {sys.argv[0]} BENCHMARK PARALLEL_BENCHMARK")
-    benchmark = parse(Path(sys.argv[1]))
-    parallel = parse(Path(sys.argv[2]), keep_cpu=True)
+    if len(sys.argv) < 3:
+        raise SystemExit(
+            f"usage: {sys.argv[0]} BENCHMARK [BENCHMARK ...] PARALLEL_BENCHMARK"
+        )
+    benchmark = {}
+    for path in sys.argv[1:-1]:
+        benchmark.update(parse(Path(path)))
+    parallel = parse(Path(sys.argv[-1]), keep_cpu=True)
 
     outputs = {
         "benchmark7-values.svg": comparison_svg(benchmark, "Values and structs", VALUES),

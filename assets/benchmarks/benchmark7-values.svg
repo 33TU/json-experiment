@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1224" viewBox="0 0 1500 1224" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1572" viewBox="0 0 1500 1572" role="img" aria-labelledby="title desc">
   <title id="title">Values and structs — Benchmark 7</title>
   <desc id="desc">Five-run median JSON marshal latency. Owned-output and reusable-output APIs are compared separately. Lower is better.</desc>
   <style>text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:#d8dee9}.title{font-family:ui-sans-serif,system-ui,sans-serif;font-size:28px;font-weight:700}.subtitle{font-family:ui-sans-serif,system-ui,sans-serif;font-size:15px;fill:#aab4c3}.group{font-family:ui-sans-serif,system-ui,sans-serif;font-size:18px;font-weight:650}.contract{font-family:ui-sans-serif,system-ui,sans-serif;font-size:14px;font-weight:650;fill:#9eabbc}.series{font-size:13px;fill:#c4ccd8}.value{font-size:13px;font-weight:650}.panel{fill:#151c27}</style>
-  <rect width="1500" height="1224" rx="14" fill="#10151d"/>
+  <rect width="1500" height="1572" rx="14" fill="#10151d"/>
   <text class="title" x="40" y="48">Values and structs — Benchmark 7</text>
   <text class="subtitle" x="40" y="76">Go 1.26 · GOAMD64=v3 · JSON v2 + SIMD · Ryzen 9 9950X3D · five-run median · lower is better</text>
   <rect x="40" y="94" width="14" height="14" rx="3" fill="#50c878"/><text class="series" x="62" y="106">json-experiment</text>
@@ -59,6 +59,54 @@
   </g>
   <g transform="translate(0,493)">
     <rect class="panel" x="25" y="0" width="1450" height="158" rx="10"/>
+    <text class="group" x="45" y="27">time.Time</text>
+    <text class="contract" x="45" y="53">Owned output</text>
+    <text class="contract" x="785" y="53">Reusable output</text>
+    <text class="series" x="193" y="81" text-anchor="end">json-experiment</text>
+    <rect x="205" y="68" width="177.0" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="390.0" y="81">57.37 ns · 1 alloc</text>
+    <text class="series" x="193" y="106" text-anchor="end">encoding/json</text>
+    <rect x="205" y="93" width="360.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="573.0" y="106">116.7 ns · 3 allocs</text>
+    <text class="series" x="193" y="131" text-anchor="end">Sonic</text>
+    <rect x="205" y="118" width="334.7" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="547.7" y="131">108.5 ns · 4 allocs</text>
+    <text class="series" x="933" y="81" text-anchor="end">json-experiment</text>
+    <rect x="945" y="68" width="126.5" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="1079.5" y="81">36.57 ns · 0 allocs</text>
+    <text class="series" x="933" y="106" text-anchor="end">json/v2</text>
+    <rect x="945" y="93" width="360.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1313.0" y="106">104.1 ns · 2 allocs</text>
+    <text class="series" x="933" y="131" text-anchor="end">Sonic</text>
+    <rect x="945" y="118" width="345.1" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="1298.1" y="131">99.79 ns · 3 allocs</text>
+  </g>
+  <g transform="translate(0,667)">
+    <rect class="panel" x="25" y="0" width="1450" height="158" rx="10"/>
+    <text class="group" x="45" y="27">struct with 10 time.Time fields</text>
+    <text class="contract" x="45" y="53">Owned output</text>
+    <text class="contract" x="785" y="53">Reusable output</text>
+    <text class="series" x="193" y="81" text-anchor="end">json-experiment</text>
+    <rect x="205" y="68" width="228.8" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="441.8" y="81">456.3 ns · 1 alloc</text>
+    <text class="series" x="193" y="106" text-anchor="end">encoding/json</text>
+    <rect x="205" y="93" width="360.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="573.0" y="106">718.0 ns · 3 allocs</text>
+    <text class="series" x="193" y="131" text-anchor="end">Sonic</text>
+    <rect x="205" y="118" width="326.6" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="539.6" y="131">651.3 ns · 13 allocs</text>
+    <text class="series" x="933" y="81" text-anchor="end">json-experiment</text>
+    <rect x="945" y="68" width="193.1" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="1146.1" y="81">370.9 ns · 0 allocs</text>
+    <text class="series" x="933" y="106" text-anchor="end">json/v2</text>
+    <rect x="945" y="93" width="330.7" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1283.7" y="106">635.2 ns · 2 allocs</text>
+    <text class="series" x="933" y="131" text-anchor="end">Sonic</text>
+    <rect x="945" y="118" width="360.0" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="1313.0" y="131">691.4 ns · 12 allocs</text>
+  </g>
+  <g transform="translate(0,841)">
+    <rect class="panel" x="25" y="0" width="1450" height="158" rx="10"/>
     <text class="group" x="45" y="27">[]int</text>
     <text class="contract" x="45" y="53">Owned output</text>
     <text class="contract" x="785" y="53">Reusable output</text>
@@ -81,7 +129,7 @@
     <rect x="945" y="118" width="139.9" height="17" rx="4" fill="#b388eb"/>
     <text class="value" x="1092.9" y="131">57.53 ns · 2 allocs</text>
   </g>
-  <g transform="translate(0,667)">
+  <g transform="translate(0,1015)">
     <rect class="panel" x="25" y="0" width="1450" height="158" rx="10"/>
     <text class="group" x="45" y="27">mixed struct</text>
     <text class="contract" x="45" y="53">Owned output</text>
@@ -105,7 +153,7 @@
     <rect x="945" y="118" width="127.4" height="17" rx="4" fill="#b388eb"/>
     <text class="value" x="1080.4" y="131">206.2 ns · 3 allocs</text>
   </g>
-  <g transform="translate(0,841)">
+  <g transform="translate(0,1189)">
     <rect class="panel" x="25" y="0" width="1450" height="158" rx="10"/>
     <text class="group" x="45" y="27">quoted struct fields</text>
     <text class="contract" x="45" y="53">Owned output</text>
@@ -129,7 +177,7 @@
     <rect x="945" y="118" width="101.7" height="17" rx="4" fill="#b388eb"/>
     <text class="value" x="1054.7" y="131">94.09 ns · 2 allocs</text>
   </g>
-  <g transform="translate(0,1015)">
+  <g transform="translate(0,1363)">
     <rect class="panel" x="25" y="0" width="1450" height="158" rx="10"/>
     <text class="group" x="45" y="27">struct slice with metadata maps</text>
     <text class="contract" x="45" y="53">Owned output</text>

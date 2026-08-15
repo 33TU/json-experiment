@@ -1,0 +1,383 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="3764" viewBox="0 0 1500 3764" role="img" aria-labelledby="title desc">
+  <title id="title">Complete JSON marshal comparison — Benchmark 7</title>
+  <desc id="desc">Five-run median JSON marshal latency across six APIs. Lower is better.</desc>
+  <style>text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:#d8dee9}.title{font-family:ui-sans-serif,system-ui,sans-serif;font-size:28px;font-weight:700}.subtitle{font-family:ui-sans-serif,system-ui,sans-serif;font-size:15px;fill:#aab4c3}.group{font-family:ui-sans-serif,system-ui,sans-serif;font-size:18px;font-weight:650}.series{font-size:13px;fill:#c4ccd8}.value{font-size:13px;font-weight:650}.panel{fill:#151c27}</style>
+  <rect width="1500" height="3764" rx="14" fill="#10151d"/>
+  <text class="title" x="40" y="48">Complete JSON marshal comparison — Benchmark 7</text>
+  <text class="subtitle" x="40" y="76">Go 1.26 · GOAMD64=v3 · JSON v2 + SIMD · Ryzen 9 9950X3D · five-run median · lower is better</text>
+  <text class="subtitle" x="1460" y="76" text-anchor="end">Each workload uses its own linear scale; labels show ns/op and allocations.</text>
+  <g transform="translate(0,125)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">map[string]int</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="136.6" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="534.6" y="56">111.8 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="182.4" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="580.4" y="81">149.3 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">589.3 ns · 11 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="493.5" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="891.5" y="131">403.9 ns · 3 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="260.5" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="658.5" y="156">213.2 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="205.7" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="603.7" y="181">168.4 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,337)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">map[string][]int</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="129.8" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="527.8" y="56">127.5 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="170.3" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="568.3" y="81">167.2 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">707.0 ns · 10 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="497.1" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="895.1" y="131">488.1 ns · 3 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="229.2" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="627.2" y="156">225.1 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="182.9" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="580.9" y="181">179.6 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,549)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">map[string]any</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="89.0" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="487.0" y="56">167.2 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="116.7" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="514.7" y="81">219.1 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">1352 ns · 23 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="567.7" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="965.7" y="131">1066 ns · 14 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="172.3" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="570.3" y="156">323.5 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="145.0" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="543.0" y="181">272.2 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,761)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">[]int</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="179.6" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="577.6" y="56">41.26 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="297.0" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="695.0" y="81">68.23 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">165.4 ns · 3 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="644.3" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="1042.3" y="131">148.0 ns · 2 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="368.9" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="766.9" y="156">84.74 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="250.4" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="648.4" y="181">57.53 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,973)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">float32</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="238.9" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="636.9" y="56">26.66 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="368.9" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="766.9" y="81">41.16 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">80.34 ns · 3 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="697.7" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="1095.7" y="131">77.85 ns · 2 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="490.5" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="888.5" y="156">54.73 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="358.8" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="756.8" y="181">40.04 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,1185)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">float64</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="257.2" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="655.2" y="56">37.44 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="391.7" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="789.7" y="81">57.02 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">104.8 ns · 3 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="608.9" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="1006.9" y="131">88.63 ns · 2 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="470.0" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="868.0" y="156">68.41 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="303.8" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="701.8" y="181">44.22 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,1397)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">mixed struct</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="151.1" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="549.1" y="56">152.4 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="209.8" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="607.8" y="81">211.6 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">726.3 ns · 7 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="577.5" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="975.5" y="131">582.6 ns · 4 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="240.9" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="638.9" y="156">243.0 ns · 4 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="204.4" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="602.4" y="181">206.2 ns · 3 allocs</text>
+  </g>
+  <g transform="translate(0,1609)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">struct slice with metadata maps</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="153.3" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="551.3" y="56">441.2 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="188.4" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="586.4" y="81">542.1 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">2072 ns · 19 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="557.0" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="955.0" y="131">1603 ns · 10 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="230.8" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="628.8" y="156">664.3 ns · 7 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="192.2" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="590.2" y="181">553.2 ns · 6 allocs</text>
+  </g>
+  <g transform="translate(0,1821)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">quoted struct fields</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="106.2" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="504.2" y="56">97.38 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="152.6" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="550.6" y="81">139.9 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">660.1 ns · 6 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="363.1" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="761.1" y="131">332.9 ns · 2 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="145.7" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="543.7" y="156">133.6 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="102.6" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="500.6" y="181">94.09 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,2033)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">omitempty / omitzero</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="138.6" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="536.6" y="56">58.69 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="213.0" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="611.0" y="81">90.15 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="688.3" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1086.3" y="106">291.4 ns · 3 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="720.0" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="1118.0" y="131">304.8 ns · 2 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="249.0" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="647.0" y="156">105.4 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="174.0" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="572.0" y="181">73.67 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,2245)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">omitzero fields</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="139.1" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="537.1" y="56">50.32 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="223.8" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="621.8" y="81">80.93 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">260.4 ns · 3 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="673.3" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="1071.3" y="131">243.5 ns · 2 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="493.0" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="891.0" y="156">178.3 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="397.6" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="795.6" y="181">143.8 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,2457)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">UTF-8 validation: ASCII</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="58.2" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="456.2" y="56">43.56 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="251.5" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="649.5" y="81">188.1 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">538.5 ns · 3 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="543.8" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="941.8" y="131">406.7 ns · 2 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="341.2" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="739.2" y="156">255.2 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="86.7" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="484.7" y="181">64.87 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,2669)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">UTF-8 validation: Unicode</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="92.8" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="490.8" y="56">55.12 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="242.7" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="640.7" y="81">144.2 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">427.8 ns · 3 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="561.1" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="959.1" y="131">333.4 ns · 2 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="319.1" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="717.1" y="156">189.6 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="119.5" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="517.5" y="181">71.00 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,2881)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">UTF-8 validation: invalid byte</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="60.6" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="458.6" y="56">74.31 ns · 0 allocs</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="219.2" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="617.2" y="81">268.8 ns · 1 alloc</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="544.6" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="942.6" y="106">667.7 ns · 3 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="405.6" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="803.6" y="131">497.3 ns · 2 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="720.0" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="1118.0" y="156">882.8 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="717.4" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="1115.4" y="181">879.6 ns · 4 allocs</text>
+  </g>
+  <g transform="translate(0,3093)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">encoding.TextMarshaler</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="144.6" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="542.6" y="56">18.35 ns · 1 alloc</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="279.4" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="677.4" y="81">35.47 ns · 2 allocs</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">91.40 ns · 2 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="590.6" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="988.6" y="131">74.97 ns · 1 alloc</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="430.7" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="828.7" y="156">54.68 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="330.4" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="728.4" y="181">41.94 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,3305)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">json.Marshaler</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="134.2" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="532.2" y="56">13.18 ns · 1 alloc</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="306.1" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="704.1" y="81">30.07 ns · 2 allocs</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">70.72 ns · 2 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="698.0" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="1096.0" y="131">68.56 ns · 1 alloc</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="511.7" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="909.7" y="156">50.26 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="530.2" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="928.2" y="181">52.08 ns · 2 allocs</text>
+  </g>
+  <g transform="translate(0,3517)">
+    <rect class="panel" x="25" y="0" width="1450" height="196" rx="10"/>
+    <text class="group" x="45" y="28">integer json.Marshaler</text>
+    <text class="series" x="378" y="56" text-anchor="end">json-experiment MarshalAppend</text>
+    <rect x="390" y="43" width="121.2" height="17" rx="4" fill="#50c878"/>
+    <text class="value" x="519.2" y="56">13.05 ns · 1 alloc</text>
+    <text class="series" x="378" y="81" text-anchor="end">json-experiment Marshal</text>
+    <rect x="390" y="68" width="277.6" height="17" rx="4" fill="#5aa9e6"/>
+    <text class="value" x="675.6" y="81">29.90 ns · 2 allocs</text>
+    <text class="series" x="378" y="106" text-anchor="end">encoding/json Marshal</text>
+    <rect x="390" y="93" width="720.0" height="17" rx="4" fill="#ef8354"/>
+    <text class="value" x="1118.0" y="106">77.54 ns · 3 allocs</text>
+    <text class="series" x="378" y="131" text-anchor="end">encoding/json/v2 MarshalWrite</text>
+    <rect x="390" y="118" width="657.8" height="17" rx="4" fill="#e76f9a"/>
+    <text class="value" x="1055.8" y="131">70.84 ns · 2 allocs</text>
+    <text class="series" x="378" y="156" text-anchor="end">sonic.ConfigFastest Marshal</text>
+    <rect x="390" y="143" width="467.5" height="17" rx="4" fill="#b388eb"/>
+    <text class="value" x="865.5" y="156">50.35 ns · 3 allocs</text>
+    <text class="series" x="378" y="181" text-anchor="end">sonic EncodeInto</text>
+    <rect x="390" y="168" width="489.0" height="17" rx="4" fill="#f2c14e"/>
+    <text class="value" x="887.0" y="181">52.66 ns · 2 allocs</text>
+  </g>
+</svg>

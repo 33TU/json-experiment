@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="500" viewBox="0 0 1500 500" role="img" aria-labelledby="title desc">
   <title id="title">Large nested struct JSON marshal benchmark</title>
-  <desc id="desc">Five-run median latency, throughput, and allocations for a 4,740-byte nested JSON payload on an AMD Ryzen 9 9950X3D. Owned-output and reusable-output APIs are compared separately.</desc>
+  <desc id="desc">Five-run median latency, throughput, and allocations for a 4,740-byte nested JSON payload on an AMD Ryzen 9 9950X3D. All APIs are ranked together by latency.</desc>
   <style>text{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;fill:#d8dee9}.title{font-family:ui-sans-serif,system-ui,sans-serif;font-size:28px;font-weight:700}.subtitle{font-family:ui-sans-serif,system-ui,sans-serif;font-size:15px;fill:#aab4c3}.contract{font-family:ui-sans-serif,system-ui,sans-serif;font-size:18px;font-weight:650}.series{font-size:14px;fill:#c4ccd8}.value{font-size:14px;font-weight:650}.panel{fill:#151c27}.note{font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;fill:#8794a6}</style>
   <rect width="1500" height="500" rx="14" fill="#10151d"/>
   <text class="title" x="40" y="48">Large nested struct</text>
@@ -9,29 +9,27 @@
   <rect x="225" y="94" width="14" height="14" rx="3" fill="#ef8354"/><text class="series" x="247" y="106">Go standard library</text>
   <rect x="445" y="94" width="14" height="14" rx="3" fill="#b388eb"/><text class="series" x="467" y="106">Sonic</text>
   <text class="subtitle" x="1460" y="106" text-anchor="end">All APIs ranked by latency; lower is better.</text>
-
   <g transform="translate(0,125)">
     <rect class="panel" x="25" y="0" width="1450" height="278" rx="10"/>
     <text class="contract" x="45" y="29">Fastest to slowest</text>
     <text class="series" x="220" y="63" text-anchor="end">MarshalAppend</text>
-    <rect x="240" y="47" width="163.3" height="22" rx="5" fill="#50c878"/>
-    <text class="value" x="413.3" y="63">2.520 µs · 1881 MB/s · 0 B · 0 allocs</text>
+    <rect x="240" y="47" width="152.8" height="22" rx="5" fill="#50c878"/>
+    <text class="value" x="402.8" y="63">2.473 µs · 1916 MB/s · 0 B · 0 allocs</text>
     <text class="series" x="220" y="101" text-anchor="end">Marshal</text>
-    <rect x="240" y="85" width="200.9" height="22" rx="5" fill="#50c878"/>
-    <text class="value" x="450.9" y="101">3.100 µs · 1529 MB/s · 4873 B · 1 alloc</text>
+    <rect x="240" y="85" width="193.0" height="22" rx="5" fill="#50c878"/>
+    <text class="value" x="443.0" y="101">3.124 µs · 1517 MB/s · 4874 B · 1 alloc</text>
     <text class="series" x="220" y="139" text-anchor="end">Sonic EncodeInto</text>
-    <rect x="240" y="123" width="233.9" height="22" rx="5" fill="#b388eb"/>
-    <text class="value" x="483.9" y="139">3.609 µs · 1313 MB/s · 2153 B · 18 allocs</text>
+    <rect x="240" y="123" width="224.9" height="22" rx="5" fill="#b388eb"/>
+    <text class="value" x="474.9" y="139">3.640 µs · 1302 MB/s · 2162 B · 18 allocs</text>
     <text class="series" x="220" y="177" text-anchor="end">Sonic Marshal</text>
-    <rect x="240" y="161" width="278.1" height="22" rx="5" fill="#b388eb"/>
-    <text class="value" x="528.1" y="177">4.291 µs · 1105 MB/s · 7203 B · 19 allocs</text>
+    <rect x="240" y="161" width="261.3" height="22" rx="5" fill="#b388eb"/>
+    <text class="value" x="511.3" y="177">4.230 µs · 1120 MB/s · 7260 B · 19 allocs</text>
     <text class="series" x="220" y="215" text-anchor="end">json/v2 Write</text>
-    <rect x="240" y="199" width="570.0" height="22" rx="5" fill="#ef8354"/>
-    <text class="value" x="820" y="215">8.797 µs · 539 MB/s · 1651 B · 34 allocs</text>
+    <rect x="240" y="199" width="558.1" height="22" rx="5" fill="#ef8354"/>
+    <text class="value" x="808.1" y="215">9.034 µs · 525 MB/s · 1651 B · 34 allocs</text>
     <text class="series" x="220" y="253" text-anchor="end">encoding/json</text>
-    <rect x="240" y="237" width="700" height="22" rx="5" fill="#ef8354"/>
-    <text class="value" x="950" y="253">10.803 µs · 439 MB/s · 7200 B · 81 allocs</text>
+    <rect x="240" y="237" width="700.0" height="22" rx="5" fill="#ef8354"/>
+    <text class="value" x="950.0" y="253">11.331 µs · 418 MB/s · 7203 B · 81 allocs</text>
   </g>
-
   <text class="note" x="40" y="477">4,740-byte encoded payload · nested structs, slices, maps, field options, ASCII, and Unicode</text>
 </svg>

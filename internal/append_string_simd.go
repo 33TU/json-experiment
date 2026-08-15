@@ -25,6 +25,8 @@ const (
 	simdChunkSize       = 16
 	simdUnrollChunkSize = 2 * simdChunkSize
 	simdThreshold       = 32
+	avx2ChunkSize       = 32
+	avx2Threshold       = 128
 )
 
 // AppendString appends the JSON representation of s to dst.
@@ -38,7 +40,11 @@ func AppendString(dst []byte, s string) []byte {
 
 	// SIMD: Process two 16-byte chunks at a time to detect special characters.
 	if len(s) >= simdThreshold {
-		dst, start, i = appendStringSIMDUnrolled(dst, s)
+		if len(s) >= avx2Threshold && archsimd.X86.AVX2() {
+			dst, start, i = appendStringSIMDAVX2(dst, s)
+		} else {
+			dst, start, i = appendStringSIMDUnrolled(dst, s)
+		}
 	}
 
 	// SWAR: Process 8 bytes at a time using bitwise operations to detect special characters.
@@ -168,7 +174,11 @@ func AppendStringHTML(dst []byte, s string) []byte {
 
 	// SIMD: Process two 16-byte chunks at a time to detect special characters.
 	if len(s) >= simdThreshold {
-		dst, start, i = appendStringHTMLSIMDUnrolled(dst, s)
+		if len(s) >= avx2Threshold && archsimd.X86.AVX2() {
+			dst, start, i = appendStringHTMLSIMDAVX2(dst, s)
+		} else {
+			dst, start, i = appendStringHTMLSIMDUnrolled(dst, s)
+		}
 	}
 
 	// SWAR: Process 8 bytes at a time using bitwise operations to detect special characters.
@@ -359,6 +369,68 @@ func appendStringSIMDUnrolled(dst []byte, s string) ([]byte, int, int) {
 			maskBits &= maskBits - 1
 		}
 		i += simdChunkSize
+	}
+
+	return dst, start, i
+}
+
+func appendStringSIMDAVX2(dst []byte, s string) ([]byte, int, int) {
+	control := archsimd.BroadcastUint8x32(0x20)
+	quote := archsimd.BroadcastUint8x32('"')
+	backslash := archsimd.BroadcastUint8x32('\\')
+	src := unsafe.Slice(unsafe.StringData(s), len(s))
+	start := 0
+	i := 0
+
+	for ; i+avx2ChunkSize <= len(src); i += avx2ChunkSize {
+		chunk := archsimd.LoadUint8x32Slice(src[i:])
+		maskBits := chunk.
+			Less(control).
+			Or(chunk.Equal(quote)).
+			Or(chunk.Equal(backslash)).
+			ToBits()
+
+		for maskBits != 0 {
+			j := i + bits.TrailingZeros32(maskBits)
+			dst = append(dst, s[start:j]...)
+			dst = appendEscapedByte(dst, s[j])
+			start = j + 1
+			maskBits &= maskBits - 1
+		}
+	}
+
+	return dst, start, i
+}
+
+func appendStringHTMLSIMDAVX2(dst []byte, s string) ([]byte, int, int) {
+	control := archsimd.BroadcastUint8x32(0x20)
+	quote := archsimd.BroadcastUint8x32('"')
+	backslash := archsimd.BroadcastUint8x32('\\')
+	less := archsimd.BroadcastUint8x32('<')
+	greater := archsimd.BroadcastUint8x32('>')
+	ampersand := archsimd.BroadcastUint8x32('&')
+	src := unsafe.Slice(unsafe.StringData(s), len(s))
+	start := 0
+	i := 0
+
+	for ; i+avx2ChunkSize <= len(src); i += avx2ChunkSize {
+		chunk := archsimd.LoadUint8x32Slice(src[i:])
+		maskBits := chunk.
+			Less(control).
+			Or(chunk.Equal(quote)).
+			Or(chunk.Equal(backslash)).
+			Or(chunk.Equal(less)).
+			Or(chunk.Equal(greater)).
+			Or(chunk.Equal(ampersand)).
+			ToBits()
+
+		for maskBits != 0 {
+			j := i + bits.TrailingZeros32(maskBits)
+			dst = append(dst, s[start:j]...)
+			dst = appendEscapedByte(dst, s[j])
+			start = j + 1
+			maskBits &= maskBits - 1
+		}
 	}
 
 	return dst, start, i

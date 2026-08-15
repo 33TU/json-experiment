@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"encoding/json/jsontext"
 	jsonv2 "encoding/json/v2"
@@ -110,6 +111,51 @@ func BenchmarkMarshalFloat32(b *testing.B) {
 
 func BenchmarkMarshalFloat64(b *testing.B) {
 	value := 1.2345678901234567
+
+	benchmarkMarshalValue(b, value)
+}
+
+func BenchmarkMarshalTime(b *testing.B) {
+	value := time.Date(
+		2026, time.August, 16,
+		12, 34, 56, 789123456,
+		time.FixedZone("EEST", 3*60*60),
+	)
+
+	benchmarkMarshalValue(b, value)
+}
+
+func BenchmarkMarshalTimeStruct(b *testing.B) {
+	type timeStruct struct {
+		CreatedAt   time.Time `json:"created_at"`
+		UpdatedAt   time.Time `json:"updated_at"`
+		PublishedAt time.Time `json:"published_at"`
+		ExpiresAt   time.Time `json:"expires_at"`
+		DeletedAt   time.Time `json:"deleted_at"`
+		StartedAt   time.Time `json:"started_at"`
+		FinishedAt  time.Time `json:"finished_at"`
+		CheckedAt   time.Time `json:"checked_at"`
+		SyncedAt    time.Time `json:"synced_at"`
+		ArchivedAt  time.Time `json:"archived_at"`
+	}
+
+	base := time.Date(
+		2026, time.August, 16,
+		12, 34, 56, 789123456,
+		time.FixedZone("EEST", 3*60*60),
+	)
+	value := timeStruct{
+		CreatedAt:   base,
+		UpdatedAt:   base.Add(time.Hour),
+		PublishedAt: base.Add(2 * time.Hour),
+		ExpiresAt:   base.Add(3 * time.Hour),
+		DeletedAt:   base.Add(4 * time.Hour),
+		StartedAt:   base.Add(5 * time.Hour),
+		FinishedAt:  base.Add(6 * time.Hour),
+		CheckedAt:   base.Add(7 * time.Hour),
+		SyncedAt:    base.Add(8 * time.Hour),
+		ArchivedAt:  base.Add(9 * time.Hour),
+	}
 
 	benchmarkMarshalValue(b, value)
 }

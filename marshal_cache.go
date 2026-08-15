@@ -132,6 +132,10 @@ func createMarshalFn(typ reflect.Type, addressable bool) marshalFn {
 	switch {
 	case typ.Implements(marshalerAppendType):
 		return createMarshalerAppendFn(typ)
+	case typ == timeType:
+		return createTimeMarshalFn()
+	case typ == timePointerType:
+		return createTimePointerMarshalFn()
 	case typ.Implements(stdMarshalerType):
 		return createStdMarshalerFn(typ)
 	case typ.Implements(stdTextMarshalerType):

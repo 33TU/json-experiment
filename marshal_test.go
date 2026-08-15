@@ -7,6 +7,7 @@ import (
 	"math"
 	"reflect"
 	"testing"
+	"time"
 
 	jsonv2 "encoding/json/v2"
 
@@ -172,6 +173,7 @@ func TestMarshal(t *testing.T) {
 	pointerJSONPointer := &pointerJSONValue
 	pointerTextKey := pointerTextMapKey(1)
 	recursiveValue := &recursiveNode{Value: 1, Next: &recursiveNode{Value: 2}}
+	timeValue := time.Date(2026, time.August, 16, 12, 34, 56, 789123456, time.FixedZone("EEST", 3*60*60))
 
 	tests := []struct {
 		name  string
@@ -193,6 +195,9 @@ func TestMarshal(t *testing.T) {
 		{"uintptr", uintptr(64)},
 		{"float32", float32(1.25)},
 		{"float64", float64(1e-7)},
+		{"time.Time", timeValue},
+		{"*time.Time", &timeValue},
+		{"nil *time.Time", (*time.Time)(nil)},
 		{"string", "quote: \" slash: \\ newline:\n unicode: 世界 <>&"},
 		{"pointer", intPointer},
 		{"pointer chain", &intPointer},
@@ -312,6 +317,35 @@ func TestMarshal(t *testing.T) {
 			}
 
 			assertJSONEqual(t, got, want)
+		})
+	}
+}
+
+func TestMarshalTimeError(t *testing.T) {
+	t.Parallel()
+
+	value := time.Date(10_000, time.January, 1, 0, 0, 0, 0, time.UTC)
+	_, wantErr := value.AppendText(nil)
+	if wantErr == nil {
+		t.Fatal("time.Time.AppendText error = nil")
+	}
+
+	for _, tt := range []struct {
+		name  string
+		value any
+	}{
+		{"time.Time", value},
+		{"*time.Time", &value},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			prefix := []byte("prefix")
+			got, err := jsonexperiment.MarshalAppend(prefix, tt.value)
+			if err == nil || err.Error() != wantErr.Error() {
+				t.Fatalf("MarshalAppend error = %v, want %v", err, wantErr)
+			}
+			if string(got) != string(prefix) {
+				t.Fatalf("MarshalAppend result = %q, want %q", got, prefix)
+			}
 		})
 	}
 }

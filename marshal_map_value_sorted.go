@@ -11,42 +11,16 @@ import (
 	"github.com/33TU/json-experiment/internal"
 )
 
-type sortedMapValueState struct {
+type sortedMapState[K any] struct {
 	keyTarget reflect.Value
 	values    reflect.Value
+	keys      []K
+	indexes   []int
 }
 
 type sortedMapIntegerKey struct {
 	text   [32]byte
 	length uint8
-}
-
-var sortedMapStringKeysPool = sync.Pool{
-	New: func() any {
-		keys := make([]string, 0)
-		return &keys
-	},
-}
-
-var sortedMapIntKeysPool = sync.Pool{
-	New: func() any {
-		keys := make([]sortedMapIntegerKey, 0)
-		return &keys
-	},
-}
-
-var sortedMapUintKeysPool = sync.Pool{
-	New: func() any {
-		keys := make([]sortedMapIntegerKey, 0)
-		return &keys
-	},
-}
-
-var sortedMapIndexesPool = sync.Pool{
-	New: func() any {
-		indexes := make([]int, 0)
-		return &indexes
-	},
 }
 
 func tryCreateSortedMapValueMarshalFn(
@@ -78,7 +52,7 @@ func createSortedMapPrimitiveStringValueMarshalFn(
 	valueFn marshalFn,
 ) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
-	valueStatePool := createSortedMapValueStatePool(typ.Key(), valueType)
+	statePool := createSortedMapStatePool[string](typ.Key(), valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
@@ -89,14 +63,10 @@ func createSortedMapPrimitiveStringValueMarshalFn(
 		}
 
 		length := value.Len()
-		state := getSortedMapValueState(valueStatePool, length)
-		defer putSortedMapValueState(valueStatePool, state)
-
-		keysPtr, keys := getSortedMapSlice[string](&sortedMapStringKeysPool, length)
-		defer putSortedMapSlice(&sortedMapStringKeysPool, keysPtr, keys)
-
-		indexesPtr, indexes := getSortedMapSlice[int](&sortedMapIndexesPool, length)
-		defer putSortedMapSlice(&sortedMapIndexesPool, indexesPtr, indexes)
+		state := getSortedMapState[string](statePool, length)
+		defer putSortedMapState(statePool, state)
+		keys := state.keys
+		indexes := state.indexes
 
 		i := 0
 		for iter := value.MapRange(); iter.Next(); {
@@ -106,6 +76,8 @@ func createSortedMapPrimitiveStringValueMarshalFn(
 			indexes = append(indexes, i)
 			i++
 		}
+		state.keys = keys
+		state.indexes = indexes
 
 		slices.SortFunc(indexes, func(a, b int) int {
 			return strings.Compare(keys[a], keys[b])
@@ -142,7 +114,7 @@ func createSortedMapPrimitiveIntValueMarshalFn(
 	valueFn marshalFn,
 ) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
-	valueStatePool := createSortedMapValueStatePool(typ.Key(), valueType)
+	statePool := createSortedMapStatePool[sortedMapIntegerKey](typ.Key(), valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
@@ -153,14 +125,10 @@ func createSortedMapPrimitiveIntValueMarshalFn(
 		}
 
 		length := value.Len()
-		state := getSortedMapValueState(valueStatePool, length)
-		defer putSortedMapValueState(valueStatePool, state)
-
-		keysPtr, keys := getSortedMapSlice[sortedMapIntegerKey](&sortedMapIntKeysPool, length)
-		defer putSortedMapSlice(&sortedMapIntKeysPool, keysPtr, keys)
-
-		indexesPtr, indexes := getSortedMapSlice[int](&sortedMapIndexesPool, length)
-		defer putSortedMapSlice(&sortedMapIndexesPool, indexesPtr, indexes)
+		state := getSortedMapState[sortedMapIntegerKey](statePool, length)
+		defer putSortedMapState(statePool, state)
+		keys := state.keys
+		indexes := state.indexes
 
 		i := 0
 		for iter := value.MapRange(); iter.Next(); {
@@ -172,6 +140,8 @@ func createSortedMapPrimitiveIntValueMarshalFn(
 			indexes = append(indexes, i)
 			i++
 		}
+		state.keys = keys
+		state.indexes = indexes
 
 		slices.SortFunc(indexes, func(a, b int) int {
 			return compareSortedMapIntegerKeys(&keys[a], &keys[b])
@@ -205,7 +175,7 @@ func createSortedMapPrimitiveUintValueMarshalFn(
 	valueFn marshalFn,
 ) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
-	valueStatePool := createSortedMapValueStatePool(typ.Key(), valueType)
+	statePool := createSortedMapStatePool[sortedMapIntegerKey](typ.Key(), valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
@@ -216,14 +186,10 @@ func createSortedMapPrimitiveUintValueMarshalFn(
 		}
 
 		length := value.Len()
-		state := getSortedMapValueState(valueStatePool, length)
-		defer putSortedMapValueState(valueStatePool, state)
-
-		keysPtr, keys := getSortedMapSlice[sortedMapIntegerKey](&sortedMapUintKeysPool, length)
-		defer putSortedMapSlice(&sortedMapUintKeysPool, keysPtr, keys)
-
-		indexesPtr, indexes := getSortedMapSlice[int](&sortedMapIndexesPool, length)
-		defer putSortedMapSlice(&sortedMapIndexesPool, indexesPtr, indexes)
+		state := getSortedMapState[sortedMapIntegerKey](statePool, length)
+		defer putSortedMapState(statePool, state)
+		keys := state.keys
+		indexes := state.indexes
 
 		i := 0
 		for iter := value.MapRange(); iter.Next(); {
@@ -235,6 +201,8 @@ func createSortedMapPrimitiveUintValueMarshalFn(
 			indexes = append(indexes, i)
 			i++
 		}
+		state.keys = keys
+		state.indexes = indexes
 
 		slices.SortFunc(indexes, func(a, b int) int {
 			return compareSortedMapIntegerKeys(&keys[a], &keys[b])
@@ -270,7 +238,7 @@ func createSortedMapTextValueMarshalFn(
 ) marshalFn {
 	keyIsPointer := keyType.Kind() == reflect.Pointer
 	valueIsMap := valueType.Kind() == reflect.Map
-	valueStatePool := createSortedMapValueStatePool(keyType, valueType)
+	statePool := createSortedMapStatePool[string](keyType, valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
@@ -281,14 +249,8 @@ func createSortedMapTextValueMarshalFn(
 		}
 
 		length := value.Len()
-		state := getSortedMapValueState(valueStatePool, length)
-		defer putSortedMapValueState(valueStatePool, state)
-
-		namesPtr, names := getSortedMapSlice[string](&sortedMapStringKeysPool, length)
-		defer putSortedMapSlice(&sortedMapStringKeysPool, namesPtr, names)
-
-		indexesPtr, indexes := getSortedMapSlice[int](&sortedMapIndexesPool, length)
-		defer putSortedMapSlice(&sortedMapIndexesPool, indexesPtr, indexes)
+		state := getSortedMapState[string](statePool, length)
+		defer putSortedMapState(statePool, state)
 
 		i := 0
 		for iter := value.MapRange(); iter.Next(); {
@@ -298,18 +260,18 @@ func createSortedMapTextValueMarshalFn(
 			if err != nil {
 				return dst, err
 			}
-			names = append(names, name)
-			indexes = append(indexes, i)
+			state.keys = append(state.keys, name)
+			state.indexes = append(state.indexes, i)
 			i++
 		}
 
-		slices.SortFunc(indexes, func(a, b int) int {
-			return strings.Compare(names[a], names[b])
+		slices.SortFunc(state.indexes, func(a, b int) int {
+			return strings.Compare(state.keys[a], state.keys[b])
 		})
 
 		dst = append(dst, '{')
-		for _, index := range indexes {
-			name := names[index]
+		for _, index := range state.indexes {
+			name := state.keys[index]
 
 			if flags&MarshalFlagEscapeHTML != 0 {
 				dst = internal.AppendStringHTML(dst, name)
@@ -336,26 +298,11 @@ func compareSortedMapIntegerKeys(a, b *sortedMapIntegerKey) int {
 	return bytes.Compare(a.text[:a.length], b.text[:b.length])
 }
 
-func getSortedMapSlice[T any](pool *sync.Pool, capacity int) (*[]T, []T) {
-	ptr := pool.Get().(*[]T)
-	values := *ptr
-	if cap(values) < capacity {
-		values = make([]T, 0, capacity)
-	}
-	return ptr, values[:0]
-}
-
-func putSortedMapSlice[T any](pool *sync.Pool, ptr *[]T, values []T) {
-	clear(values)
-	*ptr = values[:0]
-	pool.Put(ptr)
-}
-
-func createSortedMapValueStatePool(keyType, valueType reflect.Type) *sync.Pool {
+func createSortedMapStatePool[K any](keyType, valueType reflect.Type) *sync.Pool {
 	valueSliceType := reflect.SliceOf(valueType)
 	return &sync.Pool{
 		New: func() any {
-			return &sortedMapValueState{
+			return &sortedMapState[K]{
 				keyTarget: reflect.New(keyType).Elem(),
 				values:    reflect.New(valueSliceType).Elem(),
 			}
@@ -363,19 +310,29 @@ func createSortedMapValueStatePool(keyType, valueType reflect.Type) *sync.Pool {
 	}
 }
 
-func getSortedMapValueState(pool *sync.Pool, length int) *sortedMapValueState {
-	state := pool.Get().(*sortedMapValueState)
+func getSortedMapState[K any](pool *sync.Pool, length int) *sortedMapState[K] {
+	state := pool.Get().(*sortedMapState[K])
 	if state.values.Cap() < length {
 		state.values.Set(reflect.MakeSlice(state.values.Type(), length, length))
 	} else {
 		state.values.SetLen(length)
 	}
+	if cap(state.keys) < length {
+		state.keys = make([]K, 0, length)
+	}
+	if cap(state.indexes) < length {
+		state.indexes = make([]int, 0, length)
+	}
 	return state
 }
 
-func putSortedMapValueState(pool *sync.Pool, state *sortedMapValueState) {
+func putSortedMapState[K any](pool *sync.Pool, state *sortedMapState[K]) {
 	state.keyTarget.SetZero()
 	state.values.Clear()
 	state.values.SetLen(0)
+	clear(state.keys)
+	state.keys = state.keys[:0]
+	clear(state.indexes)
+	state.indexes = state.indexes[:0]
 	pool.Put(state)
 }

@@ -9,8 +9,10 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
+	"unsafe"
 
 	jsonv2 "encoding/json/v2"
 
@@ -465,29 +467,28 @@ func TestMarshalSortMapKeys(t *testing.T) {
 	tests := []struct {
 		name  string
 		value any
-		want  string
 	}{
-		{"string fast path", map[string]int{"z": 1, "a": 2}, `{"a":2,"z":1}`},
-		{"string int8 fast path", map[string]int8{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
-		{"string int16 fast path", map[string]int16{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
-		{"string int32 fast path", map[string]int32{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
-		{"string int64 fast path", map[string]int64{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
-		{"named string key fast path", map[stringMapKey]int{"z": 1, "a": 2}, `{"a":2,"z":1}`},
-		{"named string int fast path", map[string]testNumber{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
-		{"string values", map[string]string{"z": "last", "a": "first"}, `{"a":"first","z":"last"}`},
-		{"slice values", map[string][]int{"z": {3}, "a": {1, 2}}, `{"a":[1,2],"z":[3]}`},
-		{"interface values", map[string]any{"z": []int{2}, "a": "first"}, `{"a":"first","z":[2]}`},
-		{"int fast path", map[int]string{2: "two", 10: "ten", -1: "negative"}, `{"-1":"negative","10":"ten","2":"two"}`},
-		{"uint fast path", map[uint]string{2: "two", 10: "ten"}, `{"10":"ten","2":"two"}`},
-		{"int64 key limits", map[int64]string{math.MinInt64: "min", math.MaxInt64: "max"}, `{"-9223372036854775808":"min","9223372036854775807":"max"}`},
-		{"uint64 key limit", map[uint64]string{0: "zero", math.MaxUint64: "max"}, `{"0":"zero","18446744073709551615":"max"}`},
-		{"text keys", map[sortedTextMapKey]int{"z": 1, "a": 2}, `{"a":2,"z":1}`},
-		{"nil pointer text key", map[*pointerTextMapKey]int{nil: 1}, `{"":1}`},
-		{"custom values", map[string]jsonInt{"z": 1, "a": 2}, `{"a":"custom","z":"custom"}`},
+		{"string fast path", map[string]int{"z": 1, "a": 2}},
+		{"string int8 fast path", map[string]int8{"z": 1, "a": -2}},
+		{"string int16 fast path", map[string]int16{"z": 1, "a": -2}},
+		{"string int32 fast path", map[string]int32{"z": 1, "a": -2}},
+		{"string int64 fast path", map[string]int64{"z": 1, "a": -2}},
+		{"named string key fast path", map[stringMapKey]int{"z": 1, "a": 2}},
+		{"named string int fast path", map[string]testNumber{"z": 1, "a": -2}},
+		{"string values", map[string]string{"z": "last", "a": "first"}},
+		{"slice values", map[string][]int{"z": {3}, "a": {1, 2}}},
+		{"interface values", map[string]any{"z": []int{2}, "a": "first"}},
+		{"int fast path", map[int]string{2: "two", 10: "ten", -1: "negative"}},
+		{"uint fast path", map[uint]string{2: "two", 10: "ten"}},
+		{"int64 key limits", map[int64]string{math.MinInt64: "min", math.MaxInt64: "max"}},
+		{"uint64 key limit", map[uint64]string{0: "zero", math.MaxUint64: "max"}},
+		{"text keys", map[sortedTextMapKey]int{"z": 1, "a": 2}},
+		{"nil pointer text key", map[*pointerTextMapKey]int{nil: 1}},
+		{"custom values", map[string]jsonInt{"z": 1, "a": 2}},
 		{"nested maps", map[string]map[string]int{
 			"z": {"z": 1, "a": 2},
 			"a": {"z": 3, "a": 4},
-		}, `{"a":{"a":4,"z":3},"z":{"a":2,"z":1}}`},
+		}},
 	}
 
 	options := MarshalOptions{SortMapKeys: true}
@@ -495,49 +496,59 @@ func TestMarshalSortMapKeys(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := MarshalWithOptions(tt.value, options)
-			if err != nil {
-				t.Fatalf("MarshalWithOptions(%T): %v", tt.value, err)
+			got, gotErr := MarshalWithOptions(tt.value, options)
+			want, wantErr := json.Marshal(tt.value)
+			if (gotErr != nil) != (wantErr != nil) {
+				t.Fatalf("MarshalWithOptions(%T) error = %v, json.Marshal error = %v", tt.value, gotErr, wantErr)
 			}
-			if string(got) != tt.want {
-				t.Fatalf("MarshalWithOptions(%T) = %s, want %s", tt.value, got, tt.want)
+			if !bytes.Equal(got, want) {
+				t.Fatalf("MarshalWithOptions(%T) = %s, json.Marshal = %s", tt.value, got, want)
 			}
 		})
 	}
 
-	got, err := MarshalWithFlags(
-		map[string]int{"z": 1, "a": 2},
+	value := map[string]int{"z": 1, "a": 2}
+	got, gotErr := MarshalWithFlags(
+		value,
 		MarshalFlagSortMapKeys,
 	)
-	if err != nil {
-		t.Fatalf("MarshalWithFlags: %v", err)
+	want, wantErr := json.Marshal(value)
+	if (gotErr != nil) != (wantErr != nil) {
+		t.Fatalf("MarshalWithFlags error = %v, json.Marshal error = %v", gotErr, wantErr)
 	}
-	if want := `{"a":2,"z":1}`; string(got) != want {
-		t.Fatalf("MarshalWithFlags = %s, want %s", got, want)
+	if !bytes.Equal(got, want) {
+		t.Fatalf("MarshalWithFlags = %s, json.Marshal = %s", got, want)
 	}
 
-	got, err = MarshalWithFlags(
-		map[string]int{"&": 1, "A": 2},
+	value = map[string]int{"&": 1, "A": 2}
+	got, gotErr = MarshalWithFlags(
+		value,
 		MarshalFlagSortMapKeys|MarshalFlagEscapeHTML,
 	)
-	if err != nil {
-		t.Fatalf("MarshalWithFlags HTML: %v", err)
+	want, wantErr = json.Marshal(value)
+	if (gotErr != nil) != (wantErr != nil) {
+		t.Fatalf("MarshalWithFlags HTML error = %v, json.Marshal error = %v", gotErr, wantErr)
 	}
-	if want := `{"\u0026":1,"A":2}`; string(got) != want {
-		t.Fatalf("MarshalWithFlags HTML = %s, want %s", got, want)
-	}
-
-	if _, err = MarshalWithFlags(
-		map[errorTextMapKey]int{1: 1},
-		MarshalFlagSortMapKeys,
-	); err == nil {
-		t.Fatal("MarshalWithFlags text key error = nil")
+	if !bytes.Equal(got, want) {
+		t.Fatalf("MarshalWithFlags HTML = %s, json.Marshal = %s", got, want)
 	}
 
-	if _, err = MarshalWithFlags(
-		map[float64]int{1: 1},
+	errorTextMap := map[errorTextMapKey]int{1: 1}
+	_, gotErr = MarshalWithFlags(
+		errorTextMap,
 		MarshalFlagSortMapKeys,
-	); err == nil {
+	)
+	_, wantErr = json.Marshal(errorTextMap)
+	if (gotErr != nil) != (wantErr != nil) {
+		t.Fatalf("MarshalWithFlags text key error = %v, json.Marshal error = %v", gotErr, wantErr)
+	}
+
+	unsupportedMap := map[float64]int{1: 1}
+	_, gotErr = MarshalWithFlags(
+		unsupportedMap,
+		MarshalFlagSortMapKeys,
+	)
+	if gotErr == nil {
 		t.Fatal("MarshalWithFlags unsupported map key error = nil")
 	}
 }
@@ -1071,30 +1082,140 @@ func assertJSONEqual(t *testing.T, got, want []byte) {
 func TestSortSortedMapIndexesRandomized(t *testing.T) {
 	rng := rand.New(rand.NewSource(1))
 	for size := 0; size <= 256; size++ {
-		stringsToSort := make([]sortedMapStringKey, size)
+		stringsToSort := make([]string, size)
 		integerKeys := make([]sortedMapIntegerKey, size)
 		for i := range size {
-			prefix := stringsToSort[rng.Intn(i+1)].text
-			stringsToSort[i].text = prefix + strconv.Itoa(rng.Intn(32))
+			prefix := stringsToSort[rng.Intn(i+1)]
+			stringsToSort[i] = prefix + strconv.Itoa(rng.Intn(32))
 
 			value := int64(rng.Uint64())
 			integerKeys[i].length = uint8(len(internal.AppendInt(integerKeys[i].text[:0], value)))
 		}
 
-		assertSortedMapKeys(t, stringsToSort, sortSortedMapStringKeys, func(key sortedMapStringKey) string {
-			return key.text
-		})
+		assertSortedMapStringKeys(t, stringsToSort, sortSortedMapStringKeys)
 		assertSortedMapIndexes(t, integerKeys, sortSortedMapIntegerIndexes, func(key sortedMapIntegerKey) string {
 			return string(key.text[:key.length])
 		})
 	}
 }
 
-func assertSortedMapKeys[K any](t *testing.T, keys []K, sortKeys func([]K), stringify func(K) string) {
+func TestSortSortedMapKeysAdversarial(t *testing.T) {
+	ordered := make([]string, 128)
+	for i := range ordered {
+		ordered[i] = "key_" + strconv.Itoa(i)
+	}
+	slices.Sort(ordered)
+	reversed := slices.Clone(ordered)
+	slices.Reverse(reversed)
+
+	commonPrefix := strings.Repeat("shared-prefix-", 256)
+	longCommonPrefix := make([]string, 128)
+	for i := range longCommonPrefix {
+		longCommonPrefix[i] = commonPrefix + strconv.Itoa(i)
+	}
+
+	tests := []struct {
+		name string
+		keys []string
+	}{
+		{"empty", nil},
+		{"one", []string{"one"}},
+		{"insertion threshold minus one", slices.Clone(ordered[:11])},
+		{"insertion threshold", slices.Clone(ordered[:12])},
+		{"insertion threshold plus one", slices.Clone(ordered[:13])},
+		{"sorted", ordered},
+		{"reverse sorted", reversed},
+		{"duplicates", []string{"same", "same", "same", "prefix", "prefix"}},
+		{"prefix lengths", []string{"", "a", "aa", "aaa", "aab", "ab", "b"}},
+		{"invalid UTF-8", []string{"\xff", "\xfe", "a\xff", "a\xfe", "a", ""}},
+		{"long common prefix", longCommonPrefix},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertSortedMapStringKeys(t, tt.keys, sortSortedMapStringKeys)
+		})
+	}
+
+	t.Run("forced fallback", func(t *testing.T) {
+		assertSortedMapStringKeys(t, reversed, func(keys []sortedMapStringKey) {
+			radixSortSortedMapStringKeys(keys, 0, 0)
+		})
+	})
+}
+
+func TestSortSortedMapIntegerIndexesFallback(t *testing.T) {
+	keys := make([]sortedMapIntegerKey, 128)
+	for i := range keys {
+		value := int64(i*7919 - 500_000)
+		keys[i].length = uint8(len(internal.AppendInt(keys[i].text[:0], value)))
+	}
+	assertSortedMapIndexes(t, keys, func(indexes []int, keys []sortedMapIntegerKey) {
+		radixSortSortedMapIntegerIndexes(indexes, keys, 0, 0)
+	}, func(key sortedMapIntegerKey) string {
+		return string(key.text[:key.length])
+	})
+}
+
+func TestReflectMapIterPrefix(t *testing.T) {
+	type mapValue struct {
+		Text    string
+		Numbers []int
+		Pointer *int
+		Padding [256]byte
+	}
+
+	pointedValue := 42
+	wantValue := mapValue{
+		Text:    "value",
+		Numbers: []int{1, 2, 3},
+		Pointer: &pointedValue,
+	}
+	wantValue.Padding[255] = 1
+	value := reflect.ValueOf(map[stringMapKey]mapValue{"key": wantValue})
+	iter := value.MapRange()
+	if !iter.Next() {
+		t.Fatal("map iterator is empty")
+	}
+
+	prefix := (*reflectMapIterPrefix)(unsafe.Pointer(iter))
+	if prefix.key == nil || prefix.elem == nil {
+		t.Fatalf("iterator prefix pointers = (%p, %p), want non-nil", prefix.key, prefix.elem)
+	}
+
+	var reflectedKey stringMapKey
+	reflect.ValueOf(&reflectedKey).Elem().SetIterKey(iter)
+	if got := *(*stringMapKey)(prefix.key); got != reflectedKey {
+		t.Fatalf("iterator key = %q, reflect key = %q", got, reflectedKey)
+	}
+
+	var reflectedValue mapValue
+	reflect.ValueOf(&reflectedValue).Elem().SetIterValue(iter)
+	if got := *(*mapValue)(prefix.elem); !reflect.DeepEqual(got, reflectedValue) {
+		t.Fatalf("iterator value = %#v, reflect value = %#v", got, reflectedValue)
+	}
+
+	var copiedValue mapValue
+	runtimeTypedmemmove(
+		internal.InterfaceData(reflect.TypeFor[mapValue]()),
+		unsafe.Pointer(&copiedValue),
+		prefix.elem,
+	)
+	if !reflect.DeepEqual(copiedValue, wantValue) {
+		t.Fatalf("typedmemmove value = %#v, want %#v", copiedValue, wantValue)
+	}
+}
+
+func assertSortedMapStringKeys(
+	t *testing.T,
+	input []string,
+	sortKeys func([]sortedMapStringKey),
+) {
 	t.Helper()
-	want := make([]string, len(keys))
-	for i, key := range keys {
-		want[i] = stringify(key)
+	keys := make([]sortedMapStringKey, len(input))
+	want := slices.Clone(input)
+	for i, key := range input {
+		keys[i] = sortedMapStringKey{text: key, valueIndex: i}
 	}
 	rand.New(rand.NewSource(int64(len(keys)))).Shuffle(len(keys), func(i, j int) {
 		keys[i], keys[j] = keys[j], keys[i]
@@ -1103,8 +1224,11 @@ func assertSortedMapKeys[K any](t *testing.T, keys []K, sortKeys func([]K), stri
 	sortKeys(keys)
 	slices.Sort(want)
 	for i, key := range keys {
-		if got := stringify(key); got != want[i] {
-			t.Fatalf("key %d = %q, want %q", i, got, want[i])
+		if key.text != want[i] {
+			t.Fatalf("key %d = %q, want %q", i, key.text, want[i])
+		}
+		if key.text != input[key.valueIndex] {
+			t.Fatalf("key %d value index = %d, which belongs to %q", i, key.valueIndex, input[key.valueIndex])
 		}
 	}
 }

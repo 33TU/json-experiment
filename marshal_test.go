@@ -1,17 +1,20 @@
-package jsonexperiment_test
+package jsonexperiment
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
 	"math"
+	"math/rand"
 	"reflect"
+	"slices"
+	"strconv"
 	"testing"
 	"time"
 
 	jsonv2 "encoding/json/v2"
 
-	jsonexperiment "github.com/33TU/json-experiment"
+	"github.com/33TU/json-experiment/internal"
 )
 
 type numberInterface interface {
@@ -26,11 +29,13 @@ func (n testNumber) number() int {
 
 type testByte byte
 
+type stringMapKey string
+
 type allMarshalers struct{}
 
 var (
-	_ jsonexperiment.MarshalerAppend = allMarshalers{}
-	_ json.Marshaler                 = allMarshalers{}
+	_ MarshalerAppend = allMarshalers{}
+	_ json.Marshaler  = allMarshalers{}
 )
 
 func (allMarshalers) MarshalJSONAppend(dst []byte) ([]byte, error) {
@@ -306,7 +311,7 @@ func TestMarshal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := jsonexperiment.Marshal(tt.value)
+			got, err := Marshal(tt.value)
 			if err != nil {
 				t.Fatalf("Marshal(%T): %v", tt.value, err)
 			}
@@ -339,7 +344,7 @@ func TestMarshalTimeError(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			prefix := []byte("prefix")
-			got, err := jsonexperiment.MarshalAppend(prefix, tt.value)
+			got, err := MarshalAppend(prefix, tt.value)
 			if err == nil || err.Error() != wantErr.Error() {
 				t.Fatalf("MarshalAppend error = %v, want %v", err, wantErr)
 			}
@@ -426,7 +431,7 @@ func TestMarshalMapKinds(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, gotErr := jsonexperiment.Marshal(tt.value)
+			got, gotErr := Marshal(tt.value)
 			want, wantErr := json.Marshal(tt.value)
 			if (gotErr != nil) != (wantErr != nil) {
 				t.Fatalf("Marshal(%T) error = %v, json.Marshal error = %v", tt.value, gotErr, wantErr)
@@ -444,7 +449,7 @@ func TestMarshalAppend(t *testing.T) {
 	dst := make([]byte, 0, 64)
 	dst = append(dst, "prefix:"...)
 
-	got, err := jsonexperiment.MarshalAppend(dst, []int{1, 2, 3})
+	got, err := MarshalAppend(dst, []int{1, 2, 3})
 	if err != nil {
 		t.Fatalf("MarshalAppend: %v", err)
 	}
@@ -467,7 +472,11 @@ func TestMarshalSortMapKeys(t *testing.T) {
 		{"string int16 fast path", map[string]int16{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
 		{"string int32 fast path", map[string]int32{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
 		{"string int64 fast path", map[string]int64{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
+		{"named string key fast path", map[stringMapKey]int{"z": 1, "a": 2}, `{"a":2,"z":1}`},
 		{"named string int fast path", map[string]testNumber{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
+		{"string values", map[string]string{"z": "last", "a": "first"}, `{"a":"first","z":"last"}`},
+		{"slice values", map[string][]int{"z": {3}, "a": {1, 2}}, `{"a":[1,2],"z":[3]}`},
+		{"interface values", map[string]any{"z": []int{2}, "a": "first"}, `{"a":"first","z":[2]}`},
 		{"int fast path", map[int]string{2: "two", 10: "ten", -1: "negative"}, `{"-1":"negative","10":"ten","2":"two"}`},
 		{"uint fast path", map[uint]string{2: "two", 10: "ten"}, `{"10":"ten","2":"two"}`},
 		{"int64 key limits", map[int64]string{math.MinInt64: "min", math.MaxInt64: "max"}, `{"-9223372036854775808":"min","9223372036854775807":"max"}`},
@@ -481,12 +490,12 @@ func TestMarshalSortMapKeys(t *testing.T) {
 		}, `{"a":{"a":4,"z":3},"z":{"a":2,"z":1}}`},
 	}
 
-	options := jsonexperiment.MarshalOptions{SortMapKeys: true}
+	options := MarshalOptions{SortMapKeys: true}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := jsonexperiment.MarshalWithOptions(tt.value, options)
+			got, err := MarshalWithOptions(tt.value, options)
 			if err != nil {
 				t.Fatalf("MarshalWithOptions(%T): %v", tt.value, err)
 			}
@@ -496,9 +505,9 @@ func TestMarshalSortMapKeys(t *testing.T) {
 		})
 	}
 
-	got, err := jsonexperiment.MarshalWithFlags(
+	got, err := MarshalWithFlags(
 		map[string]int{"z": 1, "a": 2},
-		jsonexperiment.MarshalFlagSortMapKeys,
+		MarshalFlagSortMapKeys,
 	)
 	if err != nil {
 		t.Fatalf("MarshalWithFlags: %v", err)
@@ -507,9 +516,9 @@ func TestMarshalSortMapKeys(t *testing.T) {
 		t.Fatalf("MarshalWithFlags = %s, want %s", got, want)
 	}
 
-	got, err = jsonexperiment.MarshalWithFlags(
+	got, err = MarshalWithFlags(
 		map[string]int{"&": 1, "A": 2},
-		jsonexperiment.MarshalFlagSortMapKeys|jsonexperiment.MarshalFlagEscapeHTML,
+		MarshalFlagSortMapKeys|MarshalFlagEscapeHTML,
 	)
 	if err != nil {
 		t.Fatalf("MarshalWithFlags HTML: %v", err)
@@ -518,16 +527,16 @@ func TestMarshalSortMapKeys(t *testing.T) {
 		t.Fatalf("MarshalWithFlags HTML = %s, want %s", got, want)
 	}
 
-	if _, err = jsonexperiment.MarshalWithFlags(
+	if _, err = MarshalWithFlags(
 		map[errorTextMapKey]int{1: 1},
-		jsonexperiment.MarshalFlagSortMapKeys,
+		MarshalFlagSortMapKeys,
 	); err == nil {
 		t.Fatal("MarshalWithFlags text key error = nil")
 	}
 
-	if _, err = jsonexperiment.MarshalWithFlags(
+	if _, err = MarshalWithFlags(
 		map[float64]int{1: 1},
-		jsonexperiment.MarshalFlagSortMapKeys,
+		MarshalFlagSortMapKeys,
 	); err == nil {
 		t.Fatal("MarshalWithFlags unsupported map key error = nil")
 	}
@@ -539,7 +548,7 @@ func TestMarshalInterfacePrecedence(t *testing.T) {
 	tests := []struct {
 		name  string
 		value any
-		flags jsonexperiment.MarshalFlags
+		flags MarshalFlags
 		want  string
 	}{
 		{"MarshalerAppend", allMarshalers{}, 0, `"append"`},
@@ -549,12 +558,12 @@ func TestMarshalInterfacePrecedence(t *testing.T) {
 		{"*json.Marshaler", &jsonMarshaller{}, 0, `"json"`},
 		{"encoding.TextMarshaler", textMarshaler{}, 0, `"<text>"`},
 		{"*encoding.TextMarshaler", &textMarshaler{}, 0, `"<text>"`},
-		{"encoding.TextMarshaler HTML", textMarshaler{}, jsonexperiment.MarshalFlagEscapeHTML, `"\u003ctext\u003e"`},
+		{"encoding.TextMarshaler HTML", textMarshaler{}, MarshalFlagEscapeHTML, `"\u003ctext\u003e"`},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := jsonexperiment.MarshalWithFlags(tt.value, tt.flags)
+			got, err := MarshalWithFlags(tt.value, tt.flags)
 			if err != nil {
 				t.Fatalf("MarshalWithFlags: %v", err)
 			}
@@ -583,7 +592,7 @@ func TestMarshalCollectionElementInterfaces(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := jsonexperiment.Marshal(tt.value)
+			got, err := Marshal(tt.value)
 			if err != nil {
 				t.Fatalf("Marshal: %v", err)
 			}
@@ -617,7 +626,7 @@ func TestMarshalCollectionPointerReceiver(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := jsonexperiment.Marshal(tt.value)
+			got, err := Marshal(tt.value)
 			if err != nil {
 				t.Fatalf("Marshal(%T): %v", tt.value, err)
 			}
@@ -650,7 +659,7 @@ func TestMarshalMapPointerReceiver(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := jsonexperiment.Marshal(tt.value)
+			got, err := Marshal(tt.value)
 			if err != nil {
 				t.Fatalf("Marshal(%T): %v", tt.value, err)
 			}
@@ -684,7 +693,7 @@ func TestMarshalStringTag(t *testing.T) {
 		String:  "quote: \" slash: \\ newline:\n",
 	}
 
-	got, err := jsonexperiment.Marshal(value)
+	got, err := Marshal(value)
 	if err != nil {
 		t.Fatalf("Marshal: %v", err)
 	}
@@ -711,7 +720,7 @@ func TestMarshalByteSliceFormat(t *testing.T) {
 	}
 
 	value := []byte{0xfb, 0xff}
-	got, err := jsonexperiment.Marshal(formattedBytes{
+	got, err := Marshal(formattedBytes{
 		Base64:    value,
 		Base64URL: value,
 		Base32:    value,
@@ -763,7 +772,7 @@ func TestMarshalByteSliceFormatError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if _, err := jsonexperiment.Marshal(tt.value); err == nil {
+			if _, err := Marshal(tt.value); err == nil {
 				t.Fatal("Marshal error = nil")
 			}
 		})
@@ -777,7 +786,7 @@ func TestMarshalFormatMarshalerPrecedence(t *testing.T) {
 		Value jsonInt `json:"value,format:hex"`
 	}{Value: 123}
 
-	got, gotErr := jsonexperiment.Marshal(value)
+	got, gotErr := Marshal(value)
 	want, wantErr := jsonv2.Marshal(value)
 	if (gotErr != nil) != (wantErr != nil) {
 		t.Fatalf("Marshal error = %v, jsonv2.Marshal error = %v", gotErr, wantErr)
@@ -817,7 +826,7 @@ func TestMarshalOmitTags(t *testing.T) {
 		KeepSlice:         []int{},
 	}
 
-	got, err := jsonexperiment.Marshal(testValue)
+	got, err := Marshal(testValue)
 	if err != nil {
 		t.Fatalf("Marshal: %v", err)
 	}
@@ -848,7 +857,7 @@ func TestMarshalOmitZeroMethod(t *testing.T) {
 		KeepSlice:     zeroSlice{},
 	}
 
-	got, err := jsonexperiment.Marshal(testValue)
+	got, err := Marshal(testValue)
 	if err != nil {
 		t.Fatalf("Marshal: %v", err)
 	}
@@ -863,7 +872,7 @@ func TestMarshalOmitZeroMethod(t *testing.T) {
 func TestMarshalEscapeHTML(t *testing.T) {
 	t.Parallel()
 
-	options := jsonexperiment.MarshalOptions{EscapeHTML: true}
+	options := MarshalOptions{EscapeHTML: true}
 	value := struct {
 		Text   string              `json:"<text>"`
 		Array  [1]string           `json:"array"`
@@ -882,7 +891,7 @@ func TestMarshalEscapeHTML(t *testing.T) {
 		Any: map[string]any{"<any>": "<interface>"},
 	}
 
-	got, err := jsonexperiment.MarshalWithOptions(value, options)
+	got, err := MarshalWithOptions(value, options)
 	if err != nil {
 		t.Fatalf("MarshalWithOptions: %v", err)
 	}
@@ -911,7 +920,7 @@ func TestMarshalEscapeHTML(t *testing.T) {
 		map[uint][]string{1: {"<value>"}},
 	}
 	for _, value := range additional {
-		encoded, err := jsonexperiment.MarshalWithOptions(value, options)
+		encoded, err := MarshalWithOptions(value, options)
 		if err != nil {
 			t.Fatalf("MarshalWithOptions(%T): %v", value, err)
 		}
@@ -920,7 +929,7 @@ func TestMarshalEscapeHTML(t *testing.T) {
 		}
 	}
 
-	got, err = jsonexperiment.MarshalAppendWithOptions([]byte("prefix:"), "<>&", options)
+	got, err = MarshalAppendWithOptions([]byte("prefix:"), "<>&", options)
 	if err != nil {
 		t.Fatalf("MarshalAppendWithOptions: %v", err)
 	}
@@ -928,7 +937,7 @@ func TestMarshalEscapeHTML(t *testing.T) {
 		t.Fatalf("MarshalAppendWithOptions = %q, want %q", got, want)
 	}
 
-	got, err = jsonexperiment.Marshal("<>&")
+	got, err = Marshal("<>&")
 	if err != nil {
 		t.Fatalf("Marshal: %v", err)
 	}
@@ -941,14 +950,14 @@ func TestMarshalValidateString(t *testing.T) {
 	t.Parallel()
 
 	const value = "before\xffafter"
-	options := jsonexperiment.MarshalOptions{ValidateString: true}
+	options := MarshalOptions{ValidateString: true}
 
 	want, err := json.Marshal(value)
 	if err != nil {
 		t.Fatalf("json.Marshal: %v", err)
 	}
 
-	got, err := jsonexperiment.MarshalWithOptions(value, options)
+	got, err := MarshalWithOptions(value, options)
 	if err != nil {
 		t.Fatalf("MarshalWithOptions: %v", err)
 	}
@@ -956,7 +965,7 @@ func TestMarshalValidateString(t *testing.T) {
 		t.Fatalf("MarshalWithOptions = %q, want %q", got, want)
 	}
 
-	got, err = jsonexperiment.MarshalWithFlags(value, jsonexperiment.MarshalFlagValidateString)
+	got, err = MarshalWithFlags(value, MarshalFlagValidateString)
 	if err != nil {
 		t.Fatalf("MarshalWithFlags: %v", err)
 	}
@@ -964,7 +973,7 @@ func TestMarshalValidateString(t *testing.T) {
 		t.Fatalf("MarshalWithFlags = %q, want %q", got, want)
 	}
 
-	got, err = jsonexperiment.MarshalAppendWithOptions([]byte("prefix:\xff"), value, options)
+	got, err = MarshalAppendWithOptions([]byte("prefix:\xff"), value, options)
 	if err != nil {
 		t.Fatalf("MarshalAppendWithOptions: %v", err)
 	}
@@ -981,7 +990,7 @@ func TestMarshalValidateString(t *testing.T) {
 		Map:   map[string]string{"key\xff": "value\xfe"},
 	}
 
-	got, err = jsonexperiment.MarshalWithOptions(nested, options)
+	got, err = MarshalWithOptions(nested, options)
 	if err != nil {
 		t.Fatalf("MarshalWithOptions(nested): %v", err)
 	}
@@ -993,7 +1002,7 @@ func TestMarshalValidateString(t *testing.T) {
 		t.Fatalf("MarshalWithOptions(nested) = %q, want %q", got, want)
 	}
 
-	got, err = jsonexperiment.Marshal(value)
+	got, err = Marshal(value)
 	if err != nil {
 		t.Fatalf("Marshal: %v", err)
 	}
@@ -1022,7 +1031,7 @@ func TestMarshalError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if _, err := jsonexperiment.Marshal(tt.value); err == nil {
+			if _, err := Marshal(tt.value); err == nil {
 				t.Fatalf("Marshal(%T) error = nil", tt.value)
 			}
 		})
@@ -1030,12 +1039,12 @@ func TestMarshalError(t *testing.T) {
 }
 
 func TestMarshalReturnsOwnedBytes(t *testing.T) {
-	first, err := jsonexperiment.Marshal("first")
+	first, err := Marshal("first")
 	if err != nil {
 		t.Fatalf("Marshal(first): %v", err)
 	}
 
-	if _, err := jsonexperiment.Marshal("second"); err != nil {
+	if _, err := Marshal("second"); err != nil {
 		t.Fatalf("Marshal(second): %v", err)
 	}
 
@@ -1056,5 +1065,72 @@ func assertJSONEqual(t *testing.T, got, want []byte) {
 	}
 	if !reflect.DeepEqual(gotValue, wantValue) {
 		t.Fatalf("got %q, want JSON equivalent to %q", got, want)
+	}
+}
+
+func TestSortSortedMapIndexesRandomized(t *testing.T) {
+	rng := rand.New(rand.NewSource(1))
+	for size := 0; size <= 256; size++ {
+		stringsToSort := make([]sortedMapStringKey, size)
+		integerKeys := make([]sortedMapIntegerKey, size)
+		for i := range size {
+			prefix := stringsToSort[rng.Intn(i+1)].text
+			stringsToSort[i].text = prefix + strconv.Itoa(rng.Intn(32))
+
+			value := int64(rng.Uint64())
+			integerKeys[i].length = uint8(len(internal.AppendInt(integerKeys[i].text[:0], value)))
+		}
+
+		assertSortedMapKeys(t, stringsToSort, sortSortedMapStringKeys, func(key sortedMapStringKey) string {
+			return key.text
+		})
+		assertSortedMapIndexes(t, integerKeys, sortSortedMapIntegerIndexes, func(key sortedMapIntegerKey) string {
+			return string(key.text[:key.length])
+		})
+	}
+}
+
+func assertSortedMapKeys[K any](t *testing.T, keys []K, sortKeys func([]K), stringify func(K) string) {
+	t.Helper()
+	want := make([]string, len(keys))
+	for i, key := range keys {
+		want[i] = stringify(key)
+	}
+	rand.New(rand.NewSource(int64(len(keys)))).Shuffle(len(keys), func(i, j int) {
+		keys[i], keys[j] = keys[j], keys[i]
+	})
+
+	sortKeys(keys)
+	slices.Sort(want)
+	for i, key := range keys {
+		if got := stringify(key); got != want[i] {
+			t.Fatalf("key %d = %q, want %q", i, got, want[i])
+		}
+	}
+}
+
+func assertSortedMapIndexes[K any](
+	t *testing.T,
+	keys []K,
+	sortIndexes func([]int, []K),
+	stringify func(K) string,
+) {
+	t.Helper()
+	indexes := make([]int, len(keys))
+	want := make([]string, len(keys))
+	for i, key := range keys {
+		indexes[i] = i
+		want[i] = stringify(key)
+	}
+	rand.New(rand.NewSource(int64(len(keys)))).Shuffle(len(indexes), func(i, j int) {
+		indexes[i], indexes[j] = indexes[j], indexes[i]
+	})
+
+	sortIndexes(indexes, keys)
+	slices.Sort(want)
+	for i, index := range indexes {
+		if got := stringify(keys[index]); got != want[i] {
+			t.Fatalf("key %d = %q, want %q", i, got, want[i])
+		}
 	}
 }

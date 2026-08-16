@@ -3,6 +3,7 @@ package bench_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"math"
 	"runtime"
 	"strings"
@@ -46,6 +47,11 @@ func (jsonInt) MarshalJSON() ([]byte, error) {
 }
 
 var sonicJson = sonic.ConfigFastest
+var sonicSortedJSON = sonic.Config{
+	NoValidateJSONMarshaler: true,
+	NoValidateJSONSkip:      true,
+	SortMapKeys:             true,
+}.Froze()
 
 func BenchmarkMarshalMapInt(b *testing.B) {
 	values := map[string]int{
@@ -59,6 +65,35 @@ func BenchmarkMarshalMapInt(b *testing.B) {
 	}
 
 	benchmarkMarshalValue(b, values)
+}
+
+func BenchmarkMarshalMapIntSorted(b *testing.B) {
+	b.Run("map_string_int", func(b *testing.B) {
+		values := make(map[string]int, 128)
+		for i := 127; i >= 0; i-- {
+			values[fmt.Sprintf("key_%03d", i)] = i*7919 - 500_000
+		}
+
+		benchmarkMarshalSortedMap(b, values)
+	})
+
+	b.Run("map_int_string", func(b *testing.B) {
+		values := make(map[int]string, 128)
+		for i := -64; i < 64; i++ {
+			values[i*7919] = fmt.Sprintf("value_%03d", i+64)
+		}
+
+		benchmarkMarshalSortedMap(b, values)
+	})
+
+	b.Run("map_uint_string", func(b *testing.B) {
+		values := make(map[uint]string, 128)
+		for i := uint(0); i < 128; i++ {
+			values[i*7919] = fmt.Sprintf("value_%03d", i)
+		}
+
+		benchmarkMarshalSortedMap(b, values)
+	})
 }
 
 func BenchmarkMarshalMapIntSlice(b *testing.B) {
@@ -637,6 +672,101 @@ func benchmarkMarshalValue[T any](b *testing.B, value T) {
 	})
 
 	runtime.KeepAlive(marshalResult)
+}
+
+func benchmarkMarshalSortedMap[T any](b *testing.B, value T) {
+	flags := jsonexperiment.MarshalFlagSortMapKeys
+	deterministic := jsonv2.Deterministic(true)
+	sonicFlags := sonicEncoder.SortMapKeys | sonicEncoder.NoValidateJSONMarshaler
+
+	reference, err := json.Marshal(value)
+	if err != nil {
+		b.Fatal(err)
+	}
+	encodedBytes := int64(len(reference))
+
+	check := func(name string, got []byte, err error) {
+		b.Helper()
+		if err != nil {
+			b.Fatalf("%s: %v", name, err)
+		}
+		if !bytes.Equal(got, reference) {
+			b.Fatalf("%s output differs from encoding/json", name)
+		}
+	}
+
+	got, err := jsonexperiment.MarshalAppendWithFlags(nil, value, flags)
+	check("marshal_append", got, err)
+	got, err = jsonexperiment.MarshalWithFlags(value, flags)
+	check("marshal", got, err)
+	got, err = jsonv2.Marshal(value, deterministic)
+	check("encoding_json_v2_write", got, err)
+	got, err = sonicSortedJSON.Marshal(value)
+	check("sonic_json", got, err)
+	got, err = sonicEncoder.Encode(value, sonicFlags)
+	check("sonic_encode_into", got, err)
+
+	b.Run("marshal_append", func(b *testing.B) {
+		var result []byte
+		b.SetBytes(encodedBytes)
+		b.ReportAllocs()
+		for b.Loop() {
+			result, _ = jsonexperiment.MarshalAppendWithFlags(result[:0], value, flags)
+		}
+		runtime.KeepAlive(result)
+	})
+
+	b.Run("marshal", func(b *testing.B) {
+		var result []byte
+		b.SetBytes(encodedBytes)
+		b.ReportAllocs()
+		for b.Loop() {
+			result, _ = jsonexperiment.MarshalWithFlags(value, flags)
+		}
+		runtime.KeepAlive(result)
+	})
+
+	b.Run("encoding_json", func(b *testing.B) {
+		var result []byte
+		b.SetBytes(encodedBytes)
+		b.ReportAllocs()
+		for b.Loop() {
+			result, _ = json.Marshal(value)
+		}
+		runtime.KeepAlive(result)
+	})
+
+	b.Run("encoding_json_v2_write", func(b *testing.B) {
+		buf := bytes.NewBuffer(nil)
+		b.SetBytes(encodedBytes)
+		b.ReportAllocs()
+		for b.Loop() {
+			buf.Reset()
+			_ = jsonv2.MarshalWrite(buf, value, deterministic)
+		}
+		runtime.KeepAlive(buf.Bytes())
+	})
+
+	b.Run("sonic_json", func(b *testing.B) {
+		var result []byte
+		b.SetBytes(encodedBytes)
+		b.ReportAllocs()
+		for b.Loop() {
+			result, _ = sonicSortedJSON.Marshal(value)
+		}
+		runtime.KeepAlive(result)
+	})
+
+	b.Run("sonic_encode_into", func(b *testing.B) {
+		var result []byte
+		b.SetBytes(encodedBytes)
+		b.ReportAllocs()
+		for b.Loop() {
+			result = result[:0]
+			_ = sonicEncoder.EncodeInto(&result, value, sonicFlags)
+		}
+		runtime.KeepAlive(result)
+	})
 }
 
 func benchmarkMarshalValueParallel[T any](b *testing.B, value T) {

@@ -1,10 +1,7 @@
 package jsonexperiment
 
 import (
-	"bytes"
 	"reflect"
-	"slices"
-	"strings"
 	"sync"
 	"unsafe"
 
@@ -21,6 +18,20 @@ type sortedMapState[K any] struct {
 type sortedMapIntegerKey struct {
 	text   [32]byte
 	length uint8
+}
+
+type sortedMapStringKey struct {
+	text       string
+	valueIndex int
+}
+
+// reflectMapIterPrefix mirrors the leading fields of reflect.MapIter and
+// internal/runtime/maps.Iter. The latter guarantees that its current key and
+// element pointers are its first two fields.
+type reflectMapIterPrefix struct {
+	value reflect.Value
+	key   unsafe.Pointer
+	elem  unsafe.Pointer
 }
 
 func tryCreateSortedMapValueMarshalFn(
@@ -52,7 +63,9 @@ func createSortedMapPrimitiveStringValueMarshalFn(
 	valueFn marshalFn,
 ) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
-	statePool := createSortedMapStatePool[string](typ.Key(), valueType)
+	valueSize := valueType.Size()
+	valueTypePointer := internal.InterfaceData(valueType)
+	statePool := createSortedMapStatePool[sortedMapStringKey](typ.Key(), valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
@@ -63,38 +76,34 @@ func createSortedMapPrimitiveStringValueMarshalFn(
 		}
 
 		length := value.Len()
-		state := getSortedMapState[string](statePool, length)
+		state := getSortedMapState[sortedMapStringKey](statePool, length)
 		defer putSortedMapState(statePool, state)
 		keys := state.keys
-		indexes := state.indexes
+		valuesPtr := state.values.UnsafePointer()
 
 		i := 0
 		for iter := value.MapRange(); iter.Next(); {
-			state.keyTarget.SetIterKey(iter)
-			state.values.Index(i).SetIterValue(iter)
-			keys = append(keys, state.keyTarget.String())
-			indexes = append(indexes, i)
+			iterPrefix := (*reflectMapIterPrefix)(unsafe.Pointer(iter))
+			runtimeTypedmemmove(valueTypePointer, unsafe.Add(valuesPtr, uintptr(i)*valueSize), iterPrefix.elem)
+			key := *(*string)(iterPrefix.key)
+			keys = append(keys, sortedMapStringKey{text: key, valueIndex: i})
 			i++
 		}
 		state.keys = keys
-		state.indexes = indexes
 
-		slices.SortFunc(indexes, func(a, b int) int {
-			return strings.Compare(keys[a], keys[b])
-		})
+		sortSortedMapStringKeys(keys)
 
 		dst = append(dst, '{')
-		for _, index := range indexes {
-			key := keys[index]
+		for _, key := range keys {
 
 			if flags&MarshalFlagEscapeHTML != 0 {
-				dst = internal.AppendStringHTML(dst, key)
+				dst = internal.AppendStringHTML(dst, key.text)
 			} else {
-				dst = internal.AppendString(dst, key)
+				dst = internal.AppendString(dst, key.text)
 			}
 			dst = append(dst, ':')
 
-			valuePtr := mapValuePointer(state.values.Index(index), valueIsMap)
+			valuePtr := sortedMapValueAt(valuesPtr, key.valueIndex, valueSize, valueIsMap)
 			var err error
 			if dst, err = valueFn(dst, valuePtr, flags); err != nil {
 				return dst, err
@@ -114,6 +123,7 @@ func createSortedMapPrimitiveIntValueMarshalFn(
 	valueFn marshalFn,
 ) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
+	valueSize := valueType.Size()
 	statePool := createSortedMapStatePool[sortedMapIntegerKey](typ.Key(), valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
@@ -143,9 +153,8 @@ func createSortedMapPrimitiveIntValueMarshalFn(
 		state.keys = keys
 		state.indexes = indexes
 
-		slices.SortFunc(indexes, func(a, b int) int {
-			return compareSortedMapIntegerKeys(&keys[a], &keys[b])
-		})
+		sortSortedMapIntegerIndexes(indexes, keys)
+		valuesPtr := state.values.UnsafePointer()
 
 		dst = append(dst, '{')
 		for _, index := range indexes {
@@ -155,7 +164,7 @@ func createSortedMapPrimitiveIntValueMarshalFn(
 			dst = append(dst, key.text[:key.length]...)
 			dst = append(dst, '"', ':')
 
-			valuePtr := mapValuePointer(state.values.Index(index), valueIsMap)
+			valuePtr := sortedMapValueAt(valuesPtr, index, valueSize, valueIsMap)
 			var err error
 			if dst, err = valueFn(dst, valuePtr, flags); err != nil {
 				return dst, err
@@ -175,6 +184,7 @@ func createSortedMapPrimitiveUintValueMarshalFn(
 	valueFn marshalFn,
 ) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
+	valueSize := valueType.Size()
 	statePool := createSortedMapStatePool[sortedMapIntegerKey](typ.Key(), valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
@@ -204,9 +214,8 @@ func createSortedMapPrimitiveUintValueMarshalFn(
 		state.keys = keys
 		state.indexes = indexes
 
-		slices.SortFunc(indexes, func(a, b int) int {
-			return compareSortedMapIntegerKeys(&keys[a], &keys[b])
-		})
+		sortSortedMapIntegerIndexes(indexes, keys)
+		valuesPtr := state.values.UnsafePointer()
 
 		dst = append(dst, '{')
 		for _, index := range indexes {
@@ -216,7 +225,7 @@ func createSortedMapPrimitiveUintValueMarshalFn(
 			dst = append(dst, key.text[:key.length]...)
 			dst = append(dst, '"', ':')
 
-			valuePtr := mapValuePointer(state.values.Index(index), valueIsMap)
+			valuePtr := sortedMapValueAt(valuesPtr, index, valueSize, valueIsMap)
 			var err error
 			if dst, err = valueFn(dst, valuePtr, flags); err != nil {
 				return dst, err
@@ -238,7 +247,8 @@ func createSortedMapTextValueMarshalFn(
 ) marshalFn {
 	keyIsPointer := keyType.Kind() == reflect.Pointer
 	valueIsMap := valueType.Kind() == reflect.Map
-	statePool := createSortedMapStatePool[string](keyType, valueType)
+	valueSize := valueType.Size()
+	statePool := createSortedMapStatePool[sortedMapStringKey](keyType, valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
@@ -249,7 +259,7 @@ func createSortedMapTextValueMarshalFn(
 		}
 
 		length := value.Len()
-		state := getSortedMapState[string](statePool, length)
+		state := getSortedMapState[sortedMapStringKey](statePool, length)
 		defer putSortedMapState(statePool, state)
 
 		i := 0
@@ -260,27 +270,24 @@ func createSortedMapTextValueMarshalFn(
 			if err != nil {
 				return dst, err
 			}
-			state.keys = append(state.keys, name)
-			state.indexes = append(state.indexes, i)
+			state.keys = append(state.keys, sortedMapStringKey{text: name, valueIndex: i})
 			i++
 		}
 
-		slices.SortFunc(state.indexes, func(a, b int) int {
-			return strings.Compare(state.keys[a], state.keys[b])
-		})
+		sortSortedMapStringKeys(state.keys)
+		valuesPtr := state.values.UnsafePointer()
 
 		dst = append(dst, '{')
-		for _, index := range state.indexes {
-			name := state.keys[index]
+		for _, key := range state.keys {
 
 			if flags&MarshalFlagEscapeHTML != 0 {
-				dst = internal.AppendStringHTML(dst, name)
+				dst = internal.AppendStringHTML(dst, key.text)
 			} else {
-				dst = internal.AppendString(dst, name)
+				dst = internal.AppendString(dst, key.text)
 			}
 			dst = append(dst, ':')
 
-			valuePtr := mapValuePointer(state.values.Index(index), valueIsMap)
+			valuePtr := sortedMapValueAt(valuesPtr, key.valueIndex, valueSize, valueIsMap)
 			var err error
 			if dst, err = valueFn(dst, valuePtr, flags); err != nil {
 				return dst, err
@@ -294,8 +301,16 @@ func createSortedMapTextValueMarshalFn(
 	}
 }
 
-func compareSortedMapIntegerKeys(a, b *sortedMapIntegerKey) int {
-	return bytes.Compare(a.text[:a.length], b.text[:b.length])
+//go:noescape
+//go:linkname runtimeTypedmemmove runtime.typedmemmove
+func runtimeTypedmemmove(typ, dst, src unsafe.Pointer)
+
+func sortedMapValueAt(base unsafe.Pointer, index int, size uintptr, valueIsMap bool) unsafe.Pointer {
+	ptr := unsafe.Add(base, uintptr(index)*size)
+	if valueIsMap {
+		return *(*unsafe.Pointer)(ptr)
+	}
+	return ptr
 }
 
 func createSortedMapStatePool[K any](keyType, valueType reflect.Type) *sync.Pool {

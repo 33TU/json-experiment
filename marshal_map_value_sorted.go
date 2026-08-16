@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"reflect"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
 	"unsafe"
@@ -17,6 +16,11 @@ type sortedMapValueState struct {
 	values    reflect.Value
 }
 
+type sortedMapIntegerKey struct {
+	text   [32]byte
+	length uint8
+}
+
 var sortedMapStringKeysPool = sync.Pool{
 	New: func() any {
 		keys := make([]string, 0)
@@ -26,14 +30,14 @@ var sortedMapStringKeysPool = sync.Pool{
 
 var sortedMapIntKeysPool = sync.Pool{
 	New: func() any {
-		keys := make([]int64, 0)
+		keys := make([]sortedMapIntegerKey, 0)
 		return &keys
 	},
 }
 
 var sortedMapUintKeysPool = sync.Pool{
 	New: func() any {
-		keys := make([]uint64, 0)
+		keys := make([]sortedMapIntegerKey, 0)
 		return &keys
 	},
 }
@@ -152,7 +156,7 @@ func createSortedMapPrimitiveIntValueMarshalFn(
 		state := getSortedMapValueState(valueStatePool, length)
 		defer putSortedMapValueState(valueStatePool, state)
 
-		keysPtr, keys := getSortedMapSlice[int64](&sortedMapIntKeysPool, length)
+		keysPtr, keys := getSortedMapSlice[sortedMapIntegerKey](&sortedMapIntKeysPool, length)
 		defer putSortedMapSlice(&sortedMapIntKeysPool, keysPtr, keys)
 
 		indexesPtr, indexes := getSortedMapSlice[int](&sortedMapIndexesPool, length)
@@ -162,21 +166,23 @@ func createSortedMapPrimitiveIntValueMarshalFn(
 		for iter := value.MapRange(); iter.Next(); {
 			state.keyTarget.SetIterKey(iter)
 			state.values.Index(i).SetIterValue(iter)
-			keys = append(keys, state.keyTarget.Int())
+			key := sortedMapIntegerKey{}
+			key.length = uint8(len(internal.AppendInt(key.text[:0], state.keyTarget.Int())))
+			keys = append(keys, key)
 			indexes = append(indexes, i)
 			i++
 		}
 
 		slices.SortFunc(indexes, func(a, b int) int {
-			return compareSortedMapIntKeys(keys[a], keys[b])
+			return compareSortedMapIntegerKeys(&keys[a], &keys[b])
 		})
 
 		dst = append(dst, '{')
 		for _, index := range indexes {
-			key := keys[index]
+			key := &keys[index]
 
 			dst = append(dst, '"')
-			dst = strconv.AppendInt(dst, key, 10)
+			dst = append(dst, key.text[:key.length]...)
 			dst = append(dst, '"', ':')
 
 			valuePtr := mapValuePointer(state.values.Index(index), valueIsMap)
@@ -213,7 +219,7 @@ func createSortedMapPrimitiveUintValueMarshalFn(
 		state := getSortedMapValueState(valueStatePool, length)
 		defer putSortedMapValueState(valueStatePool, state)
 
-		keysPtr, keys := getSortedMapSlice[uint64](&sortedMapUintKeysPool, length)
+		keysPtr, keys := getSortedMapSlice[sortedMapIntegerKey](&sortedMapUintKeysPool, length)
 		defer putSortedMapSlice(&sortedMapUintKeysPool, keysPtr, keys)
 
 		indexesPtr, indexes := getSortedMapSlice[int](&sortedMapIndexesPool, length)
@@ -223,21 +229,23 @@ func createSortedMapPrimitiveUintValueMarshalFn(
 		for iter := value.MapRange(); iter.Next(); {
 			state.keyTarget.SetIterKey(iter)
 			state.values.Index(i).SetIterValue(iter)
-			keys = append(keys, state.keyTarget.Uint())
+			key := sortedMapIntegerKey{}
+			key.length = uint8(len(internal.AppendUint(key.text[:0], state.keyTarget.Uint())))
+			keys = append(keys, key)
 			indexes = append(indexes, i)
 			i++
 		}
 
 		slices.SortFunc(indexes, func(a, b int) int {
-			return compareSortedMapUintKeys(keys[a], keys[b])
+			return compareSortedMapIntegerKeys(&keys[a], &keys[b])
 		})
 
 		dst = append(dst, '{')
 		for _, index := range indexes {
-			key := keys[index]
+			key := &keys[index]
 
 			dst = append(dst, '"')
-			dst = strconv.AppendUint(dst, key, 10)
+			dst = append(dst, key.text[:key.length]...)
 			dst = append(dst, '"', ':')
 
 			valuePtr := mapValuePointer(state.values.Index(index), valueIsMap)
@@ -324,20 +332,8 @@ func createSortedMapTextValueMarshalFn(
 	}
 }
 
-func compareSortedMapIntKeys(a, b int64) int {
-	var aBuf, bBuf [20]byte
-	return bytes.Compare(
-		internal.AppendInt(aBuf[:0], a),
-		internal.AppendInt(bBuf[:0], b),
-	)
-}
-
-func compareSortedMapUintKeys(a, b uint64) int {
-	var aBuf, bBuf [20]byte
-	return bytes.Compare(
-		internal.AppendUint(aBuf[:0], a),
-		internal.AppendUint(bBuf[:0], b),
-	)
+func compareSortedMapIntegerKeys(a, b *sortedMapIntegerKey) int {
+	return bytes.Compare(a.text[:a.length], b.text[:b.length])
 }
 
 func getSortedMapSlice[T any](pool *sync.Pool, capacity int) (*[]T, []T) {

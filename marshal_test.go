@@ -470,6 +470,8 @@ func TestMarshalSortMapKeys(t *testing.T) {
 		{"named string int fast path", map[string]testNumber{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
 		{"int fast path", map[int]string{2: "two", 10: "ten", -1: "negative"}, `{"-1":"negative","10":"ten","2":"two"}`},
 		{"uint fast path", map[uint]string{2: "two", 10: "ten"}, `{"10":"ten","2":"two"}`},
+		{"int64 key limits", map[int64]string{math.MinInt64: "min", math.MaxInt64: "max"}, `{"-9223372036854775808":"min","9223372036854775807":"max"}`},
+		{"uint64 key limit", map[uint64]string{0: "zero", math.MaxUint64: "max"}, `{"0":"zero","18446744073709551615":"max"}`},
 		{"text keys", map[sortedTextMapKey]int{"z": 1, "a": 2}, `{"a":2,"z":1}`},
 		{"nil pointer text key", map[*pointerTextMapKey]int{nil: 1}, `{"":1}`},
 		{"custom values", map[string]jsonInt{"z": 1, "a": 2}, `{"a":"custom","z":"custom"}`},

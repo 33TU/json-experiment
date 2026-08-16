@@ -463,6 +463,11 @@ func TestMarshalSortMapKeys(t *testing.T) {
 		want  string
 	}{
 		{"string fast path", map[string]int{"z": 1, "a": 2}, `{"a":2,"z":1}`},
+		{"string int8 fast path", map[string]int8{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
+		{"string int16 fast path", map[string]int16{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
+		{"string int32 fast path", map[string]int32{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
+		{"string int64 fast path", map[string]int64{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
+		{"named string int fast path", map[string]testNumber{"z": 1, "a": -2}, `{"a":-2,"z":1}`},
 		{"int fast path", map[int]string{2: "two", 10: "ten", -1: "negative"}, `{"-1":"negative","10":"ten","2":"two"}`},
 		{"uint fast path", map[uint]string{2: "two", 10: "ten"}, `{"10":"ten","2":"two"}`},
 		{"text keys", map[sortedTextMapKey]int{"z": 1, "a": 2}, `{"a":2,"z":1}`},

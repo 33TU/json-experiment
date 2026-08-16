@@ -2,6 +2,7 @@ package jsonexperiment
 
 import (
 	"reflect"
+	"sync"
 	"unsafe"
 
 	"github.com/33TU/json-experiment/internal"
@@ -10,6 +11,11 @@ import (
 //
 // (map[K primitive]V value) marshal functions
 //
+
+type mapValueState struct {
+	keyTarget   reflect.Value
+	valueTarget reflect.Value
+}
 
 func tryCreateMapValueMarshalFn(
 	typ reflect.Type,
@@ -40,6 +46,8 @@ func createMapPrimitiveStringValueMarshalFn(
 	valueFn marshalFn,
 ) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
+	valueTypePointer := internal.InterfaceData(valueType)
+	statePool := createMapValueStatePool(nil, valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
@@ -49,22 +57,24 @@ func createMapPrimitiveStringValueMarshalFn(
 			return append(dst, "{}"...), nil
 		}
 
-		keyTarget := reflect.New(typ.Key()).Elem()
-		valueTarget := reflect.New(valueType).Elem()
+		state := statePool.Get().(*mapValueState)
+		defer putMapValueState(statePool, state)
+		valueTargetPointer := unsafe.Pointer(state.valueTarget.UnsafeAddr())
 
 		dst = append(dst, '{')
 		for iter := value.MapRange(); iter.Next(); {
-			keyTarget.SetIterKey(iter)
-			valueTarget.SetIterValue(iter)
+			iterPrefix := (*reflectMapIterPrefix)(unsafe.Pointer(iter))
+			runtimeTypedmemmove(valueTypePointer, valueTargetPointer, iterPrefix.elem)
+			key := *(*string)(iterPrefix.key)
 
 			if flags&MarshalFlagEscapeHTML != 0 {
-				dst = internal.AppendStringHTML(dst, keyTarget.String())
+				dst = internal.AppendStringHTML(dst, key)
 			} else {
-				dst = internal.AppendString(dst, keyTarget.String())
+				dst = internal.AppendString(dst, key)
 			}
 			dst = append(dst, ':')
 
-			valuePtr := mapValuePointer(valueTarget, valueIsMap)
+			valuePtr := mapValuePointer(valueTargetPointer, valueIsMap)
 			var err error
 			if dst, err = valueFn(dst, valuePtr, flags); err != nil {
 				return dst, err
@@ -83,7 +93,30 @@ func createMapPrimitiveIntValueMarshalFn(
 	valueType reflect.Type,
 	valueFn marshalFn,
 ) marshalFn {
+	switch typ.Key().Kind() {
+	case reflect.Int:
+		return createMapPrimitiveIntValueMarshalFnForKey[int](typ, valueType, valueFn)
+	case reflect.Int8:
+		return createMapPrimitiveIntValueMarshalFnForKey[int8](typ, valueType, valueFn)
+	case reflect.Int16:
+		return createMapPrimitiveIntValueMarshalFnForKey[int16](typ, valueType, valueFn)
+	case reflect.Int32:
+		return createMapPrimitiveIntValueMarshalFnForKey[int32](typ, valueType, valueFn)
+	case reflect.Int64:
+		return createMapPrimitiveIntValueMarshalFnForKey[int64](typ, valueType, valueFn)
+	}
+
+	return nil
+}
+
+func createMapPrimitiveIntValueMarshalFnForKey[K internal.SignedInteger](
+	typ reflect.Type,
+	valueType reflect.Type,
+	valueFn marshalFn,
+) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
+	valueTypePointer := internal.InterfaceData(valueType)
+	statePool := createMapValueStatePool(nil, valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
@@ -93,19 +126,20 @@ func createMapPrimitiveIntValueMarshalFn(
 			return append(dst, "{}"...), nil
 		}
 
-		keyTarget := reflect.New(typ.Key()).Elem()
-		valueTarget := reflect.New(valueType).Elem()
+		state := statePool.Get().(*mapValueState)
+		defer putMapValueState(statePool, state)
+		valueTargetPointer := unsafe.Pointer(state.valueTarget.UnsafeAddr())
 
 		dst = append(dst, '{')
 		for iter := value.MapRange(); iter.Next(); {
-			keyTarget.SetIterKey(iter)
-			valueTarget.SetIterValue(iter)
+			iterPrefix := (*reflectMapIterPrefix)(unsafe.Pointer(iter))
+			runtimeTypedmemmove(valueTypePointer, valueTargetPointer, iterPrefix.elem)
 
 			dst = append(dst, '"')
-			dst = internal.AppendInt(dst, keyTarget.Int())
+			dst = internal.AppendInt(dst, int64(*(*K)(iterPrefix.key)))
 			dst = append(dst, '"', ':')
 
-			valuePtr := mapValuePointer(valueTarget, valueIsMap)
+			valuePtr := mapValuePointer(valueTargetPointer, valueIsMap)
 			var err error
 			if dst, err = valueFn(dst, valuePtr, flags); err != nil {
 				return dst, err
@@ -124,7 +158,32 @@ func createMapPrimitiveUintValueMarshalFn(
 	valueType reflect.Type,
 	valueFn marshalFn,
 ) marshalFn {
+	switch typ.Key().Kind() {
+	case reflect.Uint:
+		return createMapPrimitiveUintValueMarshalFnForKey[uint](typ, valueType, valueFn)
+	case reflect.Uint8:
+		return createMapPrimitiveUintValueMarshalFnForKey[uint8](typ, valueType, valueFn)
+	case reflect.Uint16:
+		return createMapPrimitiveUintValueMarshalFnForKey[uint16](typ, valueType, valueFn)
+	case reflect.Uint32:
+		return createMapPrimitiveUintValueMarshalFnForKey[uint32](typ, valueType, valueFn)
+	case reflect.Uint64:
+		return createMapPrimitiveUintValueMarshalFnForKey[uint64](typ, valueType, valueFn)
+	case reflect.Uintptr:
+		return createMapPrimitiveUintValueMarshalFnForKey[uintptr](typ, valueType, valueFn)
+	}
+
+	return nil
+}
+
+func createMapPrimitiveUintValueMarshalFnForKey[K internal.UnsignedInteger](
+	typ reflect.Type,
+	valueType reflect.Type,
+	valueFn marshalFn,
+) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
+	valueTypePointer := internal.InterfaceData(valueType)
+	statePool := createMapValueStatePool(nil, valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
@@ -134,19 +193,20 @@ func createMapPrimitiveUintValueMarshalFn(
 			return append(dst, "{}"...), nil
 		}
 
-		keyTarget := reflect.New(typ.Key()).Elem()
-		valueTarget := reflect.New(valueType).Elem()
+		state := statePool.Get().(*mapValueState)
+		defer putMapValueState(statePool, state)
+		valueTargetPointer := unsafe.Pointer(state.valueTarget.UnsafeAddr())
 
 		dst = append(dst, '{')
 		for iter := value.MapRange(); iter.Next(); {
-			keyTarget.SetIterKey(iter)
-			valueTarget.SetIterValue(iter)
+			iterPrefix := (*reflectMapIterPrefix)(unsafe.Pointer(iter))
+			runtimeTypedmemmove(valueTypePointer, valueTargetPointer, iterPrefix.elem)
 
 			dst = append(dst, '"')
-			dst = internal.AppendUint(dst, keyTarget.Uint())
+			dst = internal.AppendUint(dst, uint64(*(*K)(iterPrefix.key)))
 			dst = append(dst, '"', ':')
 
-			valuePtr := mapValuePointer(valueTarget, valueIsMap)
+			valuePtr := mapValuePointer(valueTargetPointer, valueIsMap)
 			var err error
 			if dst, err = valueFn(dst, valuePtr, flags); err != nil {
 				return dst, err
@@ -172,6 +232,9 @@ func createMapTextValueMarshalFn(
 ) marshalFn {
 	keyIsPointer := keyType.Kind() == reflect.Pointer
 	valueIsMap := valueType.Kind() == reflect.Map
+	keyTypePointer := internal.InterfaceData(keyType)
+	valueTypePointer := internal.InterfaceData(valueType)
+	statePool := createMapValueStatePool(keyType, valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
 		value := reflect.NewAt(typ, noescape(unsafe.Pointer(&ptr))).Elem()
@@ -181,21 +244,24 @@ func createMapTextValueMarshalFn(
 			return append(dst, "{}"...), nil
 		}
 
-		keyTarget := reflect.New(keyType).Elem()
-		valueTarget := reflect.New(valueType).Elem()
+		state := statePool.Get().(*mapValueState)
+		defer putMapValueState(statePool, state)
+		keyTargetPointer := unsafe.Pointer(state.keyTarget.UnsafeAddr())
+		valueTargetPointer := unsafe.Pointer(state.valueTarget.UnsafeAddr())
 
 		dst = append(dst, '{')
 		for iter := value.MapRange(); iter.Next(); {
-			keyTarget.SetIterKey(iter)
-			valueTarget.SetIterValue(iter)
+			iterPrefix := (*reflectMapIterPrefix)(unsafe.Pointer(iter))
+			runtimeTypedmemmove(keyTypePointer, keyTargetPointer, iterPrefix.key)
+			runtimeTypedmemmove(valueTypePointer, valueTargetPointer, iterPrefix.elem)
 
 			var err error
-			if dst, err = appendMapTextKey(dst, keyTarget, keyIsPointer, flags); err != nil {
+			if dst, err = appendMapTextKey(dst, state.keyTarget, keyIsPointer, flags); err != nil {
 				return dst, err
 			}
 			dst = append(dst, ':')
 
-			valuePtr := mapValuePointer(valueTarget, valueIsMap)
+			valuePtr := mapValuePointer(valueTargetPointer, valueIsMap)
 			if dst, err = valueFn(dst, valuePtr, flags); err != nil {
 				return dst, err
 			}
@@ -237,8 +303,29 @@ func resolveMapTextKey(key reflect.Value, keyIsPointer bool) (string, error) {
 // helpers
 //
 
-func mapValuePointer(value reflect.Value, valueIsMap bool) unsafe.Pointer {
-	ptr := unsafe.Pointer(value.UnsafeAddr())
+func createMapValueStatePool(keyType, valueType reflect.Type) *sync.Pool {
+	return &sync.Pool{
+		New: func() any {
+			state := &mapValueState{
+				valueTarget: reflect.New(valueType).Elem(),
+			}
+			if keyType != nil {
+				state.keyTarget = reflect.New(keyType).Elem()
+			}
+			return state
+		},
+	}
+}
+
+func putMapValueState(pool *sync.Pool, state *mapValueState) {
+	if state.keyTarget.IsValid() {
+		state.keyTarget.SetZero()
+	}
+	state.valueTarget.SetZero()
+	pool.Put(state)
+}
+
+func mapValuePointer(ptr unsafe.Pointer, valueIsMap bool) unsafe.Pointer {
 	if valueIsMap {
 		return *(*unsafe.Pointer)(ptr)
 	}

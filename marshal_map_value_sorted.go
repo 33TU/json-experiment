@@ -25,15 +25,6 @@ type sortedMapStringKey struct {
 	valueIndex int
 }
 
-// reflectMapIterPrefix mirrors the leading fields of reflect.MapIter and
-// internal/runtime/maps.Iter. The latter guarantees that its current key and
-// element pointers are its first two fields.
-type reflectMapIterPrefix struct {
-	value reflect.Value
-	key   unsafe.Pointer
-	elem  unsafe.Pointer
-}
-
 func tryCreateSortedMapValueMarshalFn(
 	typ reflect.Type,
 	keyType reflect.Type,
@@ -346,10 +337,6 @@ func createSortedMapTextValueMarshalFn(
 		return dst, nil
 	}
 }
-
-//go:noescape
-//go:linkname runtimeTypedmemmove runtime.typedmemmove
-func runtimeTypedmemmove(typ, dst, src unsafe.Pointer)
 
 func sortedMapValueAt(base unsafe.Pointer, index int, size uintptr, valueIsMap bool) unsafe.Pointer {
 	ptr := unsafe.Add(base, uintptr(index)*size)

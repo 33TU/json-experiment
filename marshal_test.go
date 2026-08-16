@@ -134,6 +134,26 @@ func (jsonMap) MarshalJSON() ([]byte, error) {
 	return []byte(`"custom-map"`), nil
 }
 
+type mapMutatingField struct {
+	parent *map[string]mapMutatingValue
+	key    string
+}
+
+func (v mapMutatingField) MarshalJSONAppend(dst []byte) ([]byte, error) {
+	delete(*v.parent, v.key)
+	return append(dst, "null"...), nil
+}
+
+func (v mapMutatingField) MarshalJSON() ([]byte, error) {
+	delete(*v.parent, v.key)
+	return []byte("null"), nil
+}
+
+type mapMutatingValue struct {
+	Mutator mapMutatingField `json:"mutator"`
+	Value   int64            `json:"value"`
+}
+
 type valueZeroInt int
 
 func (v valueZeroInt) IsZero() bool {
@@ -444,6 +464,35 @@ func TestMarshalMapKinds(t *testing.T) {
 				assertJSONEqual(t, got, want)
 			}
 		})
+	}
+}
+
+func TestMarshalMapValueCanMutateParentMap(t *testing.T) {
+	newValues := func() map[string]mapMutatingValue {
+		values := make(map[string]mapMutatingValue)
+		values["key"] = mapMutatingValue{
+			Mutator: mapMutatingField{parent: &values, key: "key"},
+			Value:   42,
+		}
+		return values
+	}
+
+	values := newValues()
+	got, err := MarshalAppend(nil, values)
+	if err != nil {
+		t.Fatalf("MarshalAppend: %v", err)
+	}
+
+	wantValues := newValues()
+	want, err := json.Marshal(wantValues)
+	if err != nil {
+		t.Fatalf("json.Marshal: %v", err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("MarshalAppend = %s, want %s", got, want)
+	}
+	if len(values) != 0 || len(wantValues) != 0 {
+		t.Fatalf("map lengths = %d and %d, want 0", len(values), len(wantValues))
 	}
 }
 

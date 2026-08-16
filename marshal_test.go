@@ -33,6 +33,8 @@ type testByte byte
 
 type stringMapKey string
 
+type testUint uint
+
 type allMarshalers struct{}
 
 var (
@@ -479,7 +481,18 @@ func TestMarshalSortMapKeys(t *testing.T) {
 		{"slice values", map[string][]int{"z": {3}, "a": {1, 2}}},
 		{"interface values", map[string]any{"z": []int{2}, "a": "first"}},
 		{"int fast path", map[int]string{2: "two", 10: "ten", -1: "negative"}},
+		{"int8 fast path", map[int8]string{2: "two", 10: "ten", -1: "negative"}},
+		{"int16 fast path", map[int16]string{2: "two", 10: "ten", -1: "negative"}},
+		{"int32 fast path", map[int32]string{2: "two", 10: "ten", -1: "negative"}},
+		{"int64 fast path", map[int64]string{2: "two", 10: "ten", -1: "negative"}},
+		{"named int key fast path", map[testNumber]string{2: "two", 10: "ten", -1: "negative"}},
 		{"uint fast path", map[uint]string{2: "two", 10: "ten"}},
+		{"uint8 fast path", map[uint8]string{2: "two", 10: "ten"}},
+		{"uint16 fast path", map[uint16]string{2: "two", 10: "ten"}},
+		{"uint32 fast path", map[uint32]string{2: "two", 10: "ten"}},
+		{"uint64 fast path", map[uint64]string{2: "two", 10: "ten"}},
+		{"uintptr fast path", map[uintptr]string{2: "two", 10: "ten"}},
+		{"named uint key fast path", map[testUint]string{2: "two", 10: "ten"}},
 		{"int64 key limits", map[int64]string{math.MinInt64: "min", math.MaxInt64: "max"}},
 		{"uint64 key limit", map[uint64]string{0: "zero", math.MaxUint64: "max"}},
 		{"text keys", map[sortedTextMapKey]int{"z": 1, "a": 2}},

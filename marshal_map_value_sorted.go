@@ -122,8 +122,30 @@ func createSortedMapPrimitiveIntValueMarshalFn(
 	valueType reflect.Type,
 	valueFn marshalFn,
 ) marshalFn {
+	switch typ.Key().Kind() {
+	case reflect.Int:
+		return createSortedMapPrimitiveIntValueMarshalFnForKey[int](typ, valueType, valueFn)
+	case reflect.Int8:
+		return createSortedMapPrimitiveIntValueMarshalFnForKey[int8](typ, valueType, valueFn)
+	case reflect.Int16:
+		return createSortedMapPrimitiveIntValueMarshalFnForKey[int16](typ, valueType, valueFn)
+	case reflect.Int32:
+		return createSortedMapPrimitiveIntValueMarshalFnForKey[int32](typ, valueType, valueFn)
+	case reflect.Int64:
+		return createSortedMapPrimitiveIntValueMarshalFnForKey[int64](typ, valueType, valueFn)
+	default:
+		panic("jsonexperiment: unreachable signed map key kind")
+	}
+}
+
+func createSortedMapPrimitiveIntValueMarshalFnForKey[K internal.SignedInteger](
+	typ reflect.Type,
+	valueType reflect.Type,
+	valueFn marshalFn,
+) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
 	valueSize := valueType.Size()
+	valueTypePointer := internal.InterfaceData(valueType)
 	statePool := createSortedMapStatePool[sortedMapIntegerKey](typ.Key(), valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
@@ -139,13 +161,14 @@ func createSortedMapPrimitiveIntValueMarshalFn(
 		defer putSortedMapState(statePool, state)
 		keys := state.keys
 		indexes := state.indexes
+		valuesPtr := state.values.UnsafePointer()
 
 		i := 0
 		for iter := value.MapRange(); iter.Next(); {
-			state.keyTarget.SetIterKey(iter)
-			state.values.Index(i).SetIterValue(iter)
+			iterPrefix := (*reflectMapIterPrefix)(unsafe.Pointer(iter))
+			runtimeTypedmemmove(valueTypePointer, unsafe.Add(valuesPtr, uintptr(i)*valueSize), iterPrefix.elem)
 			key := sortedMapIntegerKey{}
-			key.length = uint8(len(internal.AppendInt(key.text[:0], state.keyTarget.Int())))
+			key.length = uint8(len(internal.AppendInt(key.text[:0], int64(*(*K)(iterPrefix.key)))))
 			keys = append(keys, key)
 			indexes = append(indexes, i)
 			i++
@@ -154,7 +177,6 @@ func createSortedMapPrimitiveIntValueMarshalFn(
 		state.indexes = indexes
 
 		sortSortedMapIntegerIndexes(indexes, keys)
-		valuesPtr := state.values.UnsafePointer()
 
 		dst = append(dst, '{')
 		for _, index := range indexes {
@@ -183,8 +205,32 @@ func createSortedMapPrimitiveUintValueMarshalFn(
 	valueType reflect.Type,
 	valueFn marshalFn,
 ) marshalFn {
+	switch typ.Key().Kind() {
+	case reflect.Uint:
+		return createSortedMapPrimitiveUintValueMarshalFnForKey[uint](typ, valueType, valueFn)
+	case reflect.Uint8:
+		return createSortedMapPrimitiveUintValueMarshalFnForKey[uint8](typ, valueType, valueFn)
+	case reflect.Uint16:
+		return createSortedMapPrimitiveUintValueMarshalFnForKey[uint16](typ, valueType, valueFn)
+	case reflect.Uint32:
+		return createSortedMapPrimitiveUintValueMarshalFnForKey[uint32](typ, valueType, valueFn)
+	case reflect.Uint64:
+		return createSortedMapPrimitiveUintValueMarshalFnForKey[uint64](typ, valueType, valueFn)
+	case reflect.Uintptr:
+		return createSortedMapPrimitiveUintValueMarshalFnForKey[uintptr](typ, valueType, valueFn)
+	default:
+		panic("jsonexperiment: unreachable unsigned map key kind")
+	}
+}
+
+func createSortedMapPrimitiveUintValueMarshalFnForKey[K internal.UnsignedInteger](
+	typ reflect.Type,
+	valueType reflect.Type,
+	valueFn marshalFn,
+) marshalFn {
 	valueIsMap := valueType.Kind() == reflect.Map
 	valueSize := valueType.Size()
+	valueTypePointer := internal.InterfaceData(valueType)
 	statePool := createSortedMapStatePool[sortedMapIntegerKey](typ.Key(), valueType)
 
 	return func(dst []byte, ptr unsafe.Pointer, flags MarshalFlags) ([]byte, error) {
@@ -200,13 +246,14 @@ func createSortedMapPrimitiveUintValueMarshalFn(
 		defer putSortedMapState(statePool, state)
 		keys := state.keys
 		indexes := state.indexes
+		valuesPtr := state.values.UnsafePointer()
 
 		i := 0
 		for iter := value.MapRange(); iter.Next(); {
-			state.keyTarget.SetIterKey(iter)
-			state.values.Index(i).SetIterValue(iter)
+			iterPrefix := (*reflectMapIterPrefix)(unsafe.Pointer(iter))
+			runtimeTypedmemmove(valueTypePointer, unsafe.Add(valuesPtr, uintptr(i)*valueSize), iterPrefix.elem)
 			key := sortedMapIntegerKey{}
-			key.length = uint8(len(internal.AppendUint(key.text[:0], state.keyTarget.Uint())))
+			key.length = uint8(len(internal.AppendUint(key.text[:0], uint64(*(*K)(iterPrefix.key)))))
 			keys = append(keys, key)
 			indexes = append(indexes, i)
 			i++
@@ -215,7 +262,6 @@ func createSortedMapPrimitiveUintValueMarshalFn(
 		state.indexes = indexes
 
 		sortSortedMapIntegerIndexes(indexes, keys)
-		valuesPtr := state.values.UnsafePointer()
 
 		dst = append(dst, '{')
 		for _, index := range indexes {

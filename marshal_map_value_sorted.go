@@ -133,9 +133,9 @@ func createSortedMapPrimitiveIntValueMarshalFn(
 		return createSortedMapPrimitiveIntValueMarshalFnForKey[int32](typ, valueType, valueFn)
 	case reflect.Int64:
 		return createSortedMapPrimitiveIntValueMarshalFnForKey[int64](typ, valueType, valueFn)
-	default:
-		panic("jsonexperiment: unreachable signed map key kind")
 	}
+
+	return nil
 }
 
 func createSortedMapPrimitiveIntValueMarshalFnForKey[K internal.SignedInteger](
@@ -218,9 +218,9 @@ func createSortedMapPrimitiveUintValueMarshalFn(
 		return createSortedMapPrimitiveUintValueMarshalFnForKey[uint64](typ, valueType, valueFn)
 	case reflect.Uintptr:
 		return createSortedMapPrimitiveUintValueMarshalFnForKey[uintptr](typ, valueType, valueFn)
-	default:
-		panic("jsonexperiment: unreachable unsigned map key kind")
 	}
+
+	return nil
 }
 
 func createSortedMapPrimitiveUintValueMarshalFnForKey[K internal.UnsignedInteger](

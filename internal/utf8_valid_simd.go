@@ -63,9 +63,9 @@ func validUTF8(src []byte) bool {
 func validUTF8AVX2(original, src []byte, processed int) bool {
 	const width = 32
 
-	firstHighTable := archsimd.LoadUint8x32(&utf8FirstHighAVX2)
-	firstLowTable := archsimd.LoadUint8x32(&utf8FirstLowAVX2)
-	secondHighTable := archsimd.LoadUint8x32(&utf8SecondHighAVX2)
+	firstHighTable := archsimd.LoadUint8x32Array(&utf8FirstHighAVX2)
+	firstLowTable := archsimd.LoadUint8x32Array(&utf8FirstLowAVX2)
+	secondHighTable := archsimd.LoadUint8x32Array(&utf8SecondHighAVX2)
 	lowNibble := archsimd.BroadcastUint8x32(0x0f)
 	continuationBit := archsimd.BroadcastUint8x32(0x80)
 	thirdThreshold := archsimd.BroadcastUint8x32(0xdf)
@@ -74,15 +74,15 @@ func validUTF8AVX2(original, src []byte, processed int) bool {
 
 	var previous archsimd.Uint8x32
 	for len(src) >= width {
-		input := archsimd.LoadUint8x32Slice(src)
+		input := archsimd.LoadUint8x32(src)
 
 		// AVX2 byte shifts operate independently on 128-bit lanes. Arrange the
 		// preceding lane beside each current lane so UTF-8 sequences spanning
 		// either the vector or lane boundary retain their prior three bytes.
 		prior := input.SetLo(previous.GetHi()).SetHi(input.GetLo())
-		previous1 := input.ConcatShiftBytesRightGrouped(15, prior)
-		previous2 := input.ConcatShiftBytesRightGrouped(14, prior)
-		previous3 := input.ConcatShiftBytesRightGrouped(13, prior)
+		previous1 := input.ConcatShiftBytesRightGrouped(prior, 15)
+		previous2 := input.ConcatShiftBytesRightGrouped(prior, 14)
+		previous3 := input.ConcatShiftBytesRightGrouped(prior, 13)
 
 		previous1High := previous1.AsUint16x16().ShiftAllRight(4).AsUint8x32().And(lowNibble)
 		inputHigh := input.AsUint16x16().ShiftAllRight(4).AsUint8x32().And(lowNibble)
@@ -116,9 +116,9 @@ func validUTF8AVX2(original, src []byte, processed int) bool {
 func validUTF8SIMD(original, src []byte) bool {
 	const width = 16
 
-	firstHighTable := archsimd.LoadUint8x16(&utf8FirstHigh)
-	firstLowTable := archsimd.LoadUint8x16(&utf8FirstLow)
-	secondHighTable := archsimd.LoadUint8x16(&utf8SecondHigh)
+	firstHighTable := archsimd.LoadUint8x16Array(&utf8FirstHigh)
+	firstLowTable := archsimd.LoadUint8x16Array(&utf8FirstLow)
+	secondHighTable := archsimd.LoadUint8x16Array(&utf8SecondHigh)
 	lowNibble := archsimd.BroadcastUint8x16(0x0f)
 	continuationBit := archsimd.BroadcastUint8x16(0x80)
 	thirdThreshold := archsimd.BroadcastUint8x16(0xdf)
@@ -127,10 +127,10 @@ func validUTF8SIMD(original, src []byte) bool {
 
 	var previous archsimd.Uint8x16
 	for len(src) >= 2*width {
-		input0 := archsimd.LoadUint8x16Slice(src)
-		previous01 := input0.ConcatShiftBytesRight(15, previous)
-		previous02 := input0.ConcatShiftBytesRight(14, previous)
-		previous03 := input0.ConcatShiftBytesRight(13, previous)
+		input0 := archsimd.LoadUint8x16(src)
+		previous01 := input0.ConcatShiftBytesRight(previous, 15)
+		previous02 := input0.ConcatShiftBytesRight(previous, 14)
+		previous03 := input0.ConcatShiftBytesRight(previous, 13)
 
 		previous01High := previous01.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
 		input0High := input0.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
@@ -146,10 +146,10 @@ func validUTF8SIMD(original, src []byte) bool {
 			return false
 		}
 
-		input1 := archsimd.LoadUint8x16Slice(src[width:])
-		previous11 := input1.ConcatShiftBytesRight(15, input0)
-		previous12 := input1.ConcatShiftBytesRight(14, input0)
-		previous13 := input1.ConcatShiftBytesRight(13, input0)
+		input1 := archsimd.LoadUint8x16(src[width:])
+		previous11 := input1.ConcatShiftBytesRight(input0, 15)
+		previous12 := input1.ConcatShiftBytesRight(input0, 14)
+		previous13 := input1.ConcatShiftBytesRight(input0, 13)
 
 		previous11High := previous11.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
 		input1High := input1.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
@@ -170,10 +170,10 @@ func validUTF8SIMD(original, src []byte) bool {
 	}
 
 	for len(src) >= width {
-		input := archsimd.LoadUint8x16Slice(src)
-		previous1 := input.ConcatShiftBytesRight(15, previous)
-		previous2 := input.ConcatShiftBytesRight(14, previous)
-		previous3 := input.ConcatShiftBytesRight(13, previous)
+		input := archsimd.LoadUint8x16(src)
+		previous1 := input.ConcatShiftBytesRight(previous, 15)
+		previous2 := input.ConcatShiftBytesRight(previous, 14)
+		previous3 := input.ConcatShiftBytesRight(previous, 13)
 
 		previous1High := previous1.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
 		inputHigh := input.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
@@ -194,10 +194,10 @@ func validUTF8SIMD(original, src []byte) bool {
 	}
 
 	if len(src) != 0 {
-		input := archsimd.LoadUint8x16SlicePart(src)
-		previous1 := input.ConcatShiftBytesRight(15, previous)
-		previous2 := input.ConcatShiftBytesRight(14, previous)
-		previous3 := input.ConcatShiftBytesRight(13, previous)
+		input, _ := archsimd.LoadUint8x16Part(src)
+		previous1 := input.ConcatShiftBytesRight(previous, 15)
+		previous2 := input.ConcatShiftBytesRight(previous, 14)
+		previous3 := input.ConcatShiftBytesRight(previous, 13)
 
 		previous1High := previous1.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)
 		inputHigh := input.AsUint16x8().ShiftAllRight(4).AsUint8x16().And(lowNibble)

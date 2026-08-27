@@ -14,8 +14,6 @@ import (
 	"time"
 	"unsafe"
 
-	jsonv2 "encoding/json/v2"
-
 	"github.com/33TU/json-experiment/internal"
 )
 
@@ -859,14 +857,11 @@ func TestMarshalFormatMarshalerPrecedence(t *testing.T) {
 		Value jsonInt `json:"value,format:hex"`
 	}{Value: 123}
 
-	got, gotErr := Marshal(value)
-	want, wantErr := jsonv2.Marshal(value)
-	if (gotErr != nil) != (wantErr != nil) {
-		t.Fatalf("Marshal error = %v, jsonv2.Marshal error = %v", gotErr, wantErr)
+	got, err := Marshal(value)
+	if err != nil {
+		t.Fatalf("Marshal error = %v", err)
 	}
-	if gotErr == nil {
-		assertJSONEqual(t, got, want)
-	}
+	assertJSONEqual(t, got, []byte(`{"value":"custom"}`))
 }
 
 func TestMarshalOmitTags(t *testing.T) {

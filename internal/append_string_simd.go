@@ -104,7 +104,7 @@ func AppendQuotedString(dst []byte, s string) []byte {
 		src := unsafe.Slice((*byte)(data), len(s))
 
 		for ; i+simdChunkSize <= len(src); i += simdChunkSize {
-			chunk := archsimd.LoadUint8x16Slice(src[i:])
+			chunk := archsimd.LoadUint8x16(src[i:])
 
 			maskBits := chunk.
 				Less(control).
@@ -244,7 +244,7 @@ func AppendQuotedStringHTML(dst []byte, s string) []byte {
 		src := unsafe.Slice((*byte)(data), len(s))
 
 		for ; i+simdChunkSize <= len(src); i += simdChunkSize {
-			chunk := archsimd.LoadUint8x16Slice(src[i:])
+			chunk := archsimd.LoadUint8x16(src[i:])
 
 			maskBits := chunk.
 				Less(control).
@@ -318,8 +318,8 @@ func appendStringSIMDUnrolled(dst []byte, s string) ([]byte, int, int) {
 	i := 0
 
 	for ; i+simdUnrollChunkSize <= len(src); i += simdUnrollChunkSize {
-		chunk0 := archsimd.LoadUint8x16Slice(src[i:])
-		chunk1 := archsimd.LoadUint8x16Slice(src[i+simdChunkSize:])
+		chunk0 := archsimd.LoadUint8x16(src[i:])
+		chunk1 := archsimd.LoadUint8x16(src[i+simdChunkSize:])
 
 		mask0 := chunk0.
 			Less(control).
@@ -354,7 +354,7 @@ func appendStringSIMDUnrolled(dst []byte, s string) ([]byte, int, int) {
 	}
 
 	if i+simdChunkSize <= len(src) {
-		chunk := archsimd.LoadUint8x16Slice(src[i:])
+		chunk := archsimd.LoadUint8x16(src[i:])
 		maskBits := chunk.
 			Less(control).
 			Or(chunk.Equal(quote)).
@@ -383,7 +383,7 @@ func appendStringSIMDAVX2(dst []byte, s string) ([]byte, int, int) {
 	i := 0
 
 	for ; i+avx2ChunkSize <= len(src); i += avx2ChunkSize {
-		chunk := archsimd.LoadUint8x32Slice(src[i:])
+		chunk := archsimd.LoadUint8x32(src[i:])
 		maskBits := chunk.
 			Less(control).
 			Or(chunk.Equal(quote)).
@@ -416,7 +416,7 @@ func appendStringHTMLSIMDAVX2(dst []byte, s string) ([]byte, int, int) {
 	i := 0
 
 	for ; i+avx2ChunkSize <= len(src); i += avx2ChunkSize {
-		chunk := archsimd.LoadUint8x32Slice(src[i:])
+		chunk := archsimd.LoadUint8x32(src[i:])
 		maskBits := chunk.
 			Less(control).
 			Or(chunk.Equal(quote)).
@@ -452,8 +452,8 @@ func appendStringHTMLSIMDUnrolled(dst []byte, s string) ([]byte, int, int) {
 	i := 0
 
 	for ; i+simdUnrollChunkSize <= len(src); i += simdUnrollChunkSize {
-		chunk0 := archsimd.LoadUint8x16Slice(src[i:])
-		chunk1 := archsimd.LoadUint8x16Slice(src[i+simdChunkSize:])
+		chunk0 := archsimd.LoadUint8x16(src[i:])
+		chunk1 := archsimd.LoadUint8x16(src[i+simdChunkSize:])
 
 		mask0 := chunk0.
 			Less(control).
@@ -494,7 +494,7 @@ func appendStringHTMLSIMDUnrolled(dst []byte, s string) ([]byte, int, int) {
 	}
 
 	if i+simdChunkSize <= len(src) {
-		chunk := archsimd.LoadUint8x16Slice(src[i:])
+		chunk := archsimd.LoadUint8x16(src[i:])
 		maskBits := chunk.
 			Less(control).
 			Or(chunk.Equal(quote)).
